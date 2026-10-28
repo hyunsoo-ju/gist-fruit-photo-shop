@@ -1,0 +1,25 @@
+# FruitGame basket
+
+newmtl WickerA
+Kd 0.8240 0.3760 0.2430
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl WickerB
+Kd 0.7690 0.3330 0.1840
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Band
+Kd 0.5570 0.2310 0.1370
+Ks 0 0 0
+d 1
+illum 1
+
+newmtl Inside
+Kd 0.4780 0.1840 0.1060
+Ks 0 0 0
+d 1
+illum 1

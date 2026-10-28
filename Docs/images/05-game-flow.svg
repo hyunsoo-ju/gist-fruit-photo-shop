@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 470" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#444"/>
+    </marker>
+  </defs>
+  <rect width="1040" height="470" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Game states</text>
+
+  <g font-size="15" text-anchor="middle">
+    <!-- boxes -->
+    <rect x="30" y="80" width="150" height="70" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+    <text x="105" y="110" font-weight="bold">Boot</text>
+    <text x="105" y="132" font-size="12" fill="#555">open webcam, load models</text>
+
+    <rect x="240" y="80" width="170" height="70" rx="12" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+    <text x="325" y="110" font-weight="bold">Calibrate</text>
+    <text x="325" y="132" font-size="12" fill="#555">centre → left → right → try</text>
+
+    <rect x="470" y="80" width="150" height="70" rx="12" fill="#fff4e0" stroke="#e0962a" stroke-width="2"/>
+    <text x="545" y="110" font-weight="bold">Countdown</text>
+    <text x="545" y="132" font-size="12" fill="#555">3 · 2 · 1</text>
+
+    <rect x="680" y="80" width="150" height="70" rx="12" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+    <text x="755" y="110" font-weight="bold">Playing</text>
+    <text x="755" y="132" font-size="12" fill="#555">one fruit at a time</text>
+
+    <rect x="680" y="300" width="150" height="70" rx="12" fill="#fdecea" stroke="#c62828" stroke-width="2"/>
+    <text x="755" y="330" font-weight="bold">Game Over</text>
+    <text x="755" y="352" font-size="12" fill="#555">score + best</text>
+
+    <rect x="440" y="300" width="180" height="70" rx="12" fill="#f3f3f3" stroke="#888" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="530" y="330" font-weight="bold">Paused</text>
+    <text x="530" y="352" font-size="12" fill="#555">"Can't see you" overlay</text>
+  </g>
+
+  <g stroke="#444" stroke-width="2" fill="none">
+    <line x1="180" y1="115" x2="238" y2="115" marker-end="url(#a)"/>
+    <line x1="410" y1="115" x2="468" y2="115" marker-end="url(#a)"/>
+    <line x1="620" y1="115" x2="678" y2="115" marker-end="url(#a)"/>
+    <line x1="755" y1="150" x2="755" y2="298" marker-end="url(#a)"/>
+    <path d="M700 150 L620 300" marker-end="url(#a)"/>
+    <path d="M600 300 L690 150" marker-end="url(#a)"/>
+    <path d="M680 345 C420 440 250 330 300 152" marker-end="url(#a)"/>
+    <path d="M830 330 C920 300 920 170 834 125" marker-end="url(#a)"/>
+    <!-- playing self loop -->
+    <path d="M790 80 C800 40 850 40 830 92" marker-end="url(#a)"/>
+  </g>
+  <g font-size="12" fill="#333">
+    <text x="190" y="105">face found</text>
+    <text x="420" y="105">3 poses held</text>
+    <text x="780" y="52" text-anchor="end">fruit caught / missed → next fruit</text>
+    <text x="762" y="226">timer 0:00</text>
+    <text x="762" y="242" fill="#888">(or lives, if enabled)</text>
+    <text x="586" y="236" text-anchor="end">face lost &gt; 1 s</text>
+    <text x="662" y="262">face back</text>
+    <text x="662" y="278">(+1 s grace)</text>
+    <text x="330" y="420">"recalibrate" (button, C key or Settings)</text>
+    <text x="922" y="220">play again</text>
+    <text x="922" y="236">(Space / hold</text>
+    <text x="922" y="252">centre 2 s)</text>
+  </g>
+</svg>

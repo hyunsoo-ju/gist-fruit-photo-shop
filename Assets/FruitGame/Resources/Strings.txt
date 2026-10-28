@@ -1,0 +1,70 @@
+# FruitGame string table (Docs/DESIGN.md §11). key<TAB>Korean (in-game tone: 해요체)<TAB>English. \n = new line; {0}, {1} = values.
+start.title	과일을 받아요!	Catch the fruit!
+start.hint	고개를 움직여서 바구니를 옮겨요	Move your head to steer the basket
+start.play	시작	Play
+start.calibrate	보정하기	Calibrate
+hud.go	시작!	Go!
+hud.lives	목숨 {0}	Lives {0}
+pause.title	잠깐 멈춤	Paused
+pause.resume	계속하기	Resume
+common.mainMenu	처음으로	Main menu
+common.back	뒤로	Back
+facelost.title	얼굴이 안 보여요!	Can't see you!
+facelost.sub	카메라 앞으로 돌아와 주세요	Step back in front of the camera
+over.heading	시간 끝!	Time's up!
+over.newBest	최고 기록!	New best!
+over.best	최고 {0}점	Best {0}
+over.missed	놓친 과일 {0}개	Missed {0}
+over.none	받은 과일이 없어요	No fruit caught
+over.playAgain	다시 하기	Play again
+over.photo	사진 찍기	Photo
+calib.centre	카메라를 똑바로 봐 주세요	Look straight at the camera
+calib.left	◀ 고개를 왼쪽으로\n<size=64>편한 만큼만 돌려요</size>	◀ Move your head left\n<size=64>as far as is comfortable</size>
+calib.right	고개를 오른쪽으로 ▶\n<size=64>편한 만큼만 돌려요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
+calib.try	해 봐요!\n<size=64>고개를 움직여서 바구니를 옮겨 봐요</size>	Try it!\n<size=64>Move your head to steer the basket</size>
+calib.looking	얼굴을 찾고 있어요…	Looking for your face…
+calib.closer	조금 더 가까이 와 주세요	Move a little closer
+calib.farther	조금만 뒤로 가 주세요	Move back a little
+calib.holdStill	그대로 멈춰 주세요…	Hold still…
+calib.holdThere	그 자리에서 멈춰 주세요…	Hold it there…
+calib.looksGood	좋아요	Looks good
+calib.redo	다시 하기	Redo
+photo.pose	포즈를 취해요!	Strike a pose!
+photo.take	사진 찍기	Take photo
+photo.print	인쇄하기	Print
+photo.phone	휴대폰으로 받기	Get it on your phone
+photo.save	저장	Save
+photo.retake	다시 찍기	Retake
+photo.done	완료	Done
+photo.close	닫기	Close
+photo.saved	저장했어요!	Saved!
+photo.printing	인쇄하고 있어요…	Printing…
+photo.printFail	인쇄하지 못했어요 (프린터가 연결되어 있나요?)	Couldn't print (is a printer set up?)
+photo.shareFail	사진을 보내지 못했어요	Couldn't share the photo
+photo.noNetwork	네트워크 연결을 찾지 못했어요	No network connection found.
+photo.serverFail	사진 서버를 시작하지 못했어요	Couldn't start the photo server
+photo.linkQr	같은 와이파이에 연결한 뒤\nQR 코드를 찍거나 주소를 열어요:\n{0}	Join the same Wi-Fi, then scan or open:\n{0}
+photo.link	같은 와이파이에 연결한 뒤 주소를 열어요:\n{0}	Join the same Wi-Fi, then open:\n{0}
+print.best	최고 {0}점	Best {0}
+print.labLogo	연구실 로고	LAB LOGO
+print.schoolLogo	학교 로고	SCHOOL LOGO
+page.title	내 사진	Your photo
+page.save	사진 저장	Save photo
+page.tip	사진을 길게 눌러서 저장할 수도 있어요.	Tip: you can also press and hold the photo to save it.
+page.expired	사진 링크가 만료되었어요.	This photo link has expired.
+fruit.apple	사과	Apple
+fruit.avocado	아보카도	Avocado
+fruit.banana	바나나	Banana
+fruit.cherries	체리	Cherries
+fruit.coconut	코코넛	Coconut
+fruit.dragonfruit	용과	Dragon Fruit
+fruit.grapefruit	자몽	Grapefruit
+fruit.grapes	포도	Grapes
+fruit.lemon	레몬	Lemon
+fruit.mango	망고	Mango
+fruit.mangosteen	망고스틴	Mangosteen
+fruit.melon	멜론	Melon
+fruit.orange	오렌지	Orange
+fruit.pear	배	Pear
+fruit.pineapple	파인애플	Pineapple
+fruit.watermelon	수박	Watermelon

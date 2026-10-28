@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 800" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#333"/>
+    </marker>
+    <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#3a7bd5"/>
+    </marker>
+  </defs>
+  <rect width="900" height="800" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Play plane (z = 0), one fruit at a time</text>
+
+  <!-- play area: 4.8 x 6.4 units -> 90 px/unit : 432 x 576, origin center at (290, 420) -->
+  <rect x="74" y="132" width="432" height="576" fill="#f6f8fb" stroke="#222" stroke-width="3"/>
+  <!-- spawn band above the top edge -->
+  <rect x="99" y="72" width="382" height="40" fill="#e3edf9" stroke="#3a7bd5" stroke-dasharray="6 5"/>
+  <text x="290" y="64" text-anchor="middle" font-size="14" fill="#3a7bd5">spawn band: y = +3.6, x ∈ [−2.1, +2.1] (0.5 m off-screen)</text>
+
+  <!-- side walls -->
+  <line x1="88" y1="132" x2="88" y2="708" stroke="#999" stroke-width="2" stroke-dasharray="3 4"/>
+  <line x1="492" y1="132" x2="492" y2="708" stroke="#999" stroke-width="2" stroke-dasharray="3 4"/>
+  <text x="60" y="425" font-size="13" fill="#777" transform="rotate(-90 60 425)" text-anchor="middle">invisible wall x = −2.25 (bounce)</text>
+
+  <!-- fruit path: start at x=-0.8, vx=+0.5; bounce once -->
+  <circle cx="218" cy="92" r="15" fill="#d9483b" stroke="#8e2a20" stroke-width="2"/>
+  <path d="M218 92 L470 395" stroke="#3a7bd5" stroke-width="2.5" stroke-dasharray="7 5" fill="none"/>
+  <path d="M470 395 L410 470" stroke="#3a7bd5" stroke-width="2.5" stroke-dasharray="7 5" fill="none"/>
+  <text x="482" y="398" font-size="13" fill="#3a7bd5">bounce</text>
+  <text x="100" y="152" font-size="12" fill="#3a7bd5">(drift exaggerated)</text>
+
+  <!-- velocity arrows at mid fruit -->
+  <circle cx="330" cy="227" r="15" fill="#d9483b" stroke="#8e2a20" stroke-width="2"/>
+  <path d="M322 214 Q330 204 340 212" stroke="#8e2a20" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <line x1="330" y1="245" x2="330" y2="305" stroke="#333" stroke-width="2.5" marker-end="url(#arr)"/>
+  <line x1="348" y1="227" x2="388" y2="227" stroke="#333" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="322" y="300" text-anchor="end" font-size="13" fill="#333">v<tspan font-size="10" dy="3">y</tspan><tspan dy="-3"> constant</tspan></text>
+  <text x="393" y="231" font-size="13" fill="#333">v<tspan font-size="10" dy="3">x</tspan><tspan dy="-3"> capped</tspan></text>
+  <text x="345" y="200" font-size="13" fill="#8e2a20">slow spin</text>
+
+  <!-- assist radius around basket mouth: basket at x=0.9 -> px 371, mouth y=-2.0 -> 600 -->
+  <circle cx="371" cy="600" r="90" fill="#3a7bd5" fill-opacity="0.08" stroke="#3a7bd5" stroke-dasharray="5 4"/>
+  <line x1="410" y1="520" x2="384" y2="548" stroke="#3a7bd5" stroke-width="2" marker-end="url(#arrB)"/>
+  <circle cx="410" cy="470" r="15" fill="#d9483b" stroke="#8e2a20" stroke-width="2" opacity="0.5"/>
+  <text x="478" y="548" font-size="13" fill="#3a7bd5">assist radius 1.0 m</text>
+  <text x="478" y="565" font-size="13" fill="#3a7bd5">horizontal pull only</text>
+
+  <!-- basket -->
+  <path d="M322 600 L420 600 L408 662 L334 662 Z" fill="#d2603e" stroke="#8e3b23" stroke-width="3"/>
+  <ellipse cx="371" cy="600" rx="49" ry="8" fill="#7a2f1b"/>
+  <rect x="330" y="602" width="82" height="16" fill="#3a7bd5" fill-opacity="0.25" stroke="#3a7bd5" stroke-width="1.5"/>
+  <text x="250" y="760" font-size="13" fill="#555"> </text>
+
+  <!-- rim line & miss line -->
+  <line x1="74" y1="600" x2="506" y2="600" stroke="#2e7d32" stroke-width="1.5" stroke-dasharray="8 5"/>
+  <line x1="74" y1="654" x2="506" y2="654" stroke="#c62828" stroke-width="1.5" stroke-dasharray="8 5"/>
+
+  <!-- y axis ticks -->
+  <g font-size="12" fill="#777" text-anchor="end">
+    <text x="70" y="136">+3.2</text>
+    <text x="70" y="424">0</text>
+    <text x="70" y="712">−3.2</text>
+  </g>
+
+  <!-- notes on right -->
+  <g font-size="15" fill="#222">
+    <text x="540" y="140" font-weight="bold">Falling</text>
+    <text x="540" y="162">v<tspan font-size="11" dy="3">y</tspan><tspan dy="-3"> = −2.2 m/s, up to −3.4 m/s</tspan></text>
+    <text x="540" y="182">|v<tspan font-size="11" dy="3">x</tspan><tspan dy="-3">| ≤ 0.6 m/s, picked so the</tspan></text>
+    <text x="540" y="202">landing x stays on screen</text>
+    <text x="540" y="222">spin 15–45 °/s, cosmetic only</text>
+
+    <text x="540" y="626" font-weight="bold" fill="#2e7d32">Rim y = −2.0</text>
+    <text x="540" y="646" fill="#2e7d32">enter the catch trigger while</text>
+    <text x="540" y="664" fill="#2e7d32">falling = CAUGHT</text>
+
+    <text x="540" y="694" font-weight="bold" fill="#c62828">Miss line y = −2.6</text>
+    <text x="540" y="714" fill="#c62828">fruit centre below it and not</text>
+    <text x="540" y="732" fill="#c62828">caught = MISSED</text>
+  </g>
+</svg>

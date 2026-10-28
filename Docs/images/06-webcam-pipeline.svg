@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#444"/>
+    </marker>
+  </defs>
+  <rect width="960" height="400" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Webcam pipeline (GPU, every frame)</text>
+
+  <g font-size="14" text-anchor="middle">
+    <rect x="30" y="160" width="140" height="70" rx="10" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+    <text x="100" y="190" font-weight="bold">WebCamTexture</text>
+    <text x="100" y="210" font-size="12" fill="#555">1280×720, 30 fps</text>
+
+    <rect x="210" y="160" width="150" height="70" rx="10" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+    <text x="285" y="190" font-weight="bold">Mirror + crop 3:4</text>
+    <text x="285" y="210" font-size="12" fill="#555">RenderTexture 540×720</text>
+
+    <rect x="410" y="70" width="170" height="70" rx="10" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+    <text x="495" y="100" font-weight="bold">BlazeFace</text>
+    <text x="495" y="120" font-size="12" fill="#555">128×128, Inference Engine</text>
+
+    <rect x="410" y="250" width="170" height="70" rx="10" fill="#f3e8fb" stroke="#7b3fa8" stroke-width="2"/>
+    <text x="495" y="280" font-weight="bold">Selfie segmentation</text>
+    <text x="495" y="300" font-size="12" fill="#555">256×256 mask</text>
+
+    <rect x="630" y="70" width="150" height="70" rx="10" fill="#fff4e0" stroke="#e0962a" stroke-width="2"/>
+    <text x="705" y="100" font-weight="bold">Face tracker</text>
+    <text x="705" y="120" font-size="12" fill="#555">pick largest, filter</text>
+
+    <rect x="630" y="250" width="150" height="70" rx="10" fill="#f3e8fb" stroke="#7b3fa8" stroke-width="2"/>
+    <text x="705" y="280" font-weight="bold">Mask smoothing</text>
+    <text x="705" y="300" font-size="12" fill="#555">blur + temporal lerp</text>
+
+    <rect x="820" y="70" width="120" height="70" rx="10" fill="#fbe9e4" stroke="#d2603e" stroke-width="2"/>
+    <text x="880" y="100" font-weight="bold">Basket x</text>
+    <text x="880" y="120" font-size="12" fill="#555">L2</text>
+
+    <rect x="820" y="210" width="120" height="50" rx="10" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+    <text x="880" y="240" font-weight="bold">Person quad</text>
+
+    <rect x="820" y="300" width="120" height="50" rx="10" fill="#e6eef3" stroke="#6f8ea3" stroke-width="2"/>
+    <text x="880" y="330" font-weight="bold">Bokeh quad</text>
+  </g>
+
+  <g stroke="#444" stroke-width="2" fill="none">
+    <line x1="170" y1="195" x2="208" y2="195" marker-end="url(#a)"/>
+    <path d="M360 185 L408 115" marker-end="url(#a)"/>
+    <path d="M360 205 L408 280" marker-end="url(#a)"/>
+    <line x1="580" y1="105" x2="628" y2="105" marker-end="url(#a)"/>
+    <line x1="580" y1="285" x2="628" y2="285" marker-end="url(#a)"/>
+    <line x1="780" y1="105" x2="818" y2="105" marker-end="url(#a)"/>
+    <path d="M780 275 L818 240" marker-end="url(#a)"/>
+    <path d="M780 295 L818 320" marker-end="url(#a)"/>
+    <!-- camera colour straight to the composite quads -->
+    <path d="M285 230 L285 375 L800 375 L818 340" stroke="#aaa" stroke-dasharray="5 4" marker-end="url(#a)"/>
+    <path d="M800 375 L800 250 L818 240" stroke="#aaa" stroke-dasharray="5 4"/>
+  </g>
+  <text x="300" y="368" font-size="12" fill="#777">camera colour (person = colour × mask; bokeh = heavily blurred, slightly desaturated colour)</text>
+</svg>

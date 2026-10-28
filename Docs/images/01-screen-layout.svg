@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 860" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bokeh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9cc3d9"/>
+      <stop offset="1" stop-color="#c9dccb"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="9"/></filter>
+    <clipPath id="screen"><rect x="40" y="40" width="540" height="720" rx="18"/></clipPath>
+  </defs>
+  <rect width="900" height="860" fill="#ffffff"/>
+
+  <g clip-path="url(#screen)">
+    <!-- L5 bokeh webcam background -->
+    <rect x="40" y="40" width="540" height="720" fill="url(#bokeh)"/>
+    <g filter="url(#blur)" opacity="0.75">
+      <circle cx="110" cy="150" r="46" fill="#f4e2b8"/>
+      <circle cx="500" cy="120" r="60" fill="#e8f1f7"/>
+      <rect x="430" y="260" width="120" height="180" fill="#8aa6b8"/>
+      <circle cx="140" cy="380" r="40" fill="#b8cfae"/>
+    </g>
+    <!-- L4 background fruit pile -->
+    <g opacity="0.9">
+      <rect x="40" y="640" width="540" height="120" fill="#b7a58a"/>
+      <circle cx="120" cy="628" r="22" fill="#d9483b"/>
+      <circle cx="160" cy="634" r="18" fill="#f2a33a"/>
+      <circle cx="140" cy="600" r="17" fill="#e8d34a"/>
+      <circle cx="470" cy="630" r="22" fill="#9cc24a"/>
+      <circle cx="505" cy="636" r="16" fill="#d9483b"/>
+    </g>
+    <!-- L3 person cut-out -->
+    <g>
+      <path d="M150 760 C160 600 230 560 310 560 C390 560 460 600 470 760 Z" fill="#5a6b7d"/>
+      <rect x="290" y="500" width="40" height="70" fill="#e9c1a0"/>
+      <ellipse cx="310" cy="440" rx="72" ry="88" fill="#efcaa8"/>
+      <path d="M238 420 C240 340 380 340 382 420 C370 380 250 380 238 420 Z" fill="#3b2b25"/>
+      <circle cx="285" cy="440" r="5" fill="#2b2b2b"/>
+      <circle cx="335" cy="440" r="5" fill="#2b2b2b"/>
+      <path d="M292 478 Q310 492 328 478" stroke="#2b2b2b" stroke-width="3" fill="none"/>
+      <!-- face box -->
+      <rect x="232" y="346" width="156" height="186" fill="none" stroke="#3a7bd5" stroke-width="2.5" stroke-dasharray="8 6"/>
+      <circle cx="310" cy="440" r="5" fill="#3a7bd5"/>
+    </g>
+    <!-- L2 basket + falling fruit -->
+    <g>
+      <line x1="310" y1="445" x2="310" y2="560" stroke="#3a7bd5" stroke-width="2" stroke-dasharray="4 5"/>
+      <path d="M245 575 L375 575 L358 660 L262 660 Z" fill="#d2603e" stroke="#8e3b23" stroke-width="3"/>
+      <ellipse cx="310" cy="575" rx="65" ry="10" fill="#7a2f1b"/>
+      <path d="M252 605 L368 605 M257 630 L363 630" stroke="#8e3b23" stroke-width="2"/>
+      <!-- banana -->
+      <g transform="translate(330 170) rotate(-15)">
+        <path d="M-40 0 Q0 40 40 0 Q0 22 -40 0 Z" fill="#f2cf3a" stroke="#b08f15" stroke-width="2"/>
+        <path d="M-34 -6 Q0 30 36 -8 Q0 14 -34 -6 Z" fill="#f7dc5a" stroke="#b08f15" stroke-width="2"/>
+      </g>
+      <path d="M300 120 L304 140 M330 112 L330 134 M358 120 L354 140" stroke="#3a7bd5" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+    <!-- L1 foreground foliage -->
+    <g>
+      <polygon points="40,760 40,640 90,600 140,660 120,760" fill="#4e9a4a"/>
+      <polygon points="100,760 150,620 210,760" fill="#3d7f3a"/>
+      <polygon points="200,760 230,700 270,690 300,760" fill="#6db35a"/>
+      <polygon points="420,760 470,660 520,760" fill="#3d7f3a"/>
+      <polygon points="480,760 520,610 580,640 580,760" fill="#5aa64f"/>
+      <polygon points="300,760 340,715 390,725 410,760" fill="#82c068"/>
+      <!-- canopy top corners -->
+      <path d="M40 40 L150 40 Q120 90 70 120 Q50 100 40 110 Z" fill="#5aa64f"/>
+      <path d="M580 40 L470 40 Q500 100 545 130 Q565 110 580 118 Z" fill="#4e9a4a"/>
+    </g>
+  </g>
+  <!-- L0 score UI -->
+  <g>
+    <text x="74" y="118" font-size="64" font-weight="900" fill="#ffffff" stroke="#c2185b" stroke-width="10" paint-order="stroke" stroke-linejoin="round">7</text>
+  </g>
+  <text x="548" y="108" text-anchor="end" font-size="40" font-weight="900" fill="#ffffff" stroke="#c2185b" stroke-width="8" paint-order="stroke" stroke-linejoin="round">0:42</text>
+  <rect x="40" y="40" width="540" height="720" rx="18" fill="none" stroke="#222" stroke-width="4"/>
+  <text x="310" y="800" text-anchor="middle" font-size="18" fill="#555">Portrait 3:4 (e.g. 1080 × 1440)</text>
+
+  <!-- legend -->
+  <g font-size="19">
+    <line x1="555" y1="95" x2="640" y2="95" stroke="#c2185b" stroke-width="1.5"/>
+    <text x="650" y="101" fill="#c2185b" font-weight="bold">L0 Score + 60 s timer</text>
+
+    <line x1="380" y1="150" x2="640" y2="190" stroke="#3a7bd5" stroke-width="1.5"/>
+    <text x="650" y="196" fill="#3a7bd5" font-weight="bold">L2 Falling fruit</text>
+
+    <line x1="390" y1="440" x2="640" y2="300" stroke="#5a6b7d" stroke-width="1.5"/>
+    <text x="650" y="296" fill="#33414f" font-weight="bold">L3 Webcam person</text>
+    <text x="650" y="318" fill="#555" font-size="15">background removed,</text>
+    <text x="650" y="336" fill="#555" font-size="15">face box drives basket x</text>
+
+    <line x1="520" y1="250" x2="640" y2="390" stroke="#6f8ea3" stroke-width="1.5"/>
+    <text x="650" y="396" fill="#4b6a7f" font-weight="bold">L5 Bokeh background</text>
+    <text x="650" y="416" fill="#555" font-size="15">blurred webcam</text>
+
+    <line x1="370" y1="610" x2="640" y2="490" stroke="#d2603e" stroke-width="1.5"/>
+    <text x="650" y="496" fill="#b04a2c" font-weight="bold">L2 Basket</text>
+    <text x="650" y="516" fill="#555" font-size="15">x only, y fixed</text>
+
+    <line x1="520" y1="625" x2="640" y2="590" stroke="#8a7a5a" stroke-width="1.5"/>
+    <text x="650" y="596" fill="#6f5f3f" font-weight="bold">L4 Fruit pile</text>
+    <text x="650" y="616" fill="#555" font-size="15">caught fruit stacks here</text>
+
+    <line x1="560" y1="700" x2="640" y2="690" stroke="#3d7f3a" stroke-width="1.5"/>
+    <text x="650" y="696" fill="#3d7f3a" font-weight="bold">L1 Foreground</text>
+    <text x="650" y="716" fill="#555" font-size="15">low-poly trees and bushes</text>
+  </g>
+</svg>

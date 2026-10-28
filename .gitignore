@@ -1,0 +1,70 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# Unity
+# ---------------------------------------------------------------------------------------------------------------------
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+.vs/
+.vscode/
+.idea/
+.consulo/
+sysinfo.txt
+crashlytics-build.properties
+*.apk
+*.aab
+*.unitypackage
+.DS_Store
+
+# Unity's crash-recovery scene copies
+**/_Recovery/
+**/_Recovery.meta
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Third-party files that may not be redistributed (Docs/DESIGN.md, decision 39). Their .meta files stay in the repo so
+# references survive: copy the files back into place BEFORE opening the project (see README, 준비).
+# ---------------------------------------------------------------------------------------------------------------------
+
+# Robust Video Matting model (GPL-3.0, 107 MB): download it instead.
+Assets/FruitGame/ML/rvm_resnet50_fp32.onnx
+
+# Low Poly Trees Asset Pack (Lite): "do not redistribute or resell these assets, even if they are modified".
+Assets/FruitGame/Art/Models/Trees/*
+!Assets/FruitGame/Art/Models/Trees/*.meta
+
+# Low Poly Food and PolyOne Free Fruits: redistribution terms unclear, so treated the same way.
+Assets/FruitGame/Art/Models/Fruits/*
+!Assets/FruitGame/Art/Models/Fruits/*.meta
+Assets/FruitGame/Art/Models/FruitsPolyOne/*
+!Assets/FruitGame/Art/Models/FruitsPolyOne/*.meta
+
+# Voxel meshes baked from those models (modified versions): rebuilt by FruitGame > Voxels > Bake Fruit / Bake Scene.
+Assets/FruitGame/Art/Voxels/Fruit/*.asset
+Assets/FruitGame/Art/Voxels/World/*Tree*.asset
+
+# Orchard illustration from Photo Booth 2: source and licence unknown.
+Assets/FruitGame/Art/Backdrops/OrchardIllustration.png
+
+# Licence notes that come with the privately shared asset zips (see the setup manual).
+/FruitGame-licences/

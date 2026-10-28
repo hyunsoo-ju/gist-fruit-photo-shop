@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5231f21887f3476188dee80a9036edb, type: 3}
+  m_Name: Orange
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.FruitType
+  id: orange
+  displayName: Orange
+  visualPrefabs:
+  - {fileID: 7524270826156699328, guid: 6475593bbc07d412cb8b20e5022168e9, type: 3}
+  - {fileID: 6764227095446814107, guid: d687c48d94ede4be6870721a5bcd284b, type: 3}
+  points: 1
+  spawnWeight: 1
+  sizeScale: 1
+  colliderShape: 0
+  greyboxColor: {r: 0.9490196, g: 0.6392157, b: 0.22745098, a: 1}
+  icon: {fileID: 0}
+  sourceModels:
+  - {fileID: 4148953910094994632, guid: 682f50d9b9a6a4570ac6555992fce79a, type: 3}
+  - {fileID: 5769248340106970892, guid: 0676094fdc9af4c739667891855e228a, type: 3}
+  sourceAtlas: {fileID: 0}
+  atlas: {fileID: 2800000, guid: 6308a6cc4ed33482c89493b994dff711, type: 3}
+  atlasFar: {fileID: 0}

@@ -1,0 +1,8 @@
+# Created by Kenney (www.kenney.nl)
+
+newmtl grass
+Kd 0.4062 0.6710 0.2598
+
+newmtl colorPurple
+Kd 0.6235294 0.5372549 1
+

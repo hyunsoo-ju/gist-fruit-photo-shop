@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a643362ec40d14f11b0858738a7c3dbf, type: 3}
+  m_Name: GameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.GameConfig
+  endCondition: 0
+  roundDuration: 60
+  lives: 3
+  countdownSeconds: 3
+  fallSpeedStart: 2.7
+  fallSpeedMax: 3.8
+  driftCapStart: 0.7
+  driftCapMax: 1.2
+  difficultyCurve: 2
+  spinDegPerSec: {x: 120, y: 240}
+  spawnXRange: 2.1
+  spawnY: 3.6
+  nextFruitDelay: 0.6
+  fruitSize: 0.88
+  wallX: 2.25
+  rimY: -2
+  missY: -2.6
+  despawnY: -4.2
+  basketMouthWidth: 1.6
+  basketXLimit: 1.45
+  basketMaxSpeed: 18
+  basketHeight: 0.8
+  basketTaper: 0.75
+  basketWallThickness: 0.08
+  knockedGravity: 9
+  fruitBounciness: 0.45
+  fruitFriction: 0.3
+  knockedTimeout: 4
+  pileZ: 3.6
+  pileDepthFactor: 1.15
+  pileFloorY: -3.6
+  pileHalfWidth: 3
+  pileSpawnY: 3.6
+  pileMax: 40
+  pileFreezeSpeed: 0.05
+  pileFreezeTime: 1.5
+  assistRadius: 1.8
+  assistStrength: 4
+  assistExtraSpeedCap: 1
+  sensitivity: 1
+  deadZone: 0.04
+  softClampKnee: 0.8
+  calibMinRangePerSide: 0.03
+  oneEuroMinCutoff: 1.2
+  oneEuroBeta: 0.4
+  steadyTolerance: 0.015
+  steadyHoldTime: 1
+  faceLostPauseDelay: 1
+  faceReturnGrace: 1
+  photoCaption: GIST Fruit Photo Shop
+  beautyStrength: 1
+  bigEye: 0.2
+  faceSlim: 0
+  fruitBlockSize: 0.044
+  worldBlockSize: 0.063
+  farBlockSize: 0.09
+  fruitColors: 5
+  renderScale: 0.5
+  pileDither: 0.5
+  farDither: 0.55
+  playerOutline: 3
+  playerOutlineColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
+  preferredCameraName: Symplectomorphism
+  keyboardBasketSpeed: 7

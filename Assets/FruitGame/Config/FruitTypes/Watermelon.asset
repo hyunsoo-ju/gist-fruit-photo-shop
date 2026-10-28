@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5231f21887f3476188dee80a9036edb, type: 3}
+  m_Name: Watermelon
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.FruitType
+  id: watermelon
+  displayName: Watermelon
+  visualPrefabs:
+  - {fileID: 4882965176775483826, guid: 385b4118c72bf402385c512e27e27178, type: 3}
+  - {fileID: 8084523848474410535, guid: 0bdc29432e2754693993320fb788a7ca, type: 3}
+  points: 1
+  spawnWeight: 0.4
+  sizeScale: 1.3
+  colliderShape: 0
+  greyboxColor: {r: 0.2627451, g: 0.627451, b: 0.2784314, a: 1}
+  icon: {fileID: 0}
+  sourceModels:
+  - {fileID: 919132149155446097, guid: b96f9875455624425a545f4e48403586, type: 3}
+  - {fileID: 919132149155446097, guid: e08b1410fe9bb4ca7b19cac0f8928cab, type: 3}
+  sourceAtlas: {fileID: 2800000, guid: f3cdd5d431be84c35827b3fcff5683be, type: 3}
+  atlas: {fileID: 2800000, guid: 6308a6cc4ed33482c89493b994dff711, type: 3}
+  atlasFar: {fileID: 0}

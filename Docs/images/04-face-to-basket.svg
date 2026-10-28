@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="Helvetica, Arial, sans-serif">
+  <rect width="900" height="560" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Face x → basket x (after calibration)</text>
+
+  <!-- chart area: x 100..560 (face u 0..1), y 470..90 (basket -1..+1) -->
+  <line x1="100" y1="470" x2="580" y2="470" stroke="#333" stroke-width="1.5"/>
+  <line x1="100" y1="470" x2="100" y2="80" stroke="#333" stroke-width="1.5"/>
+  <text x="340" y="510" text-anchor="middle" font-size="15" fill="#333">face centre u in the mirrored camera image (0 = left, 1 = right)</text>
+  <text x="50" y="280" text-anchor="middle" font-size="15" fill="#333" transform="rotate(-90 50 280)">basket x (−limit … +limit)</text>
+  <g font-size="12" fill="#777" text-anchor="middle">
+    <text x="100" y="488">0</text><text x="330" y="488">0.5</text><text x="560" y="488">1</text>
+  </g>
+  <g font-size="12" fill="#777" text-anchor="end">
+    <text x="94" y="94">+limit</text><text x="94" y="284">0</text><text x="94" y="474">−limit</text>
+  </g>
+  <line x1="100" y1="280" x2="560" y2="280" stroke="#eee"/>
+
+  <!-- calibrated comfortable range: u_left=0.36, u_right=0.64 -> px 266, 394 ; centre 0.5 -> 330 -->
+  <rect x="266" y="80" width="128" height="390" fill="#3a7bd5" fill-opacity="0.08"/>
+  <line x1="266" y1="80" x2="266" y2="470" stroke="#3a7bd5" stroke-dasharray="5 4"/>
+  <line x1="394" y1="80" x2="394" y2="470" stroke="#3a7bd5" stroke-dasharray="5 4"/>
+  <text x="266" y="72" text-anchor="middle" font-size="13" fill="#3a7bd5">u_left</text>
+  <text x="394" y="72" text-anchor="middle" font-size="13" fill="#3a7bd5">u_right</text>
+
+  <!-- raw 1:1 mapping (grey) -->
+  <line x1="100" y1="470" x2="560" y2="90" stroke="#bbb" stroke-width="2" stroke-dasharray="6 5"/>
+  <text x="520" y="150" font-size="13" fill="#999">1 : 1 (no gain)</text>
+
+  <!-- gained mapping with deadzone + soft clamp -->
+  <path d="M100 90 M266 90" fill="none"/>
+  <path d="M100 470 L240 470 C256 470 262 462 266 452 L322 281 L338 279 L394 108 C398 98 404 90 420 90 L560 90"
+        fill="none" stroke="#d2603e" stroke-width="4" stroke-linejoin="round"/>
+  <text x="420" y="118" font-size="14" font-weight="bold" fill="#b04a2c">used mapping</text>
+  <text x="300" y="300" font-size="12" fill="#b04a2c" text-anchor="end">dead zone</text>
+  <text x="220" y="455" font-size="12" fill="#b04a2c" text-anchor="middle">soft clamp</text>
+
+  <!-- notes -->
+  <g font-size="15" fill="#222">
+    <text x="610" y="110" font-weight="bold">Pipeline per frame</text>
+    <text x="610" y="138">1. u = mirrored face-box centre</text>
+    <text x="610" y="162">2. t = (u − u_centre) / range of that side</text>
+    <text x="610" y="186">3. dead zone |t| &lt; 0.04 → 0</text>
+    <text x="610" y="210">4. x = limit · softclamp(t)</text>
+    <text x="610" y="234">5. One-Euro filter on x</text>
+    <text x="610" y="258">6. MoveTowards at ≤ 9 m/s</text>
+
+    <text x="610" y="306" font-weight="bold">Calibration gives</text>
+    <text x="610" y="330">u_centre, u_left, u_right</text>
+    <text x="610" y="354">left and right ranges kept separate</text>
+    <text x="610" y="378">Sensitivity 0.6× … 1.6×</text>
+    <text x="610" y="402">in Settings, recalibrate any time</text>
+  </g>
+</svg>

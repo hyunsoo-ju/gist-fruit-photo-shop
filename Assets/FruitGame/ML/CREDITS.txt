@@ -1,0 +1,4 @@
+BlazeFace short-range (Google MediaPipe), via unity/inference-engine-blaze-face on Hugging Face. License: Apache-2.0.
+MediaPipe Selfie Segmentation (Google), ONNX export by onnx-community/mediapipe_selfie_segmentation on Hugging Face. License: Apache-2.0.
+Robust Video Matting (ResNet-50, fp32) by Shanchuan Lin et al., github.com/PeterL1n/RobustVideoMatting. License: GPL-3.0 (if the game is ever distributed, it must comply with GPL-3.0).
+MediaPipe Face Mesh v2 (478 landmarks, Google), ONNX export from astaileyyoung/FaceMeshONNX on Hugging Face. License: MIT (export); original MediaPipe model Apache-2.0.

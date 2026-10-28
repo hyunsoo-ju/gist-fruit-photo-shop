@@ -1,0 +1,687 @@
+using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEditor.Events;
+using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.TextCore.LowLevel;
+using UnityEngine.UI;
+
+namespace FruitGame.EditorTools
+{
+    /// <summary>
+    /// Builds (or rebuilds) the M1 greybox: config + fruit type assets, materials, the HUD font,
+    /// and Assets/FruitGame/Scenes/Game.unity. Safe to run repeatedly; existing assets are reused.
+    /// </summary>
+    public static class GreyboxSceneBuilder
+    {
+        const string Root = "Assets/FruitGame";
+        const string ConfigPath = Root + "/Config/GameConfig.asset";
+        const string FruitTypeDir = Root + "/Config/FruitTypes";
+        const string MaterialDir = Root + "/Art/Materials";
+        const string FontTtf = Root + "/Art/Fonts/Fredoka-Bold.ttf";
+        const string FontAssetPath = Root + "/Art/Fonts/Fredoka-Bold SDF.asset";
+        const string StickerMaterialPath = Root + "/Art/Fonts/Fredoka-Bold Sticker.mat";
+        const string ScenePath = Root + "/Scenes/Game.unity";
+        const string AudioDir = Root + "/Audio";
+
+        static readonly Color Sky = Hex("#9CC3D9");
+        static readonly Color ScorePink = Hex("#C2185B");
+
+        struct FruitDef
+        {
+            public string id, name, color;
+            public float weight, size;
+            public FruitColliderShape shape;
+        }
+
+        static readonly FruitDef[] Fruits =
+        {
+            new FruitDef { id = "apple", name = "Apple", color = "#D9483B", weight = 1f, size = 1f },
+            new FruitDef { id = "banana", name = "Banana", color = "#F2CF3A", weight = 1f, size = 1f, shape = FruitColliderShape.Capsule },
+            new FruitDef { id = "orange", name = "Orange", color = "#F2A33A", weight = 1f, size = 1f },
+            new FruitDef { id = "pear", name = "Pear", color = "#B8C94A", weight = 1f, size = 1f, shape = FruitColliderShape.Capsule },
+            new FruitDef { id = "lemon", name = "Lemon", color = "#F5E04B", weight = 1f, size = 0.9f },
+            new FruitDef { id = "mango", name = "Mango", color = "#F07F3C", weight = 1f, size = 1f },
+            new FruitDef { id = "grapefruit", name = "Grapefruit", color = "#F28B7A", weight = 1f, size = 1.05f },
+            new FruitDef { id = "pineapple", name = "Pineapple", color = "#C9A23A", weight = 0.4f, size = 1.2f, shape = FruitColliderShape.Capsule },
+            new FruitDef { id = "melon", name = "Melon", color = "#7DB84A", weight = 0.4f, size = 1.25f },
+        };
+
+        [MenuItem("FruitGame/Build Scene")]
+        public static void Build()
+        {
+            // Open the new scene first: NewScene unloads unused assets, which would orphan
+            // ScriptableObjects created just before it.
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            EnsureFolder(MaterialDir);
+            EnsureFolder(FruitTypeDir);
+
+            var config = LoadOrCreate<GameConfig>(ConfigPath);
+            var types = CreateFruitTypes();
+            var lit = LitMaterial("Greybox_Lit", Color.white);
+            var font = CreateFontAsset();
+            var sticker = CreateStickerMaterial(font);
+
+            // Cameras: a black background camera clears the letterbox bars, the main camera renders 3:4.
+            var bgCamGo = new GameObject("Letterbox Camera");
+            var bgCam = bgCamGo.AddComponent<Camera>();
+            bgCam.clearFlags = CameraClearFlags.SolidColor;
+            bgCam.backgroundColor = Color.black;
+            bgCam.cullingMask = 0;
+            bgCam.depth = -10;
+
+            var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
+            var cam = camGo.AddComponent<Camera>();
+            cam.transform.position = new Vector3(0f, 0f, -12f);
+            cam.fieldOfView = 30f;
+            cam.nearClipPlane = 0.3f;
+            cam.farClipPlane = 50f;
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Sky;
+            cam.depth = 0;
+            camGo.AddComponent<AudioListener>();
+            camGo.AddComponent<PortraitLetterbox>();
+            camGo.AddComponent<UniversalAdditionalCameraData>().renderPostProcessing = true;
+            BuildPostProcessing();
+
+            var lightGo = new GameObject("Directional Light");
+            var light = lightGo.AddComponent<Light>();
+            light.type = LightType.Directional;
+            light.color = Hex("#FFF1DC");
+            light.intensity = 1.2f;
+            light.shadows = LightShadows.Soft;
+            lightGo.transform.rotation = Quaternion.Euler(50f, 30f, 0f);
+            RenderSettings.ambientMode = AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = Hex("#CFE3EE");
+            RenderSettings.ambientEquatorColor = Hex("#B9D3B0");
+            RenderSettings.ambientGroundColor = Hex("#7E8B6A");
+
+            // Layers, back to front (README §2). L3–L5 are placeholders until M4/M5.
+            var l5 = new GameObject("L5_Bokeh").transform;
+            var bokeh = Primitive(PrimitiveType.Quad, "Bokeh (placeholder)", l5, LitMaterial("Greybox_Bokeh", Hex("#B9D3DD")));
+            bokeh.position = new Vector3(0f, 0f, 6f);
+            var bokehRenderer = bokeh.GetComponent<Renderer>();
+            bokehRenderer.shadowCastingMode = ShadowCastingMode.Off;
+            bokehRenderer.receiveShadows = false;
+            bokeh.localScale = new Vector3(4.8f * 18f / 12f + 0.2f, 6.4f * 18f / 12f + 0.2f, 1f);
+
+            var far = new GameObject("L4b_FarTrees").transform;
+            BuildBackgroundTrees(far);
+
+            var l4 = new GameObject("L4_Pile").transform;
+            var floor = Primitive(PrimitiveType.Cube, "Pile Ground", l4, LitMaterial("Greybox_Ground", Hex("#B7A58A")));
+            floor.position = new Vector3(0f, config.pileFloorY - 0.3f, config.pileZ);
+            floor.localScale = new Vector3(8f, 0.6f, 1.6f);
+
+            var l3 = new GameObject("L3_Person").transform;
+            var personMat = LitMaterial("Greybox_Person", Hex("#5A6B7D"));
+            var torso = Primitive(PrimitiveType.Capsule, "Torso (placeholder)", l3, personMat);
+            torso.position = new Vector3(0f, -3.4f, 2f);
+            torso.localScale = new Vector3(2.4f, 1.6f, 0.6f);
+            var head = Primitive(PrimitiveType.Sphere, "Head (placeholder)", l3, LitMaterial("Greybox_Skin", Hex("#EFCAA8")));
+            head.position = new Vector3(0f, -0.5f, 2f);
+            head.localScale = new Vector3(1.1f, 1.35f, 0.8f);
+
+            var l2 = new GameObject("L2_Play").transform;
+            var basket = BuildBasket(l2, config);
+            var assist = basket.gameObject.AddComponent<BasketAssist>();
+            Set(assist, "config", config);
+            Set(assist, "basket", basket);
+
+            var spawnerGo = new GameObject("FruitSpawner");
+            spawnerGo.transform.SetParent(l2, false);
+            var spawner = spawnerGo.AddComponent<FruitSpawner>();
+            Set(spawner, "config", config);
+            Set(spawner, "basket", basket);
+            Set(spawner, "assist", assist);
+            Set(spawner, "greyboxMaterial", lit);
+            SetList(spawner, "fruitTypes", types);
+
+            var l1 = new GameObject("L1_Foreground").transform;
+            BuildForeground(l1);
+
+            // Systems
+            var systems = new GameObject("Systems");
+            var input = systems.AddComponent<FallbackInput>();
+            Set(input, "config", config);
+            Set(input, "worldCamera", cam);
+            Set(basket, "input", input);
+
+            var audioGo = new GameObject("Audio");
+            audioGo.transform.SetParent(systems.transform, false);
+            var src = audioGo.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;
+            var sfx = audioGo.AddComponent<AudioFeedback>();
+            Set(sfx, "catchPop", Clip("catch_pop"));
+            Set(sfx, "rimTink", Clip("rim_tink"));
+            Set(sfx, "missThud", Clip("miss_thud"));
+            Set(sfx, "spawnRustle", Clip("spawn_rustle"));
+            Set(sfx, "pileLand", Clip("pile_land"));
+            Set(sfx, "countdownTick", Clip("countdown_tick"));
+            Set(sfx, "roundOver", Clip("round_over"));
+
+            var pileGo = new GameObject("Fruit Pile");
+            pileGo.transform.SetParent(l4, false);
+            pileGo.transform.position = new Vector3(0f, 0f, config.pileZ);
+            var pile = pileGo.AddComponent<FruitPile>();
+            Set(pile, "config", config);
+            Set(pile, "spawner", spawner);
+            Set(pile, "audioFeedback", sfx);
+            EnsureLayer("Pile");
+
+            var gsm = systems.AddComponent<GameStateMachine>();
+            var hud = BuildHud(cam, font, sticker, gsm);
+
+            Set(gsm, "config", config);
+            Set(gsm, "spawner", spawner);
+            Set(gsm, "basket", basket);
+            Set(gsm, "fallbackInput", input);
+            Set(gsm, "hud", hud);
+            Set(gsm, "audioFeedback", sfx);
+            Set(gsm, "pile", pile);
+
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AddToBuildSettings(ScenePath);
+            ConfigurePlayer();
+            AssetDatabase.SaveAssets();
+            Debug.Log($"[FruitGame] Scene built at {ScenePath}");
+        }
+
+        static BasketController BuildBasket(Transform parent, GameConfig config)
+        {
+            var root = new GameObject("Basket").transform;
+            root.SetParent(parent, false);
+            root.position = new Vector3(0f, config.rimY, 0f);
+
+            var visual = new GameObject("Visual").transform;
+            visual.SetParent(root, false);
+
+            // Low-poly basket model (3D Assets/FruitGame Extras/Basket). It sits in a "Model" child tilted
+            // toward the camera so the mouth reads; "Visual" carries the squash/wobble animation.
+            var model = new GameObject("Model").transform;
+            model.SetParent(visual, false);
+            model.localRotation = Quaternion.Euler(-5f, 0f, 0f);
+            // The model is authored with a 1.1 m mouth and 0.65 m height; scale it to the configured size
+            // so it matches the colliders BasketController builds from the same config.
+            float widthScale = config.basketMouthWidth / 1.1f;
+            model.localScale = new Vector3(widthScale, config.basketHeight / 0.65f, widthScale);
+            var basketPrefab = ArtLibrary.Basket();
+            if (basketPrefab != null)
+                PrefabUtility.InstantiatePrefab(basketPrefab, model);
+
+            var rb = root.gameObject.AddComponent<Rigidbody>();
+            rb.isKinematic = true;
+            rb.useGravity = false;
+            var basket = root.gameObject.AddComponent<BasketController>();
+            Set(basket, "config", config);
+            Set(basket, "visual", visual);
+            return basket;
+        }
+
+        /// <summary>A gentle global grade: a touch of saturation and contrast, soft bloom and vignette (no tonemapping; it greys the pastels).</summary>
+        static void BuildPostProcessing()
+        {
+            EnsureFolder(Root + "/Art/Rendering");
+            string path = Root + "/Art/Rendering/GamePostProfile.asset";
+            var profile = AssetDatabase.LoadAssetAtPath<VolumeProfile>(path);
+            if (profile == null)
+            {
+                profile = ScriptableObject.CreateInstance<VolumeProfile>();
+                AssetDatabase.CreateAsset(profile, path);
+            }
+
+            T Override<T>() where T : VolumeComponent
+            {
+                if (!profile.TryGet<T>(out var c))
+                {
+                    c = profile.Add<T>(true);
+                    c.name = typeof(T).Name;
+                    AssetDatabase.AddObjectToAsset(c, profile);
+                }
+                c.active = true;
+                return c;
+            }
+
+            var tone = Override<Tonemapping>();
+            tone.mode.Override(TonemappingMode.None);
+            var color = Override<ColorAdjustments>();
+            color.saturation.Override(10f);
+            color.contrast.Override(6f);
+            var bloom = Override<Bloom>();
+            bloom.intensity.Override(0.25f);
+            bloom.threshold.Override(1.0f);
+            var vignette = Override<Vignette>();
+            vignette.intensity.Override(0.2f);
+            vignette.smoothness.Override(0.45f);
+            EditorUtility.SetDirty(profile);
+
+            var go = new GameObject("Post Processing");
+            var volume = go.AddComponent<Volume>();
+            volume.isGlobal = true;
+            volume.sharedProfile = profile;
+        }
+
+        /// <summary>
+        /// Distant canopies behind the person and the pile, hazed toward light blue so they read as far away.
+        /// Their crowns still frame the top corners.
+        /// </summary>
+        static void BuildBackgroundTrees(Transform parent)
+        {
+            var haze = Hex("#A9C6DD");
+            var oak = ArtLibrary.FarTree("003_Oak_Tree", haze, 0.7f);
+            var pine = ArtLibrary.FarTree("002_Pine_Tree", haze, 0.7f);
+            var placed = new[]
+            {
+                ArtLibrary.Place(oak, parent, new Vector3(-5.0f, -0.9f, 5.2f), 7.2f, 20f),
+                ArtLibrary.Place(oak, parent, new Vector3(5.0f, -1.1f, 5.2f), 7.5f, -70f, true),
+                ArtLibrary.Place(pine, parent, new Vector3(-3.4f, -4.6f, 5.4f), 4.2f, 30f),
+                ArtLibrary.Place(pine, parent, new Vector3(3.5f, -4.6f, 5.4f), 4.6f, 200f),
+            };
+            // Distant trees neither cast shadows (they'd darken the webcam backdrop) nor receive them.
+            foreach (var t in placed)
+                foreach (var r in t.GetComponentsInChildren<Renderer>())
+                {
+                    r.shadowCastingMode = ShadowCastingMode.Off;
+                    r.receiveShadows = false;
+                }
+        }
+
+        static void BuildForeground(Transform parent)
+        {
+            // A few small trees framing the bottom corners, mostly toward the edges so they don't hide the play area.
+            var trees = new GameObject("Small Trees").transform;
+            trees.SetParent(parent, false);
+            ArtLibrary.Place(ArtLibrary.Tree("002_Pine_Tree"), trees, new Vector3(-2.15f, -3.1f, -1.1f), 2.0f, 15f);
+            ArtLibrary.Place(ArtLibrary.Tree("003_Oak_Tree"), trees, new Vector3(-1.95f, -3.1f, -0.6f), 1.15f, 100f);
+            ArtLibrary.Place(ArtLibrary.Tree("005_Cypress_Tree"), trees, new Vector3(2.2f, -3.1f, -1.1f), 2.3f, 0f);
+            ArtLibrary.Place(ArtLibrary.Tree("002_Pine_Tree"), trees, new Vector3(2.0f, -3.1f, -0.7f), 1.3f, 60f);
+
+            // Shrubbery along the bottom edge. Bases are buried below the frame; tops stay under the
+            // basket's travel band (README §2).
+            var shrubs = new GameObject("Shrubs").transform;
+            shrubs.SetParent(parent, false);
+            var plants = new (string name, float x, float z, float h, float yaw)[]
+            {
+                ("mushroom_redGroup", -2.6f, -0.9f, 0.5f, 30f),
+                ("plant_bushLarge", -2.25f, -1.0f, 0.8f, 0f),
+                ("grass", -1.85f, -0.65f, 0.35f, 40f),
+                ("plant_bushDetailed", -1.5f, -0.8f, 0.7f, 70f),
+                ("flower_redA", -1.0f, -0.6f, 0.6f, 10f),
+                ("grass_leafsLarge", -0.6f, -0.9f, 0.5f, 120f),
+                ("grass", -0.15f, -0.65f, 0.35f, 200f),
+                ("plant_bush", 0.4f, -0.85f, 0.7f, 160f),
+                ("flower_yellowA", 0.9f, -0.6f, 0.55f, 80f),
+                ("plant_bushDetailed", 1.35f, -0.95f, 0.75f, 250f),
+                ("grass_large", 1.65f, -0.65f, 0.4f, 15f),
+                ("flower_purpleA", 1.85f, -0.6f, 0.6f, 300f),
+                ("plant_bushLarge", 2.25f, -1.0f, 0.85f, 190f),
+                ("rock_smallA", 2.65f, -0.7f, 0.3f, 45f),
+            };
+            foreach (var p in plants)
+            {
+                var prefab = ArtLibrary.Nature(p.name);
+                if (prefab != null)
+                    ArtLibrary.Place(prefab, shrubs, new Vector3(p.x, -3.1f, p.z), p.h, p.yaw);
+            }
+        }
+
+        static GameHUD BuildHud(Camera cam, TMP_FontAsset font, Material sticker, GameStateMachine gsm)
+        {
+            // Overlay canvas scaled by height; every HUD element lives in "Frame", which
+            // PortraitLetterbox stretches to the 3:4 camera viewport.
+            var canvasGo = new GameObject("UI", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1080f, 1440f);
+            scaler.matchWidthOrHeight = 1f;
+
+            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+
+            var frame = MakeRect("Frame", canvasGo.transform, Vector2.zero, Vector2.one);
+            SetList(cam.GetComponent<PortraitLetterbox>(), "uiFrames", new List<RectTransform> { frame });
+            var root = frame.transform;
+            var dark = Hex("#33414F");
+
+            // Always-on HUD
+            var score = Text("Score", root, font, sticker, 150, TextAlignmentOptions.TopLeft,
+                new Vector2(0f, 1f), new Vector2(60f, -40f), new Vector2(400f, 200f), "0");
+            score.rectTransform.pivot = new Vector2(0.2f, 0.75f);
+            var timer = Text("Timer", root, font, sticker, 100, TextAlignmentOptions.TopRight,
+                new Vector2(1f, 1f), new Vector2(-60f, -50f), new Vector2(400f, 160f), "1:00");
+            timer.rectTransform.pivot = new Vector2(0.8f, 0.7f);
+            var lives = Text("Lives", root, font, sticker, 56, TextAlignmentOptions.TopLeft,
+                new Vector2(0f, 1f), new Vector2(60f, -230f), new Vector2(400f, 80f), "Lives 3");
+
+            var title = Text("Message Title", root, font, sticker, 180, TextAlignmentOptions.Center,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, 140f), new Vector2(960f, 260f), "");
+            title.textWrappingMode = TextWrappingModes.NoWrap;
+            title.enableAutoSizing = true;
+            title.fontSizeMin = 72f;
+            title.fontSizeMax = 180f;
+            var sub = Text("Message Sub", root, font, sticker, 56, TextAlignmentOptions.Top,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, -40f), new Vector2(1000f, 240f), "");
+
+            // Pause button (top centre, between score and timer)
+            var pauseButton = MakeButton("Pause Button", root, font, "II", 72, new Vector2(0.5f, 1f),
+                new Vector2(0f, -50f), new Vector2(130f, 130f), ScorePink, gsm.Pause);
+
+            // Start menu
+            var startMenu = MakeRect("Start Menu", root, Vector2.zero, Vector2.one);
+            var startTitle = Text("Title", startMenu, font, sticker, 160, TextAlignmentOptions.Center,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, 260f), new Vector2(960f, 240f), "Catch the fruit!");
+            startTitle.textWrappingMode = TextWrappingModes.NoWrap;
+            startTitle.enableAutoSizing = true;
+            startTitle.fontSizeMin = 72f;
+            startTitle.fontSizeMax = 160f;
+            Text("Hint", startMenu, font, sticker, 52, TextAlignmentOptions.Top,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, 100f), new Vector2(960f, 160f),
+                "Move the mouse to steer the basket");
+            MakeButton("Play Button", startMenu, font, "Play", 96, new Vector2(0.5f, 0.5f),
+                new Vector2(0f, -120f), new Vector2(560f, 190f), ScorePink, gsm.StartRound);
+
+            // Pause menu: dims the game and blocks clicks behind it
+            var pauseMenu = MakeRect("Pause Menu", root, Vector2.zero, Vector2.one);
+            var dim = pauseMenu.gameObject.AddComponent<Image>();
+            dim.color = new Color(0.1f, 0.12f, 0.16f, 0.45f);
+            Text("Title", pauseMenu, font, sticker, 160, TextAlignmentOptions.Center,
+                new Vector2(0.5f, 0.5f), new Vector2(0f, 260f), new Vector2(960f, 240f), "Paused");
+            MakeButton("Resume Button", pauseMenu, font, "Resume", 80, new Vector2(0.5f, 0.5f),
+                new Vector2(0f, 20f), new Vector2(560f, 170f), ScorePink, gsm.Resume);
+            MakeButton("Menu Button", pauseMenu, font, "Main menu", 80, new Vector2(0.5f, 0.5f),
+                new Vector2(0f, -190f), new Vector2(560f, 170f), Hex("#5A6B7D"), gsm.ReturnToMenu);
+
+            // Game over: same-size score, small two-column fruit tally, mouse buttons
+            var panelRt = MakeRect("Game Over", root, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            panelRt.sizeDelta = new Vector2(820f, 1060f);
+            panelRt.anchoredPosition = new Vector2(0f, -50f);
+            var panelImg = panelRt.gameObject.AddComponent<Image>();
+            panelImg.sprite = RoundedSprite();
+            panelImg.type = Image.Type.Sliced;
+            panelImg.color = new Color(1f, 1f, 1f, 0.88f);
+            var panel = panelRt.transform;
+            var top = new Vector2(0.5f, 1f);
+            Text("Heading", panel, font, sticker, 110, TextAlignmentOptions.Top,
+                top, new Vector2(0f, -40f), new Vector2(780f, 150f), "Time's up!");
+            var goScore = Text("Score", panel, font, null, 96, TextAlignmentOptions.Top,
+                top, new Vector2(0f, -190f), new Vector2(780f, 120f), "0");
+            goScore.color = dark;
+            var goBest = Text("Best", panel, font, null, 56, TextAlignmentOptions.Top,
+                top, new Vector2(0f, -310f), new Vector2(780f, 80f), "");
+            goBest.color = dark;
+            var tallyLeft = Text("Tally Left", panel, font, null, 40, TextAlignmentOptions.Top,
+                top, new Vector2(-190f, -420f), new Vector2(360f, 300f), "");
+            tallyLeft.color = dark;
+            var tallyRight = Text("Tally Right", panel, font, null, 40, TextAlignmentOptions.Top,
+                top, new Vector2(190f, -420f), new Vector2(360f, 300f), "");
+            tallyRight.color = dark;
+            var goMissed = Text("Missed", panel, font, null, 40, TextAlignmentOptions.Top,
+                top, new Vector2(0f, -735f), new Vector2(780f, 60f), "");
+            goMissed.color = new Color(dark.r, dark.g, dark.b, 0.75f);
+            MakeButton("Play Again Button", panel, font, "Play again", 64, top,
+                new Vector2(-195f, -840f), new Vector2(360f, 150f), ScorePink, gsm.StartRound);
+            MakeButton("Menu Button", panel, font, "Main menu", 64, top,
+                new Vector2(195f, -840f), new Vector2(360f, 150f), Hex("#5A6B7D"), gsm.ReturnToMenu);
+
+            var hud = canvasGo.AddComponent<GameHUD>();
+            Set(hud, "scoreText", score);
+            Set(hud, "timerText", timer);
+            Set(hud, "livesText", lives);
+            Set(hud, "messageTitle", title);
+            Set(hud, "messageSub", sub);
+            Set(hud, "startMenu", startMenu.gameObject);
+            Set(hud, "pauseButton", pauseButton.gameObject);
+            Set(hud, "pauseMenu", pauseMenu.gameObject);
+            Set(hud, "gameOverPanel", panelRt.gameObject);
+            Set(hud, "gameOverScore", goScore);
+            Set(hud, "gameOverBest", goBest);
+            Set(hud, "gameOverTallyLeft", tallyLeft);
+            Set(hud, "gameOverTallyRight", tallyRight);
+            Set(hud, "gameOverMissed", goMissed);
+
+            pauseMenu.gameObject.SetActive(false);
+            pauseButton.gameObject.SetActive(false);
+            panelRt.gameObject.SetActive(false);
+            return hud;
+        }
+
+        static RectTransform MakeRect(string name, Transform parent, Vector2 anchorMin, Vector2 anchorMax)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = anchorMin;
+            rt.anchorMax = anchorMax;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            return rt;
+        }
+
+        /// <summary>A large, mouse-friendly button whose click calls a GameStateMachine method (saved in the scene).</summary>
+        static Button MakeButton(string name, Transform parent, TMP_FontAsset font, string label, float fontSize,
+            Vector2 anchor, Vector2 pos, Vector2 size, Color color, UnityAction onClick)
+        {
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = anchor;
+            rt.pivot = new Vector2(0.5f, anchor.y >= 1f ? 1f : 0.5f);
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = size;
+
+            var img = go.GetComponent<Image>();
+            img.sprite = RoundedSprite();
+            img.type = Image.Type.Sliced;
+            img.color = color;
+
+            var button = go.GetComponent<Button>();
+            var colors = button.colors;
+            colors.normalColor = Color.white;
+            colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f, 1f);
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+            colors.fadeDuration = 0.08f;
+            button.colors = colors;
+            UnityEventTools.AddPersistentListener(button.onClick, onClick);
+
+            var text = Text("Label", go.transform, font, null, fontSize, TextAlignmentOptions.Center,
+                new Vector2(0.5f, 0.5f), Vector2.zero, size, label);
+            text.color = Color.white;
+            return button;
+        }
+
+        static Sprite RoundedSprite() => AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+
+        static TextMeshProUGUI Text(string name, Transform parent, TMP_FontAsset font, Material mat, float size,
+            TextAlignmentOptions align, Vector2 anchor, Vector2 pos, Vector2 box, string text)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = anchor;
+            rt.pivot = anchor;
+            rt.anchoredPosition = pos;
+            rt.sizeDelta = box;
+            var t = go.AddComponent<TextMeshProUGUI>();
+            if (font != null) t.font = font;
+            if (mat != null) t.fontSharedMaterial = mat;
+            t.fontSize = size;
+            t.alignment = align;
+            t.color = Color.white;
+            t.text = text;
+            t.raycastTarget = false;
+            return t;
+        }
+
+        static TMP_FontAsset CreateFontAsset()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontAssetPath);
+            if (existing != null) return existing;
+            var ttf = AssetDatabase.LoadAssetAtPath<Font>(FontTtf);
+            if (ttf == null) { Debug.LogWarning("[FruitGame] Fredoka-Bold.ttf not found; using TMP default font."); return null; }
+
+            var fa = TMP_FontAsset.CreateFontAsset(ttf, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024, AtlasPopulationMode.Dynamic);
+            fa.name = "Fredoka-Bold SDF";
+            AssetDatabase.CreateAsset(fa, FontAssetPath);
+            fa.atlasTextures[0].name = "Fredoka-Bold Atlas";
+            AssetDatabase.AddObjectToAsset(fa.atlasTextures[0], fa);
+            fa.material.name = "Fredoka-Bold Material";
+            AssetDatabase.AddObjectToAsset(fa.material, fa);
+            fa.TryAddCharacters("0123456789:+×!?.,'- ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz←→");
+            EditorUtility.SetDirty(fa);
+            AssetDatabase.SaveAssets();
+            return fa;
+        }
+
+        static Material CreateStickerMaterial(TMP_FontAsset font)
+        {
+            if (font == null) return null;
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(StickerMaterialPath);
+            if (mat == null)
+            {
+                mat = new Material(font.material) { name = "Fredoka-Bold Sticker" };
+                AssetDatabase.CreateAsset(mat, StickerMaterialPath);
+            }
+            // White fill, thick magenta outline, hard drop shadow down-right: the "sticker" look (README §9).
+            // The desktop SDF shader is used because the mobile one drops the outline.
+            var sdf = Shader.Find("TextMeshPro/Distance Field");
+            if (sdf != null) mat.shader = sdf;
+            mat.EnableKeyword("OUTLINE_ON");
+            mat.SetFloat("_FaceDilate", 0.1f);
+            mat.SetColor("_OutlineColor", ScorePink);
+            mat.SetFloat("_OutlineWidth", 0.32f);
+            mat.EnableKeyword("UNDERLAY_ON");
+            mat.SetColor("_UnderlayColor", new Color(0.35f, 0.04f, 0.18f, 0.9f));
+            mat.SetFloat("_UnderlayOffsetX", 0.6f);
+            mat.SetFloat("_UnderlayOffsetY", -0.6f);
+            mat.SetFloat("_UnderlayDilate", 0.4f);
+            mat.SetFloat("_UnderlaySoftness", 0f);
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        static List<FruitType> CreateFruitTypes()
+        {
+            var list = new List<FruitType>();
+            foreach (var f in Fruits)
+            {
+                var t = LoadOrCreate<FruitType>($"{FruitTypeDir}/{f.name}.asset");
+                t.id = f.id;
+                t.displayName = f.name;
+                t.points = 1;
+                t.spawnWeight = f.weight;
+                t.sizeScale = f.size;
+                t.colliderShape = f.shape;
+                t.greyboxColor = Hex(f.color);
+                t.visualPrefabs = ArtLibrary.FruitPrefabs(f.name);
+                EditorUtility.SetDirty(t);
+                list.Add(t);
+            }
+            return list;
+        }
+
+        static Material LitMaterial(string name, Color color)
+        {
+            string path = $"{MaterialDir}/{name}.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                var shader = Shader.Find("Universal Render Pipeline/Lit");
+                mat = new Material(shader) { name = name };
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetColor("_BaseColor", color);
+            mat.SetFloat("_Smoothness", 0.15f);
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        static Transform Primitive(PrimitiveType type, string name, Transform parent, Material mat)
+        {
+            var go = GameObject.CreatePrimitive(type);
+            go.name = name;
+            Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(parent, false);
+            go.GetComponent<Renderer>().sharedMaterial = mat;
+            return go.transform;
+        }
+
+        static AudioClip Clip(string name) => AssetDatabase.LoadAssetAtPath<AudioClip>($"{AudioDir}/{name}.ogg");
+
+        static void ConfigurePlayer()
+        {
+            PlayerSettings.defaultScreenWidth = 1080;
+            PlayerSettings.defaultScreenHeight = 1440;
+            PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
+            PlayerSettings.resizableWindow = true;
+        }
+
+        static void EnsureLayer(string name)
+        {
+            if (LayerMask.NameToLayer(name) >= 0) return;
+            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tagManager.FindProperty("layers");
+            for (int i = 8; i < layers.arraySize; i++)
+            {
+                var p = layers.GetArrayElementAtIndex(i);
+                if (!string.IsNullOrEmpty(p.stringValue)) continue;
+                p.stringValue = name;
+                tagManager.ApplyModifiedPropertiesWithoutUndo();
+                return;
+            }
+            Debug.LogWarning($"[FruitGame] No free layer for '{name}'.");
+        }
+
+        static void AddToBuildSettings(string path)
+        {
+            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
+            scenes.RemoveAll(s => s.path == path);
+            scenes.Insert(0, new EditorBuildSettingsScene(path, true));
+            EditorBuildSettings.scenes = scenes.ToArray();
+        }
+
+        static T LoadOrCreate<T>(string path) where T : ScriptableObject
+        {
+            var asset = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (asset != null) return asset;
+            asset = ScriptableObject.CreateInstance<T>();
+            AssetDatabase.CreateAsset(asset, path);
+            return asset;
+        }
+
+        static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path)) return;
+            int slash = path.LastIndexOf('/');
+            EnsureFolder(path.Substring(0, slash));
+            AssetDatabase.CreateFolder(path.Substring(0, slash), path.Substring(slash + 1));
+        }
+
+        static void Set(Object target, string field, Object value)
+        {
+            var so = new SerializedObject(target);
+            var p = so.FindProperty(field);
+            if (p == null) { Debug.LogError($"[FruitGame] {target.GetType().Name}.{field} not found"); return; }
+            p.objectReferenceValue = value;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static void SetList<T>(Object target, string field, List<T> values) where T : Object
+        {
+            var so = new SerializedObject(target);
+            var p = so.FindProperty(field);
+            p.arraySize = values.Count;
+            for (int i = 0; i < values.Count; i++) p.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        static Color Hex(string hex) => ColorUtility.TryParseHtmlString(hex, out var c) ? c : Color.magenta;
+    }
+}

@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5231f21887f3476188dee80a9036edb, type: 3}
+  m_Name: Melon
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.FruitType
+  id: melon
+  displayName: Melon
+  visualPrefabs:
+  - {fileID: 6475610236191089441, guid: 7c5bf7892841643c5abb5ca940054321, type: 3}
+  - {fileID: 6695689116743511036, guid: 089351bf19b204227a1d8c847e6cbef1, type: 3}
+  points: 1
+  spawnWeight: 0.4
+  sizeScale: 1.25
+  colliderShape: 0
+  greyboxColor: {r: 0.49019608, g: 0.72156864, b: 0.2901961, a: 1}
+  icon: {fileID: 0}
+  sourceModels:
+  - {fileID: 2066379886807274083, guid: 36c3145a3101a4969956e3c2f2dee688, type: 3}
+  - {fileID: 7779553337028103894, guid: a741e07e37ab541889d74805e8e351db, type: 3}
+  sourceAtlas: {fileID: 0}
+  atlas: {fileID: 2800000, guid: 6308a6cc4ed33482c89493b994dff711, type: 3}
+  atlasFar: {fileID: 0}

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" font-family="Helvetica, Arial, sans-serif">
+  <rect width="960" height="540" fill="#ffffff"/>
+  <text x="30" y="40" font-size="22" font-weight="bold" fill="#222">Side view (camera looks along +Z)</text>
+
+  <!-- axis -->
+  <line x1="60" y1="440" x2="920" y2="440" stroke="#999" stroke-width="1.5"/>
+  <text x="920" y="465" font-size="15" fill="#777" text-anchor="end">+Z (depth)</text>
+
+  <!-- camera at z=-12 -> x=80 ; scale 40px per unit; z0 -> x=560 -->
+  <!-- frustum: half-height at distance d = d*tan(15deg)=0.268d ; px: 40*0.268=10.7 px per px-of-depth... use per unit -->
+  <line x1="80" y1="240" x2="920" y2="15" stroke="#bbb" stroke-dasharray="5 5"/>
+  <line x1="80" y1="240" x2="920" y2="465" stroke="#bbb" stroke-dasharray="5 5"/>
+
+  <g>
+    <rect x="62" y="225" width="40" height="30" rx="5" fill="#333"/>
+    <polygon points="102,232 118,224 118,256 102,248" fill="#333"/>
+    <text x="82" y="285" font-size="14" text-anchor="middle" fill="#333">Camera</text>
+    <text x="82" y="302" font-size="13" text-anchor="middle" fill="#777">z = −12</text>
+    <text x="82" y="318" font-size="13" text-anchor="middle" fill="#777">FOV 30°</text>
+  </g>
+
+  <!-- layers: x = 560 + z*40 ; half height = (z+12)*0.268*40 = (z+12)*10.7 -->
+  <!-- L1 z=-1.5: hh=112 -->
+  <g>
+    <line x1="500" y1="128" x2="500" y2="352" stroke="#3d7f3a" stroke-width="5"/>
+    <polygon points="488,352 500,300 512,352" fill="#3d7f3a"/>
+    <polygon points="488,150 500,128 512,150" fill="#3d7f3a"/>
+    <text x="490" y="395" text-anchor="end" font-size="15" font-weight="bold" fill="#3d7f3a">L1 Foreground</text>
+    <text x="490" y="413" text-anchor="end" font-size="13" fill="#555">z −1.5 … −0.5</text>
+  </g>
+  <!-- L2 z=0: hh=128 -->
+  <g>
+    <line x1="560" y1="112" x2="560" y2="368" stroke="#d2603e" stroke-width="5"/>
+    <circle cx="560" cy="160" r="9" fill="#f2cf3a" stroke="#b08f15" stroke-width="2"/>
+    <rect x="550" y="320" width="20" height="22" fill="#d2603e" stroke="#8e3b23" stroke-width="2"/>
+    <text x="565" y="462" text-anchor="start" font-size="15" font-weight="bold" fill="#b04a2c">L2 Play plane</text>
+    <text x="565" y="480" text-anchor="start" font-size="13" fill="#555">z = 0 (fruit, basket)</text>
+  </g>
+  <!-- L3 z=2: hh=150 -->
+  <g>
+    <line x1="640" y1="90" x2="640" y2="390" stroke="#5a6b7d" stroke-width="5"/>
+    <text x="640" y="80" text-anchor="middle" font-size="15" font-weight="bold" fill="#33414f">L3 Person</text>
+    <text x="640" y="62" text-anchor="middle" font-size="13" fill="#555">z = 2</text>
+  </g>
+  <!-- L4 z=3.5 hh=166 -->
+  <g>
+    <line x1="700" y1="74" x2="700" y2="406" stroke="#8a7a5a" stroke-width="5" stroke-dasharray="2 0"/>
+    <rect x="680" y="380" width="56" height="12" fill="#b7a58a"/>
+    <circle cx="694" cy="372" r="7" fill="#d9483b"/>
+    <circle cx="710" cy="373" r="7" fill="#9cc24a"/>
+    <circle cx="702" cy="361" r="7" fill="#f2a33a"/>
+    <text x="715" y="40" text-anchor="middle" font-size="15" font-weight="bold" fill="#6f5f3f">L4 Fruit pile</text>
+    <text x="715" y="22" text-anchor="middle" font-size="13" fill="#555">z 3.25 … 3.75, narrow box</text>
+  </g>
+  <!-- L5 z=6 hh=193 -->
+  <g>
+    <line x1="800" y1="47" x2="800" y2="433" stroke="#6f8ea3" stroke-width="5"/>
+    <text x="812" y="200" font-size="15" font-weight="bold" fill="#4b6a7f">L5 Bokeh bg</text>
+    <text x="812" y="218" font-size="13" fill="#555">z = 6</text>
+    <text x="812" y="236" font-size="13" fill="#555">blurred webcam</text>
+  </g>
+
+  <!-- UI -->
+  <g>
+    <rect x="140" y="110" width="160" height="56" rx="8" fill="#fde4ef" stroke="#c2185b"/>
+    <text x="220" y="135" text-anchor="middle" font-size="15" font-weight="bold" fill="#c2185b">L0 Score (UI)</text>
+    <text x="220" y="154" text-anchor="middle" font-size="13" fill="#555">Screen Space – Camera</text>
+  </g>
+
+  <text x="30" y="520" font-size="14" fill="#555">Quads behind z = 0 are scaled by (12 + z) / 12 so they still fill the frame; the slight perspective gives the 2.5D parallax.</text>
+</svg>
