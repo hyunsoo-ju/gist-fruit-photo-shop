@@ -1,4 +1,4 @@
-# 지스트의 과일 사진가게 (FruitGame)
+# 지스트의 과일 사진가게 (GIST Fruit Photo Shop)
 
 ![지스트의 과일 사진가게](Docs/images/title.png)
 
@@ -42,6 +42,7 @@
 ## 실행 방법
 
 - Unity **6000.6.7f1**(URP), macOS 또는 Windows.
+- 코드, 폴더, 메뉴에서는 줄여서 **FruitGame**이라고 부릅니다.
 - `Assets/FruitGame/Scenes/Game.unity`를 열고 Play를 누릅니다.
 - 얼굴 조작에는 웹캠이 필요합니다. 특정 카메라를 사용하려면 `Assets/FruitGame/Config/GameConfig.asset`의 `preferredCameraName`을 설정합니다. 테스트 시 **F2**로 마우스/키보드 조작으로 전환할 수 있으며, **F1**을 누르면 추적 디버그 화면이 표시되고, **F3**을 누르면 한국어와 영어가 전환됩니다. 문구는 `Assets/FruitGame/Resources/Strings.txt`에서 수정할 수 있습니다.
 - QR 다운로드를 사용하려면 휴대폰이 부스 컴퓨터와 같은 네트워크에 연결되어 있어야 합니다.

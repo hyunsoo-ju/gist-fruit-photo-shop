@@ -1,10 +1,10 @@
-# 지스트의 과일 사진가게 (FruitGame) — design & build reference
+# 지스트의 과일 사진가게 (GIST Fruit Photo Shop) — design & build reference
 
 An **interactive, accessibility-focused photo booth**. A visitor stands in front of a webcam and plays a one-minute fruit-catching game using only head movement: a basket follows their face left and right, and fruit falls one at a time from the treetops. Every catch drops onto a growing pile behind them. When the round ends, they pose in front of their pile and take home a framed photo, printed or downloaded to their phone.
 
 The whole thing is styled as **pixel art and voxels**: block-built fruit, trees and basket, a gently pixelated render, a pixel font for Korean and English, and chunky 3D UI.
 
-This document describes the MVP as it should be. Where the current build doesn't match yet, the milestone that closes the gap is named (§15). The history of how each choice was made is in the decisions log (§16). Numbers are starting values to tune in playtesting.
+This document describes the MVP as it should be. Where the current build doesn't match yet, the milestone that closes the gap is named (§15). The history of how each choice was made is in the decisions log (§16). Numbers are starting values to tune in playtesting. **FruitGame** is the project's short name, used in code, asset folders, shaders and menus.
 
 ![Screen layout](images/01-screen-layout.svg)
 
