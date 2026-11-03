@@ -21,14 +21,15 @@ This document describes the MVP as it should be. Where the current build doesn't
 | Engine | Unity 6000.6.7f1, URP 17.6, Input System 1.20 |
 | ML runtime | Unity Inference Engine (`com.unity.ai.inference` 2.6.1), all on-device |
 | Target | **macOS and Windows** standalone. Everything used (WebCamTexture, Inference Engine, URP, HttpListener) is cross-platform; anything macOS-only gets a Windows fallback or is flagged. |
-| Screen | **Portrait 3:4**, reference 1080 × 1440, letterboxed in any window |
+| Screen | **Portrait 9:16 or landscape 16:9**, chosen from the window's shape (reference 1080 × 1920 / 1920 × 1080) on a full-size monitor (M16). Until then: portrait 3:4, 1080 × 1440, letterboxed in any window. |
+| Booth hardware | A full-size monitor; a **DSLR** on clean HDMI through an **Elgato Game Capture 4K X**, which the computer sees as a webcam; a **Canon SELPHY CP1500** photo printer, with postcard paper assumed until the film is confirmed (§9, §10; M17). |
 | Control | Face x position from the webcam. Mouse/keyboard fallback for testing (F2). |
 | Operation | **Mouse only.** Every screen is usable with a mouse; keys are shortcuts for staff. |
 | Style | **Pixel / voxel**: voxel models, a gently pixelated render, Neo둥근모 Pro pixel font, keycap-style 3D UI |
 | Language | **Korean first** (in-game tone: 해요체), English as a fallback |
 | Session | A **60 s timed round**. A lives counter is coded in but switched off. |
 | Accessibility | Per-player calibration of head movement, so even a small comfortable range covers the whole basket travel; forgiving rules; large, high-contrast UI |
-| Output | A 1080 × 1440 framed photo: printed, or downloaded over local Wi-Fi via QR code |
+| Output | A four-cut photo on a **100 × 148 mm postcard** (1800 × 1200 at 300 dpi, M17), printed on the SELPHY or downloaded over local Wi-Fi via QR code. Until M17: a 1080 × 1440 image. |
 
 ---
 
@@ -67,7 +68,12 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 | **L4b** | Distant orchard | 5.2 … 5.95 | A layered orchard along the sides and top: the two big oak canopies framing the top corners and two pines, plus six smaller trees at varied sizes and depths pushed out to the edges, each with its own leaf tint so the layer isn't one flat green. A few fruit blocks (red, orange or yellow per tree) sit on the camera-facing side of each canopy, and three block clouds drift near the top. Coarser blocks than the play layers and dithered toward the sky, so it all reads as far away. The **centre stays open** so the live room behind the player shows through. No shadows. |
 | **L5** | Backdrop | 6 | The live camera frame of the room behind the player, sharp by default (an optional bokeh blur exists). Alternative: a pixel-art orchard illustration (§9). Drawn through the back pixel layer, like L4 and L4b. |
 
-**Camera:** position (0, 0, −12), looking +Z, vertical FOV 30°. `PortraitLetterbox` keeps it at 3:4 in any window size (black bars from a second camera) and stretches the HUD frame to match. At z = 0 the visible area is about **4.8 m wide × 6.4 m tall**; one world unit is one metre. Quads behind z = 0 are scaled by `(12 + z) / 12` so they still fill the frame exactly.
+**Camera:** position (0, 0, −12), looking +Z, vertical FOV 30°. `PortraitLetterbox` keeps it at 3:4 in any window size (black bars from a second camera) and stretches the HUD frame to match. At z = 0 the visible area is about **4.8 m wide × 6.4 m tall**; one world unit is one metre. Quads behind z = 0 are scaled by `(12 + z) / 12` so they still fill the frame exactly. (`PortraitLetterbox` is replaced by the two-orientation layout below in M16.)
+
+**Two orientations (M16).** The game uses **portrait 9:16** or **landscape 16:9**, picked from the window's shape (`GameConfig.orientation`: Auto, Portrait or Landscape; a window in between letterboxes to the nearer one, and the layout switches live). The **play column** keeps one size in both: the fruit walls at ±2.25 m with their crate stacks (about 5.4 m wide in all) and the height from the canopy line to the ground. Speeds, the basket, calibration, the assist and the pile therefore behave identically, and only what's around the column changes.
+- **Portrait 9:16:** the camera fits the column's width, so the view grows taller (about 5.4 × 9.6 m at z = 0): more canopy and sky above, more ground and foreground plants below, and the HUD gets its own space above and below the play area instead of sitting over it.
+- **Landscape 16:9:** the camera fits the column's height (6.4 m, so about 11.4 m wide at z = 0). The play column stays in the middle, bounded by **visible walls** that fruit bounce off: stacks of voxel **fruit crates** (they suit a fruit shop; two tree trunks are the alternative). Each bounce gives a "thock", a small crate wobble and a few block particles. The column is deliberately not stretched to the full width: the player's head range would map to a very long basket travel, and fruit would take too long to cross. Outside the walls the orchard, foreground plants and the live room carry on, and the side areas hold the HUD: score, the live score graph and the catch tally on the left; the timer and a **film strip** of the round's four cuts on the right, each slot filling in as its action shot is taken.
+- Spawn height, the miss line and the pile stay tied to the column. The extra scenery (taller canopy and ground for portrait, wider orchard and foreground for landscape) is built once to cover the largest view in each direction, by extending **Build Orchard And Plant Variety** (§12).
 
 ### Rendering style
 
@@ -89,6 +95,13 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 - **Round timer:** 60 s, top-right. It pauses whenever the game pauses. The last 10 s pulse.
 - **Lives (coded, off):** `LivesCounter` and a lives HUD exist and are tested, but `GameConfig.endCondition = Timer` keeps them inactive. Switching to `Lives` (or `TimerOrLives`) makes 3 misses end the round, with no other code change.
 - **Difficulty ramp:** driven by elapsed round time. Fall speed goes from 2.7 to 3.8 m/s and the drift cap from 0.7 to 1.2 m/s along an ease-in curve. It stays easy on purpose.
+- **Harder round (M16.1):** the current round is too easy, so it gets harder through **pace and variety, never through more head movement**: calibration still maps each player's own range to the full basket travel, and the basket keeps its size. Candidate levers, tried in this order and tuned by playtest:
+  1. A steeper ramp: fall speed toward about 5 m/s and the drift cap toward about 1.8 m/s by the end of the round, with more wall bounces.
+  2. Less waiting: the gap before the next fruit shrinks from 0.6 s to about 0.3 s over the round.
+  3. **Two fruit at once** in the last 20 s: the next fruit drops when the current one passes half height.
+  4. The assist fades over the round (full at the start, about half by the end).
+  5. Scoring variety: a rare, faster **golden fruit** worth 3, a **combo** bonus for consecutive catches, and possibly a **rotten fruit** to dodge (no points, and it never joins the pile).
+  The target is a catch rate of roughly 40–50 % for a first-timer and 70–80 % for a practised player, read from the round stats. An **Easy** option in the staff settings keeps today's gentle curve for players who need it.
 - **Best score** is saved in PlayerPrefs.
 
 ### Fruit types & scoring hooks
@@ -110,7 +123,7 @@ Every fruit is its own type, even though all are worth the same for now, so vari
 | Spawn position | Random x in ±2.1 m, at y = +3.6, just above the top edge, so fruit appears to drop out of the canopy |
 | Vertical speed | **Constant** per fruit: 2.7 m/s at the start, ramping to at most 3.8 m/s |
 | Sideways speed | Random but capped: \|vx\| ≤ 0.7 m/s at the start, up to 1.2 m/s, wide enough that wall bounces are common and visible |
-| Walls | Invisible walls at x = ±2.25 reflect vx, so fruit never leaves the screen sideways |
+| Walls | Walls at x = ±2.25 reflect vx, so fruit never leaves the play column sideways. Invisible until M16; from M16 they're shown as voxel crate stacks with bounce feedback (§3), which matters in landscape, where the screen is much wider than the column. |
 | Spin | 120–240 °/s around a random axis, fast enough to read the fruit's shape. Cosmetic during the scripted fall. |
 | Size | Every fruit is normalised to about **0.88 m** across (`fruitSize` × the type's `sizeScale`), whatever its model scale |
 
@@ -222,15 +235,22 @@ When a fruit is caught, the falling fruit is consumed by the basket. A **pile co
 
 | Stage | Spec |
 |---|---|
-| **Capture** | `WebcamSource` opens a `WebCamTexture` (1280×720 at 30 fps requested). Camera choice: `GameConfig.preferredCameraName` if a device name contains it, else the first non-built-in camera (e.g. an iPhone via Continuity Camera, a capture card or a USB webcam), else any. All device names are logged. |
-| **Prep** | A blit mirrors the frame and centre-crops it to 3:4 into a 540×720 RenderTexture. Rotation and vertical flip reported by the device are handled here. |
+| **Capture** | `WebcamSource` opens a `WebCamTexture` (1280 × 720 at 30 fps requested). Camera choice: `GameConfig.preferredCameraName` if a device name contains it, else the first non-built-in camera (e.g. an iPhone via Continuity Camera, a capture card or a USB webcam), else any. All device names are logged. **Booth camera (M17):** a DSLR or mirrorless camera with **clean HDMI** out into an **Elgato Game Capture 4K X**, a driverless UVC device on macOS and Windows, so it's picked like any webcam. Requested at **1920 × 1080, 60 fps** (`cameraResolution` / `cameraFps`; 60 fps keeps latency down, and 4K is a setting for sharper photos if the computer keeps up). `cameraRotation` (0 / 90 / 270°) supports a camera mounted on its side for portrait, which keeps the full 1080 px across the player instead of a 608 px crop from a landscape frame. |
+| **Prep** | A blit mirrors the frame and centre-crops it to 3:4 into a 540×720 RenderTexture. Rotation and vertical flip reported by the device are handled here. From M16 it crops to the screen's orientation instead (9:16 or 16:9, into 540 × 960 or 960 × 540) and applies `cameraRotation`. |
 | **Face detection** | `FaceTracker` runs **BlazeFace short-range** (128×128, six keypoints; Apache-2.0) on the GPU with score filtering and NMS baked into the graph, and async readback so rendering never stalls. Outputs the face box, centre, score, keypoints and last-seen time. ~50–130 detections/s. |
-| **Person matting** | `PersonSegmenter` runs **Robust Video Matting** (ResNet-50 fp32; **GPL-3.0**) at 576×768 with downsample 0.5 baked in, carrying its four recurrent states between frames for temporally stable, strand-level hair edges. It's **time-sliced** with `ScheduleIterable`: a slice of layers per frame, adapted to hold the target frame rate (60), so the game runs at full speed while the matte updates ~20×/s. MediaPipe Selfie Segmentation (256×256, Apache-2.0) is the fallback model. |
+| **Person matting** | `PersonSegmenter` runs **Robust Video Matting** (ResNet-50 fp32; **GPL-3.0**) at 576×768 with downsample 0.5 baked in, carrying its four recurrent states between frames for temporally stable, strand-level hair edges. It's **time-sliced** with `ScheduleIterable`: a slice of layers per frame, adapted to hold the target frame rate (60), so the game runs at full speed while the matte updates ~20×/s. MediaPipe Selfie Segmentation (256×256, Apache-2.0) is the fallback model. From M16 the input follows the prep aspect (576 × 1024 or 1024 × 576); the time slicing absorbs the larger input, but the matte rate is re-checked on the booth computer. |
 | **Matte cleanup** | `Mask Smooth` blurs each new matte slightly and blends it 85 % with the previous one; the cut-out uses smoothstep(0.05, 0.75), so edges are soft and don't flicker. |
 | **Player (L3)** | `PersonCutout` draws camera colour × matte through `FruitGame/Person Cutout` at queue Geometry+500, writing depth only where the person is. The same shader applies the beauty filter in the photo booth (§10) and, from M11, the pixel outline. |
 | **Face mesh** | `FaceMesh` runs **MediaPipe Face Mesh v2** (478 points; Apache-2.0) on a crop around the BlazeFace box, **only while the photo booth is open**, to place makeup and the eye reshape precisely. |
 | **Backdrop (L5)** | `BokehBackdrop` shows the camera frame sharp and ungraded by default. Its **Bokeh** switch brings back the blurred version: the player masked out, Kawase-blurred at ¼ resolution, slightly desaturated, brightened and tinted, so the room becomes soft bokeh. **Use Illustration** shows a pixel-art orchard illustration instead (`Art/Backdrops/OrchardIllustration.png`, from Photo Booth 2), centre-cropped to 3:4; off by default. |
 | **Fallbacks** | No matting model: the person layer shows the full frame. No camera at all: a plain backdrop colour, the person layer hidden, and the mouse/keyboard drives the basket. |
+
+**Booth camera checklist (M17)**
+- Clean HDMI output (no focus points, menus or recording overlays), the camera's auto power-off disabled, and mains power through a dummy battery.
+- Continuous autofocus with face detection; manual exposure and white balance under the booth lights, so the image doesn't pump as people move.
+- About a 24–35 mm equivalent lens at chest height, framing the player from the waist up with room for the basket travel.
+- **Latency:** measure face movement to basket movement on the DSLR path and on a webcam. If HDMI capture adds too much lag for comfortable control, track the face on a separate webcam and use the DSLR only for the picture (two `WebcamSource`s, the face box mapped between them).
+- The Elgato 4K X needs a USB 10 Gbps port for 4K at full rate; 1080p60 also works at 5 Gbps.
 
 **Cross-platform notes**
 - WebCamTexture, Inference Engine (Metal on macOS, DX12/Vulkan on Windows) and URP run on both platforms. GPU backend, with CPU as a fallback.
@@ -260,9 +280,9 @@ The print is a **four-cut** (네컷): three **action shots** taken automatically
 ### What's in the print
 | Element | Spec |
 |---|---|
-| Canvas | Portrait **1080 × 1440**, composed off-screen by `PhotoFrame` at full resolution regardless of window size, on a cream #FFF8EC card |
+| Canvas | Portrait **1080 × 1440**, composed off-screen by `PhotoFrame` at full resolution regardless of window size, on a cream #FFF8EC card. **From M17:** the **postcard, landscape 148 × 100 mm, at 300 dpi: 1800 × 1200**, borderless, with about 3 mm kept clear at every edge for the borderless crop. Other SELPHY papers (L 89 × 119 mm, card 54 × 86 mm, square) are **paper profiles** with their own layouts, chosen in Settings once the film is confirmed. Every layout is landscape on the paper, so the printer setting never changes. |
 | Title | The flat pixel title (`Art/Title/Export/Title.png`) across the top. Without it, `GameConfig.photoCaption` ("GIST Fruit Photo Shop") is shown as text instead. |
-| Cuts | A **2 × 2 grid** (478 × 452 per cell) inside an **orange pixel frame** (the orange keycap sprite, 9-sliced): the action shots in reading order, and the **final shot bottom-right with a darker orange #B85C10 outline**. Each 3:4 shot is cropped to its cell, trimming a little more from the top (sky) than the bottom (`cropFromBottom` 0.35). Missing action shots leave their cells empty. |
+| Cuts | A **2 × 2 grid** (478 × 452 per cell) inside an **orange pixel frame** (the orange keycap sprite, 9-sliced): the action shots in reading order, and the **final shot bottom-right with a darker orange #B85C10 outline**. Each 3:4 shot is cropped to its cell, trimming a little more from the top (sky) than the bottom (`cropFromBottom` 0.35). Missing action shots leave their cells empty. **From M17** the layout follows the round's orientation: **portrait** rounds print four 9:16 cuts **side by side** (about 34 × 60 mm each) with the title and bottom band underneath; **landscape** rounds print a **2 × 2 grid** of 16:9 cuts (about 66 × 37 mm each) with a slimmer band underneath. Shots are captured at print resolution, so cuts aren't scaled up. |
 | Bottom band | **Lab logo** (left; pixel panel placeholder, TBD: there may not be one) · this round's **score** (sticker) and **"Best n"** (centre) · **GIST school logo** (right; `Art/Logos/GIST_Wordmark.png` in a 330 × 190 slot). Logos keep their aspect ratio. |
 
 ### Korean-style beauty filter ("뽀샤시" look)
@@ -279,7 +299,7 @@ A port of **GPUPixel**'s beauty filter (Apache-2.0), built into `FruitGame/Perso
 Known nits: bright glasses glare picks up a slight cool tint, and eye enlargement bends glasses frames slightly.
 
 ### Getting the photo home
-- **Print:** `PhotoShare.Print` saves the PNG, then sends it to the default printer (macOS `lp -o fit-to-page`, optional `printerName`; Windows shell "print" verb). Failure shows "Couldn't print (is a printer set up?)".
+- **Print:** `PhotoShare.Print` saves the PNG, then sends it to the default printer (macOS `lp -o fit-to-page`, optional `printerName`; Windows shell "print" verb). Failure shows "Couldn't print (is a printer set up?)". **SELPHY CP1500 (M17):** connected by **USB-C** (more dependable at a venue than Wi-Fi; AirPrint over Wi-Fi is the backup) and printed borderless at exact size, with the paper profile's media name instead of fit-to-page, so nothing is rescaled. A postcard takes about 40 s (three colour passes and a coating), so prints are **queued**: the preview shows "Printing… about 40 s" and the next player can start meanwhile. A **print counter** tracks the paper tray and the ink cassette (36 prints per cassette in the KP-108IN set) and warns staff before either runs out; printer errors the OS reports (no paper, no ink, jam) are shown on the staff panel. **Copies:** 1 by default; 2 is a setting, for pairs.
 - **Get it on your phone:** `PhotoShare` runs a small `HttpListener` server (port 8765) that serves each photo at an unguessable link `http://<LAN IP>:8765/p/<id>`, a mobile page in the game's pixel style (cream background, the pixel title, Neo둥근모 served from `StreamingAssets/PhonePage/` as a web font, the photo in a dark pixel border, and a pink keycap "Save photo" button that sinks when tapped). A QR code (`QrCode.cs`, an in-project encoder: byte mode, ECC M, versions 1–10) and the link as text are shown on a card. Links expire after 15 minutes.
 - **Save** writes `~/Pictures/FruitGame/FruitGame_<date>_<time>_<score>.png` (Windows: `Pictures\FruitGame\`).
 - **Booth notes:** phones must be on the same Wi-Fi as the booth computer; venue Wi-Fi with client isolation will block downloads; macOS may ask to allow incoming connections the first time. Email delivery is not part of the MVP.
@@ -308,6 +328,7 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 - **Flat exports** (FruitGame > Title > Export PNGs, `TitleExporter`): `Art/Title/Export/Title.png` (1272 × 600, transparent), `Icon.png` (transparent) and `AppIcon.png` (1024 × 1024 on the sky colour), rendered at 4 px per block and scaled up with hard pixels; the title and icon are also copied to `Docs/images/` for the README.
 
 ### Buttons, panels & HUD
+- **Booth scale (M16):** the booth uses a full-size monitor seen from about 1.5–2 m, so the UI shrinks to roughly three-quarters of today's size: 1 UI art pixel = **3 canvas units** instead of 4 (`uiPixelScale`), and text drops a 16 px step or two, still on whole glyph pixels. Hit areas stay at least 80 canvas units tall. Each screen has a **portrait and a landscape layout** (`AspectLayout`: anchors, sizes and positions per orientation, switched live); in landscape the HUD and panels move into the side areas (§3).
 - **Pixel UI art** (`Art/UI/`, 1 pixel = 4 canvas units; sliced Images use Pixels Per Unit Multiplier 0.25): keycap face and lip sprites in pink #C2185B, slate #5A6B7D and orange #F28C26 (dark #1E2233 outline, light top-left edge), and a cream panel with a thick darker bottom edge.
 - **Buttons are keycaps** (`KeycapButton`): the button's image is the dark lip and a Face child carries the label, leaving 3 pixels of lip below. Hover lifts the face 1 pixel; pressing sinks it so the lip disappears. Positions snap in whole pixels. Large hit areas (≥ 110 canvas units tall) keep the mouse-only booth easy.
 - **Panels** (game over, the phone card) use the cream panel sprite.
@@ -325,11 +346,19 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 | **Game over** | "Time's up!", score, best, score-over-time graph, two-column fruit tally, missed count, **Play again**, **Photo**, **Main menu** | Space = play again |
 | **Photo booth** | Pose / countdown / preview, as in §10 | — |
 
-A **Settings** panel (M6) adds sensitivity, recalibrate, steady-hold tolerance and time, assist, camera device and mirror, all mouse-operable. The **F1** debug overlay shows the face box, the matte, the mapping value t and FPS; it's off by default at the booth (M6).
+A staff **Settings** panel (M6), opened with **F4** or by holding the top-left corner for 3 s, holds sensitivity, recalibrate, steady-hold tolerance and time, assist, the camera device, rotation and mirror, the orientation, the paper profile and copies, the print counter, and the language. The **F1** debug overlay shows the face box, the matte, the mapping value t and FPS; it's off by default at the booth (M6).
 
 ### Juice & audio
 - A catch squashes the basket for 0.12 s and bursts a few block particles; a miss plays a soft thud; a rustle from the canopy telegraphs each spawn.
 - Sounds: pop (catch), tink (rim), thud (miss), rustle (spawn), pile land, countdown tick, round over, and the camera shutter (action shots and the final shot). All short, one mixer, nothing loud. A gentle ambience loop is a polish item.
+
+### Booth operation & finish (M6)
+- **Attract mode:** after 30 s on the title screen with nobody in front of the camera, a short loop plays: the title drops in again, a ghost basket catches a few fruit, and sample four-cuts slide past. A face in front of the camera brings back the title.
+- **Walk-away reset:** with no face for 20 s on the game-over or booth screens, the game returns to the title, so the next visitor starts clean. During play the face-lost pause applies; a pause longer than 60 s ends the round.
+- **Transitions and feedback:** pixel block-dissolve wipes between screens instead of hard cuts, the score and tally counting up on game over, and click sounds on every button.
+- **Audio:** an ambience loop (birds, leaves) and a mixer with one staff volume.
+- **Kiosk build:** full screen without window chrome, starts on login, keeps the display awake and restarts after a crash; the cursor stays available for mouse operation but hides after 3 s without movement.
+- **Finish pass:** a boot screen while models load, consistent spacing on every screen in both orientations and languages, the lab logo decision, and a playtest with real visitors on the booth hardware.
 
 ---
 
@@ -397,10 +426,14 @@ Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Ed
 | `language` | Korean | starting language; F3 flips to English |
 | `preferredCameraName` | "Symplectomorphism" | part of a device name; empty = first non-built-in camera |
 | `keyboardBasketSpeed` | 7 m/s | fallback input |
-
 | `renderScale` | 0.5 | pixel render size as a fraction of 1080 × 1440 |
 | `pileDither` / `farDither` | 0.5 / 0.55 | far dither is baked into materials: re-run Build Orchard after changing |
 | `playerOutline` / `playerOutlineColor` | 3 px / #1E2233 | at 1080 wide; 0 = off |
+| `orientation` | Auto | Auto / Portrait / Landscape (M16) |
+| `uiPixelScale` | 3 | canvas units per UI art pixel (4 until M16) |
+| `cameraRotation` / `cameraResolution` / `cameraFps` | 0° / 1920 × 1080 / 60 | M17; 90° or 270° for a camera on its side |
+| `paperProfile` / `printCopies` | Postcard / 1 | M17 |
+| `attractDelay` / `walkAwayReset` | 30 s / 20 s | M6 |
 
 ---
 
@@ -441,7 +474,7 @@ Scene hierarchy: `Main Camera`, `Directional Light`, `L1_Foreground`, `L2_Play` 
 
 ## 15. Milestones & roadmap
 
-Gameplay, face control, the webcam pipeline and the photo booth are working. What remains for the MVP is the pixel/voxel look, the title, localisation and polish. **M8** is a decision gate that settles block size and render resolution before the big conversion; **M6** comes last so it polishes the final look.
+Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel look, the title and Korean localisation are done (M1–M15). What's left is fitting the booth to the event hardware and finishing it: **M16** adapts the game to portrait 9:16 and landscape 16:9 at booth scale, **M16.1** makes the round harder, **M17** connects the DSLR capture and the SELPHY printer, and **M6** comes last so it polishes the final layouts.
 
 | # | Goal | Status / done when |
 |---|---|---|
@@ -462,13 +495,19 @@ Gameplay, face control, the webcam pipeline and the photo booth are working. Wha
 | **M14** | Photo frame restyle + four-cut | ✅ The print is a **four-cut**: `ActionShots` takes three shots during the round (15/30/45 s, with a small 3·2·1 counter, light flashes and a shutter) and the booth's final shot completes the 2 × 2 grid, highlighted with a darker orange outline. The print is a cream card with the pixel title, an orange pixel frame and pixel-panel placeholders. The phone page is restyled to match (pixel font, keycap button), and the camera shutter sound (CC0) is used for every shot. *Checked: a full round with three action shots and the final shot composed into the print, every phone-page route, and the page at phone size.* |
 | **M15** | Korean localisation | ✅ About 70 strings in `Resources/Strings.txt` (Korean 해요체 + English), `Strings` / `LocalizedText` / `LanguageSwitch` (Korean by default, F3 flips), 26 scene labels and every code-set message (HUD, calibration, photo booth, phone page, fruit names) through the table. Fit measured for every string in both languages (104/104 after enlarging the face-lost title layout, letting the logo placeholders wrap, and giving the print-failure message two lines). *Checked: Korean start and game-over screens, the English flip (including the game-over lines), and the phone page in Korean.* |
 | **M15.1** | Labmate setup manual | ✅ Kept outside the repo, in `~/Documents/3D Assets/FruitGame Private Share/`: `FruitGame 설치 안내.md` (Korean: clone, unzip the shared files into the project **before** first opening Unity, open, optional re-bake, run, troubleshooting, licences), four zips of the repo-excluded files at their project paths (1 Model · 2 Fruit · 3 Trees · 4 Extras, each with its licence note in an ignored `FruitGame-licences/` folder), and `make-private-zips.sh` to rebuild them. *Checked: a clean copy of the repo plus the four zips gives exactly the working project's files, with no orphan `.meta`.* |
-| **M6** | Polish & builds | Assist tuning, juice, ambience, the settings screen, debug overlay off by default, photo auto-delete; macOS and Windows builds with camera permission prompts. |
+| **M16** | Two orientations at booth scale | 9:16 and 16:9 from the window's shape (`AspectLayout` replaces `PortraitLetterbox`); camera fit rules around a fixed play column; visible crate walls with bounce feedback; scenery extended for the taller and wider views; the prep crop and matting at each aspect; every screen laid out for both orientations at the smaller booth UI scale; action shots and the final shot at the screen's aspect; the side-area HUD and film strip in landscape. *Done when:* a full round plays identically in both orientations, every string fits in both languages and orientations, and the frame rate holds. |
+| **M16.1** | Harder round | The difficulty levers in §4, added one at a time with `GameConfig` values, and checked against the target catch rates in short playtests; the Easy option keeps today's curve. *Done when:* a practised player is challenged by the end of the round and a first-timer still catches about half. |
+| **M17** | Booth hardware | **Camera:** the DSLR → Elgato 4K X input (device match, resolution, frame rate, rotation), latency measured against a webcam (with the separate tracking webcam as the fallback), the camera checklist. **Printer:** the print at paper size (postcard 1800 × 1200 with the portrait and landscape four-cut layouts; other paper profiles once the film is known), the SELPHY over USB-C borderless at exact size, the print queue with status, the paper/ink counter and copies. *Done when:* a real round on the DSLR prints correctly on the CP1500 and the phone download still works. |
+| **M6** | Polish & builds | **Final gameplay tuning** from playtests on the booth hardware (difficulty values, assist, scoring, timing); a finished UI pass and the staff Settings panel; attract mode and walk-away reset; transitions, ambience and UI sounds; assist tuning and juice; debug overlay off by default; photo auto-delete; the lab logo decision; kiosk macOS and Windows builds with camera permission prompts; a playtest with real visitors on the booth hardware. |
 
-**Dependencies:** M8 gates M10 and M11. M9 can start any time. M12 needs M9 (glyphs) and M10 (the block mesher). M13 needs M9 and M10. M14 needs M9 and M12. M15 needs M9.
+**Dependencies:** M8 gated M10 and M11; M12–M15 needed M9. **M16** comes before the printer half of **M17** (the print layouts follow the shot aspect) and before **M6** (which polishes the final layouts). **M16.1** follows M16 directly, so difficulty is tuned in the final layouts; its values get their last adjustment in M6. The camera half of M17 can start any time.
 
 ### Open questions
 1. **Lab logo:** TBD; there may not be one. The frame keeps a placeholder until then (or the slot can be dropped).
 2. **Public repository:** handled by `.gitignore` (decision 39). Before publishing, also decide whether to keep the GIST logos in a public repo (school marks) and the two old README PDFs (`README.pdf`, `Docs/FruitGame-README-M3.pdf`), which describe the pre-revision design.
+3. **Printer paper:** postcard (KP-108IN) is assumed; the actual SELPHY film decides the paper profile (§10).
+4. **Display:** the monitor's size, whether it stands portrait or landscape (or each at different events), and the viewing distance, which sets the final UI scale.
+5. **Camera:** the DSLR model (it needs clean HDMI out and mains power) and lens, and the booth computer (USB 10 Gbps for 4K capture).
 ---
 
 ## 16. Decisions log
@@ -521,3 +560,7 @@ Gameplay, face control, the webcam pipeline and the photo booth are working. Wha
 | 44 | Shutter sound (2026-10-29) | "Camera" by themightyglider (OpenGameArt, CC0), downloaded to `~/Documents/3D Assets/Downloads/` and imported as `Audio/camera_shutter.ogg`. The score bump is now 0.3 s. |
 | 45 | Localisation (M15, 2026-10-29) | A small in-project string table (one TSV in Resources) instead of Unity's Localization package: about 70 strings, two languages, no Addressables, and easy for anyone to edit. Korean is the default; F3 flips to English for staff or visitors. |
 | 46 | Static pixel font (2026-11-03) | The font asset was dynamic: TMP added glyphs as text was drawn and Unity cleared them again, so the asset kept changing in git. It is now baked once with a fixed character set (§11). The common-syllable set covers names (the F1 overlay shows the camera's name) and most new wording without a re-bake. |
+| 47 | Two orientations (2026-11-03) | Portrait 9:16 and landscape 16:9 replace 3:4. The play column keeps one size in both, so the game plays the same. Landscape doesn't stretch the play area across the screen (the head range would map to a very long travel, and fruit would take too long to cross); visible crate walls bound the column, and the sides carry the HUD and the four-cut film strip. |
+| 48 | Booth hardware (2026-11-03) | A DSLR via clean HDMI into an Elgato Game Capture 4K X (UVC, so the game still sees an ordinary webcam) and a Canon SELPHY CP1500 on USB-C. Postcard paper is assumed until the film is confirmed. Every print layout is landscape on the paper (four 9:16 cuts in a row, or a 2 × 2 grid of 16:9 cuts), so the printer setting never changes between orientations. |
+| 49 | Booth-scale UI (2026-11-03) | A full-size monitor makes the UI oversized: the UI pixel scale drops from 4 to 3 canvas units and text by a step or two. It's part of M16, since every layout is redone there anyway; M6 does the final finish. |
+| 50 | Harder round (2026-11-03) | The round was too easy. Difficulty rises through pace and variety (faster ramp, shorter gaps, two fruit at once late on, a fading assist, golden and rotten fruit, combos) rather than a smaller basket or more head travel, which would undo the accessibility of calibration. Done right after M16, with the final tuning in M6. |
