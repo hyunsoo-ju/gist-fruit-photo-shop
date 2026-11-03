@@ -26,7 +26,17 @@ namespace FruitGame.EditorTools
             public int slotCount = 1;
             /// <summary>Palette mode: colour lookup by uv (and slot). Null = Material mode.</summary>
             public System.Func<Vector2, int, Color> sampleColor;
+            /// <summary>
+            /// Optional per-block edit after the solid shape is known (palette mode): given a cell, the solid shape's
+            /// min and max cells, whether the cell is solid, whether it was coloured from the model (false: hidden
+            /// inside), and which of its faces touch the outside air (bit d for Dirs[d]: +x, −x, +y, −y, +z, −z), return
+            /// Keep, Remove (carve it out) or Fill (make it solid in the given colour). Used to carve plank grooves or close
+            /// a recessed lid.
+            /// </summary>
+            public System.Func<Vector3Int, Vector3Int, Vector3Int, bool, bool, int, (CellEdit edit, Color color)> edit;
         }
+
+        public enum CellEdit { Keep, Remove, Fill }
 
         public class Result
         {
@@ -145,6 +155,69 @@ namespace FruitGame.EditorTools
                     if (outside[j] || best[j] != float.MaxValue) continue;
                     outside[j] = true;
                     queue.Enqueue(j);
+                }
+            }
+
+            if (src.edit != null && palette)
+            {
+                var smin = new Vector3Int(int.MaxValue, int.MaxValue, int.MaxValue);
+                var smax = new Vector3Int(int.MinValue, int.MinValue, int.MinValue);
+                for (int i = 0; i < count; i++)
+                {
+                    if (outside[i]) continue;
+                    var c = new Vector3Int(i % nx, (i / nx) % ny, i / (nx * ny));
+                    smin = Vector3Int.Min(smin, c);
+                    smax = Vector3Int.Max(smax, c);
+                }
+                var ops = new (CellEdit op, Color color)[count];
+                for (int i = 0; i < count; i++)
+                {
+                    var c = new Vector3Int(i % nx, (i / nx) % ny, i / (nx * ny));
+                    int exposed = 0;
+                    for (int d = 0; d < 6; d++)
+                    {
+                        var a = c + Dirs[d];
+                        if (a.x < 0 || a.y < 0 || a.z < 0 || a.x >= nx || a.y >= ny || a.z >= nz || outside[Index(a.x, a.y, a.z)]) exposed |= 1 << d;
+                    }
+                    ops[i] = src.edit(c, smin, smax, !outside[i], best[i] != float.MaxValue, exposed);
+                }
+                // Applied after deciding every cell, so one edit can't change another's neighbourhood.
+                for (int i = 0; i < count; i++)
+                {
+                    var (op, color) = ops[i];
+                    if (op == CellEdit.Remove) best[i] = float.MaxValue;
+                    else if (op == CellEdit.Fill)
+                    {
+                        best[i] = 0f;
+                        colorSum[i] = color;
+                        weightSum[i] = 1f;
+                    }
+                }
+                // Removed blocks can open the inside to the air, so find the outside again.
+                for (int i = 0; i < count; i++) outside[i] = false;
+                for (int z = 0; z < nz; z++)
+                for (int y = 0; y < ny; y++)
+                for (int x = 0; x < nx; x++)
+                {
+                    if (x != 0 && y != 0 && z != 0 && x != nx - 1 && y != ny - 1 && z != nz - 1) continue;
+                    int i = Index(x, y, z);
+                    if (best[i] != float.MaxValue || outside[i]) continue;
+                    outside[i] = true;
+                    queue.Enqueue(i);
+                }
+                while (queue.Count > 0)
+                {
+                    int i = queue.Dequeue();
+                    int x = i % nx, y = (i / nx) % ny, z = i / (nx * ny);
+                    foreach (var d in Dirs)
+                    {
+                        int ax = x + d.x, ay = y + d.y, az = z + d.z;
+                        if (ax < 0 || ay < 0 || az < 0 || ax >= nx || ay >= ny || az >= nz) continue;
+                        int j = Index(ax, ay, az);
+                        if (outside[j] || best[j] != float.MaxValue) continue;
+                        outside[j] = true;
+                        queue.Enqueue(j);
+                    }
                 }
             }
 

@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 namespace FruitGame
 {
     /// <summary>
-    /// The pixel render (Docs/DESIGN.md §3). Two helper cameras draw the game layers at renderScale × 1080 × 1440 into
+    /// The pixel render (Docs/DESIGN.md §3). Two helper cameras draw the game layers at renderScale × the layout's reference size into
     /// textures with hard pixels: one for everything behind the player (layers Back and Pile: backdrop, far orchard,
     /// pile) and one for everything in front (basket, falling fruit, foreground plants, on a transparent background).
     /// This camera then draws, at full resolution: the back layer on a far quad, the sharp player (layer Person), and
@@ -25,7 +25,6 @@ namespace FruitGame
         public const string CompositeLayer = "PixelComposite";
         const float BackDistance = 45f;
         const float FrontDistance = 2f;
-        static readonly Vector2Int Reference = new Vector2Int(1080, 1440);
 
         Camera main;
         Camera backCam, frontCam;
@@ -42,29 +41,26 @@ namespace FruitGame
             originalMask = main.cullingMask;
             if (!pixelRender) return;
 
-            var size = Vector2Int.RoundToInt((Vector2)Reference * config.renderScale);
-            backRt = MakeTarget("Pixel Back", size);
-            frontRt = MakeTarget("Pixel Front", size);
-
             int back = Mask(BackLayer) | Mask("Pile");
             int person = Mask(PersonLayer);
             int composite = Mask(CompositeLayer);
             int ui = Mask("UI") | Mask("HUD3D");
-            backCam = MakeCamera("Pixel Back Camera", back, main.backgroundColor, backRt);
-            frontCam = MakeCamera("Pixel Front Camera", originalMask & ~(back | person | composite | ui), Color.clear, frontRt);
+            backCam = MakeCamera("Pixel Back Camera", back, main.backgroundColor);
+            frontCam = MakeCamera("Pixel Front Camera", originalMask & ~(back | person | composite | ui), Color.clear);
             main.cullingMask = person | composite;
 
-            backMat = MakeMaterial(backRt, BlendMode.One, BlendMode.Zero, (int)RenderQueue.Geometry - 100);
-            frontMat = MakeMaterial(frontRt, BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha, (int)RenderQueue.Transparent);
+            backMat = MakeMaterial(BlendMode.One, BlendMode.Zero, (int)RenderQueue.Geometry - 100);
+            frontMat = MakeMaterial(BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha, (int)RenderQueue.Transparent);
             backQuad = MakeQuad("Pixel Back Layer", backMat);
             frontQuad = MakeQuad("Pixel Front Layer", frontMat);
-            FitQuads();
+            MakeTargets();
+            ScreenLayout.Changed += MakeTargets;
         }
 
         void OnDestroy()
         {
-            if (backRt != null) { backRt.Release(); Destroy(backRt); }
-            if (frontRt != null) { frontRt.Release(); Destroy(frontRt); }
+            ScreenLayout.Changed -= MakeTargets;
+            ReleaseTargets();
             if (backMat != null) Destroy(backMat);
             if (frontMat != null) Destroy(frontMat);
         }
@@ -83,11 +79,37 @@ namespace FruitGame
             frontCam.Render();
         }
 
+        /// <summary>Game pixels across the view: renderScale × the layout's reference size.</summary>
+        public static Vector2Int TargetSize(GameConfig config) =>
+            Vector2Int.RoundToInt((Vector2)ScreenLayout.Reference * config.renderScale);
+
+        /// <summary>(Re)creates both layer textures at the current layout's size.</summary>
+        void MakeTargets()
+        {
+            ReleaseTargets();
+            var size = TargetSize(config);
+            backRt = MakeTarget("Pixel Back", size);
+            frontRt = MakeTarget("Pixel Front", size);
+            backCam.targetTexture = backRt;
+            frontCam.targetTexture = frontRt;
+            backMat.SetTexture("_MainTex", backRt);
+            frontMat.SetTexture("_MainTex", frontRt);
+            FitQuads();
+        }
+
+        void ReleaseTargets()
+        {
+            if (backCam != null) backCam.targetTexture = null;
+            if (frontCam != null) frontCam.targetTexture = null;
+            if (backRt != null) { backRt.Release(); Destroy(backRt); }
+            if (frontRt != null) { frontRt.Release(); Destroy(frontRt); }
+        }
+
         /// <summary>Sizes the composite quads to exactly fill this camera's view at their distances.</summary>
         void FitQuads()
         {
             float h = 2f * Mathf.Tan(main.fieldOfView * 0.5f * Mathf.Deg2Rad);
-            float aspect = (float)Reference.x / Reference.y;
+            float aspect = ScreenLayout.Aspect;
             Place(backQuad, BackDistance);
             Place(frontQuad, FrontDistance);
 
@@ -97,7 +119,7 @@ namespace FruitGame
                 quad.localRotation = Quaternion.identity;
                 quad.localScale = new Vector3(h * d * aspect, h * d, 1f);
             }
-            // The helpers see exactly what this camera sees at the reference 3:4 aspect.
+            // The helpers see exactly what this camera sees at the layout's aspect.
             foreach (var cam in new[] { backCam, frontCam })
             {
                 cam.fieldOfView = main.fieldOfView;
@@ -126,7 +148,7 @@ namespace FruitGame
             return rt;
         }
 
-        Camera MakeCamera(string name, int mask, Color background, RenderTexture target)
+        Camera MakeCamera(string name, int mask, Color background)
         {
             var go = new GameObject(name);
             go.transform.SetParent(transform, false);
@@ -138,7 +160,6 @@ namespace FruitGame
             cam.backgroundColor = background;
             cam.allowHDR = false; // keeps the front layer's alpha
             cam.allowMSAA = false;
-            cam.targetTexture = target;
             cam.depth = main.depth - 1f;
             var data = go.GetComponent<UniversalAdditionalCameraData>();
             if (data == null) data = go.AddComponent<UniversalAdditionalCameraData>();
@@ -147,10 +168,9 @@ namespace FruitGame
             return cam;
         }
 
-        Material MakeMaterial(RenderTexture tex, BlendMode src, BlendMode dst, int queue)
+        Material MakeMaterial(BlendMode src, BlendMode dst, int queue)
         {
             var m = new Material(compositeShader) { renderQueue = queue };
-            m.SetTexture("_MainTex", tex);
             m.SetFloat("_SrcBlend", (float)src);
             m.SetFloat("_DstBlend", (float)dst);
             return m;

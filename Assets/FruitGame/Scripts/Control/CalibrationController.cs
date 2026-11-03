@@ -116,14 +116,15 @@ namespace FruitGame
                 return;
             }
 
-            var face = tracker.FaceRect;
-            PlaceRing(face);
+            // Measured in the 3:4 play area (the same in either screen layout); the ring is drawn where the face is on screen.
+            var face = tracker.PlayFaceRect;
+            PlaceRing(CameraFrame.ToView(tracker.FaceRect));
 
             // Too far or too close makes tracking unreliable; don't count the hold until it's fixed.
             if (face.width < 0.12f) { Hold(false, Strings.Get("calib.closer")); return; }
             if (face.width > 0.45f) { Hold(false, Strings.Get("calib.farther")); return; }
 
-            float u = tracker.FaceCenter.x;
+            float u = face.center.x;
             float now = Time.unscaledTime;
             history.Add((now, u));
             history.RemoveAll(h => now - h.time > config.steadyHoldTime);
@@ -165,15 +166,16 @@ namespace FruitGame
             return progress >= 1f;
         }
 
-        /// <summary>Centres the progress ring on the face (webcam UV == HUD frame UV).</summary>
+        /// <summary>Centres the progress ring on the face (a rect in HUD frame UV).</summary>
         void PlaceRing(Rect face)
         {
             ring.gameObject.SetActive(true);
             var c = face.center;
-            // The frame is 3:4, so a circle spanning `size` in u spans size × 0.75 in v.
-            float size = Mathf.Max(face.width, face.height / 0.75f) * 1.6f;
-            ring.anchorMin = new Vector2(c.x - size * 0.5f, c.y - size * 0.375f);
-            ring.anchorMax = new Vector2(c.x + size * 0.5f, c.y + size * 0.375f);
+            // A circle spanning `size` in u spans size × aspect in v (the frame is 9:16 or 16:9).
+            float aspect = ScreenLayout.Aspect;
+            float size = Mathf.Max(face.width, face.height / aspect) * 1.6f;
+            ring.anchorMin = new Vector2(c.x - size * 0.5f, c.y - size * aspect * 0.5f);
+            ring.anchorMax = new Vector2(c.x + size * 0.5f, c.y + size * aspect * 0.5f);
             ring.offsetMin = ring.offsetMax = Vector2.zero;
         }
     }

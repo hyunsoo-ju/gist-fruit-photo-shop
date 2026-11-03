@@ -60,6 +60,9 @@ namespace FruitGame
         readonly Vector4[] slim = new Vector4[4];
         static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
         static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+        static readonly int OutlineTexelId = Shader.PropertyToID("_OutlineTexel");
+        static readonly int FrameAspectId = Shader.PropertyToID("_FrameAspect");
+        static readonly int EdgeFadeId = Shader.PropertyToID("_EdgeFade");
         static readonly int BigEyeId = Shader.PropertyToID("_BigEye");
         static readonly int SlimId = Shader.PropertyToID("_Slim");
         static readonly int EyeAId = Shader.PropertyToID("_EyeA");
@@ -127,6 +130,11 @@ namespace FruitGame
             quadMaterial.SetFloat(EdgeHighId, edge.y);
             // Pixel-style outline around the player (Docs/DESIGN.md §3); the front layers draw over it where they overlap.
             quadMaterial.SetFloat(OutlineWidthId, config != null ? config.playerOutline : 0f);
+            // The quad spans the view's height: one screen pixel is 1 / reference height of it.
+            float h = ScreenLayout.Reference.y;
+            quadMaterial.SetVector(OutlineTexelId, new Vector4(1f / (h * CameraFrame.Aspect), 1f / h, 0f, 0f));
+            quadMaterial.SetFloat(FrameAspectId, CameraFrame.Aspect);
+            quadMaterial.SetFloat(EdgeFadeId, CameraFrame.EdgeFade);
             if (config != null) quadMaterial.SetColor(OutlineColorId, config.playerOutlineColor);
             UpdateBeauty();
         }
@@ -236,8 +244,9 @@ namespace FruitGame
             for (int i = 0; i < 4; i++) quadMaterial.SetVector(SlimIds[i], slim[i]);
         }
 
-        /// <summary>Distance in "u" units on the 3:4 frame (a v step is 4/3 of a u step).</summary>
-        static float AspectDistance(Vector2 a, Vector2 b) => Vector2.Distance(new Vector2(a.x, a.y * 4f / 3f), new Vector2(b.x, b.y * 4f / 3f));
+        /// <summary>Distance in "u" units on the frame (a v step is 1 / aspect of a u step).</summary>
+        static float AspectDistance(Vector2 a, Vector2 b) =>
+            Vector2.Distance(new Vector2(a.x, a.y / CameraFrame.Aspect), new Vector2(b.x, b.y / CameraFrame.Aspect));
 
         /// <summary>GPUPixel's box blur (radius 4, spaced taps) for the mean, and the blurred squared high-pass.</summary>
         void RunBeautyPrep(RenderTexture frame)

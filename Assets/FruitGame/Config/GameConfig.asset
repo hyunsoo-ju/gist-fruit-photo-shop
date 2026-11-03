@@ -69,10 +69,15 @@ MonoBehaviour:
   worldBlockSize: 0.063
   farBlockSize: 0.09
   fruitColors: 5
+  orientation: 0
+  playColumnWidth: 5.4
+  playHeight: 6.43
+  uiPixelScale: 3
   renderScale: 0.5
   pileDither: 0.5
   farDither: 0.55
   playerOutline: 3
   playerOutlineColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
+  language: 0
   preferredCameraName: Symplectomorphism
   keyboardBasketSpeed: 7

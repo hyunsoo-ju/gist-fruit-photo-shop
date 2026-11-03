@@ -114,8 +114,18 @@ namespace FruitGame
         [Tooltip("Colours per fruit after clean-up (the voxeliser snaps every block to one of these).")]
         [Range(2, 8)] public int fruitColors = 5;
 
+        [Header("Screen layout (Docs/DESIGN.md §3)")]
+        [Tooltip("Auto picks portrait 9:16 or landscape 16:9 from the window's shape.")]
+        public OrientationSetting orientation = OrientationSetting.Auto;
+        [Tooltip("Width of the play column at z = 0, crate walls included: the view's width in portrait.")]
+        public float playColumnWidth = 5.4f;
+        [Tooltip("Height of the play area at z = 0: the view's height in landscape.")]
+        public float playHeight = 6.43f;
+        [Tooltip("Screen pixels per UI art pixel on the 1080-pixel short side: 4 was the 3:4 build's size, 3 suits a full-size monitor.")]
+        [Range(2, 4)] public int uiPixelScale = 3;
+
         [Header("Pixel render (Docs/DESIGN.md §3)")]
-        [Tooltip("Game layers render at this fraction of 1080 x 1440 and are scaled up with hard pixels.")]
+        [Tooltip("Game layers render at this fraction of the layout's reference size (1080 × 1920 or 1920 × 1080) and are scaled up with hard pixels.")]
         [Range(0.25f, 1f)] public float renderScale = 0.5f;
         [Tooltip("Dither toward the sky on the background pile (0 = full colour).")]
         [Range(0f, 1f)] public float pileDither = 0.5f;

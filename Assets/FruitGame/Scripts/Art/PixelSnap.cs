@@ -23,9 +23,9 @@ namespace FruitGame
             if (cam == null) return;
             transform.localPosition = baseLocal;
             var p = transform.position;
-            // World size of one game pixel at this depth (1440 × renderScale pixels span the view height).
+            // World size of one game pixel at this depth (reference height × renderScale pixels span the view height).
             float distance = Vector3.Dot(p - cam.transform.position, cam.transform.forward);
-            float pixel = 2f * distance * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / (1440f * renderScale);
+            float pixel = 2f * distance * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / (ScreenLayout.Reference.y * renderScale);
             if (pixel <= 0f) return;
             var local = cam.transform.InverseTransformPoint(p);
             local.x = Mathf.Round(local.x / pixel) * pixel;

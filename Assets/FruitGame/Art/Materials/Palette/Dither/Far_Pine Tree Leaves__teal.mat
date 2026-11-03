@@ -33,7 +33,7 @@ Material:
     - _Fade: 0.55
     - _Levels: 4
     m_Colors:
-    - _BaseColor: {r: 0.2623876, g: 0.6727212, b: 0.29159096, a: 1}
+    - _BaseColor: {r: 0.24139655, g: 0.7534478, b: 0.2204427, a: 1}
     - _FadeColor: {r: 0.663, g: 0.776, b: 0.867, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

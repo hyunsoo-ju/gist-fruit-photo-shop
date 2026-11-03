@@ -8,10 +8,12 @@ namespace FruitGame.EditorTools
 {
     /// <summary>
     /// Builds the scenery variety from the M8 style test into Game.unity (Docs/DESIGN.md §3, L1 and L4b):
-    /// - <b>Far orchard</b>: six extra trees at the sides (smaller, at varied depths), a leaf tint per tree, fruit blocks on
-    ///   the camera-facing side of every canopy, and three block clouds near the top. The centre stays open.
+    /// - <b>Far orchard</b>: six extra trees on the far hills at the sides (smaller, at varied depths), a leaf tint per
+    ///   tree, fruit blocks on the camera-facing side of every canopy, and three block clouds near the top. The
+    ///   centre stays open; the two big oaks also stand on the hills.
     /// - <b>Foreground plants</b>: a leaf tint per plant, a petal colour per flower, and twelve extra small flowers and
-    ///   grass tufts along the front edge (never big bushes, which hid the flowers and covered the basket).
+    ///   grass tufts along the front edge (never big bushes, which hid the flowers and covered the basket), plus small
+    ///   trees, bushes and flowers beside the crate walls for the wider landscape view.
     /// Generated objects live in "Generated" containers and are replaced on every run; tints are palette materials.
     /// Run before "Voxels/Mark Scene Meshes" and "Voxels/Bake Scene", which turn the new copies into blocks too.
     /// </summary>
@@ -59,7 +61,16 @@ namespace FruitGame.EditorTools
             var originals = farRoot.Cast<Transform>().Where(t => t != generated).ToList();
             var fullLeaves = ForegroundMaterials();
 
-            var spots = new[] { (-3.1f, -0.9f, 5.6f, 0.42f), (3.15f, -0.7f, 5.5f, 0.45f), (-2.6f, -1.9f, 5.3f, 0.3f), (2.7f, -2.0f, 5.25f, 0.32f), (-3.6f, 0.6f, 5.8f, 0.5f), (3.7f, 0.9f, 5.8f, 0.48f) };
+            // Extra trees stand on the far hills (FarHills.SurfaceY, sunk a little so no base shows), clear of the open
+            // middle above the pile.
+            var spots = new[] { (-5.7f, 5.9f, 0.42f), (5.9f, 5.9f, 0.45f), (-4.3f, 5.3f, 0.3f), (4.4f, 5.25f, 0.32f), (-7.3f, 6.1f, 0.5f), (7.4f, 6.1f, 0.48f) }
+                .Select(s => (s.Item1, FarHills.SurfaceY(Mathf.Abs(s.Item1)) - 0.12f, s.Item2, s.Item3)).ToArray();
+            // Original trees beside the middle also stand on the hills.
+            foreach (var t in originals)
+            {
+                float ax = Mathf.Abs(t.position.x);
+                if (FarHills.SurfaceY(ax) > FarHills.Ground) t.position = new Vector3(t.position.x, FarHills.SurfaceY(ax) - 0.12f, t.position.z);
+            }
             var trees = new List<(Transform tree, int tint)>();
             for (int i = 0; i < originals.Count; i++) trees.Add((originals[i], (i * 2) % Greens.Length));
             for (int i = 0; i < spots.Length; i++)
@@ -170,6 +181,27 @@ namespace FruitGame.EditorTools
                 copy.transform.localScale = src.localScale * Random.Range(0.7f, 0.95f);
             }
 
+            // Landscape sides (Docs/DESIGN.md §3): outside the crate walls the view runs to about ±5.5 m, so small trees,
+            // bushes and flowers continue there (off-screen in portrait).
+            var smallTrees = fg.Find("Small Trees").Cast<Transform>().ToList();
+            var bushes = shrubs.Cast<Transform>().Where(t => t != generated && !t.name.StartsWith("flower") && !t.name.StartsWith("grass")).ToList();
+            int side = 0;
+            foreach (float sign in new[] { -1f, 1f })
+            {
+                var spots = new[] { (3.45f, -0.75f, 0), (4.6f, -0.9f, 0), (5.5f, -0.7f, 0), (3.0f, -0.5f, 1), (4.0f, -0.55f, 1), (5.0f, -0.5f, 1), (3.7f, -0.47f, 2), (4.9f, -0.46f, 2), (5.8f, -0.48f, 2) };
+                foreach (var (ax, z, kind) in spots)
+                {
+                    var pool = kind == 0 ? smallTrees : kind == 1 ? (bushes.Count > 0 ? bushes : grass) : (Random.value < 0.6f ? flowers : grass);
+                    var src = pool[Random.Range(0, pool.Count)];
+                    var copy = Object.Instantiate(src.gameObject, generated);
+                    copy.name = src.name + "_Side";
+                    copy.transform.position = new Vector3(sign * ax + Random.Range(-0.15f, 0.15f), src.position.y, z);
+                    copy.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+                    copy.transform.localScale = src.localScale * (kind == 0 ? Random.Range(0.8f, 1.05f) : Random.Range(0.8f, 1.1f));
+                    side++;
+                }
+            }
+
             int tinted = 0;
             var plants = shrubs.Cast<Transform>().Where(t => t != generated).Concat(generated.Cast<Transform>()).Concat(fg.Find("Small Trees").Cast<Transform>()).ToList();
             foreach (var plant in plants)
@@ -192,7 +224,7 @@ namespace FruitGame.EditorTools
                     tinted++;
                 }
             }
-            return $"plants: {gaps.Length} extra flowers and grass tufts, {tinted} renderers tinted";
+            return $"plants: {gaps.Length} extra flowers and grass tufts, {side} side plants for landscape, {tinted} renderers tinted";
         }
 
         /// <summary>A far-layer material: full colour, dithered toward the sky by fade (FruitGame/Dither Fade).</summary>

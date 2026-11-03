@@ -13,8 +13,11 @@ Shader "FruitGame/Person Cutout"
         _EdgeLow("Edge Low", Range(0, 1)) = 0.35
         _EdgeHigh("Edge High", Range(0, 1)) = 0.65
         _DepthCutoff("Depth Cutoff", Range(0, 1)) = 0.5
-        _OutlineWidth("Outline (px at 1080 wide)", Float) = 0
+        _OutlineWidth("Outline (screen px)", Float) = 0
         _OutlineColor("Outline Color", Color) = (0.118, 0.133, 0.2, 1)
+        _OutlineTexel("Outline Texel (uv per screen px)", Vector) = (0.000926, 0.000694, 0, 0)
+        _FrameAspect("Camera Frame Aspect", Float) = 0.75
+        _EdgeFade("Edge Fade (uv, 0 = off)", Float) = 0
 
         [Header(Beauty filter ported from GPUPixel)]
         _Beauty("Strength (0 = off)", Range(0, 1)) = 0
@@ -69,6 +72,9 @@ Shader "FruitGame/Person Cutout"
             half _DepthCutoff;
             half _OutlineWidth;
             half4 _OutlineColor;
+            float4 _OutlineTexel;
+            float _FrameAspect;
+            float _EdgeFade;
             float4 _MainTex_TexelSize;
             half _Beauty;
             half _BlurAlpha;
@@ -120,7 +126,7 @@ Shader "FruitGame/Person Cutout"
         // Soft round spot; distances in "u" units (the frame is 3:4, so one v step is 4/3 of a u step).
         half Spot(float2 uv, float2 centre, half radius)
         {
-            float2 d = (uv - centre) * float2(1.0, 4.0 / 3.0) / max(radius, 1e-4);
+            float2 d = (uv - centre) * float2(1.0, 1.0 / _FrameAspect) / max(radius, 1e-4);
             return exp(-dot(d, d) * 1.5);
         }
 
@@ -139,7 +145,7 @@ Shader "FruitGame/Person Cutout"
 
         // GPUPixel's beauty face filter + makeup, in gamma space like the original.
         // Distances in "u" units: the frame is 3:4, so one v step is 4/3 of a u step.
-        float2 AspectU(float2 d) { return d * float2(1.0, 4.0 / 3.0); }
+        float2 AspectU(float2 d) { return d * float2(1.0, 1.0 / _FrameAspect); }
 
         // GPUPixel's curve warp: near `start`, sample from further along -pull, so the contour moves by +pull.
         float2 SlimWarp(float2 uv, float4 pt)
@@ -251,7 +257,7 @@ Shader "FruitGame/Person Cutout"
                 half ring = 0;
                 if (_OutlineWidth > 0.0h)
                 {
-                    float2 r = _OutlineWidth * float2(1.0 / 1080.0, 1.0 / 1440.0);
+                    float2 r = _OutlineWidth * _OutlineTexel.xy;
                     [unroll] for (int k = 0; k < 8; k++)
                     {
                         float ang = k * 0.785398;
@@ -264,6 +270,8 @@ Shader "FruitGame/Person Cutout"
                     ring = step(_EdgeLow + (_EdgeHigh - _EdgeLow) * 0.5h, ring);
                 }
                 half cover = max(a, ring);
+                // A camera frame narrower than the view fades out at its left and right edges (CameraFrame.EdgeFade).
+                if (_EdgeFade > 0.0) cover *= smoothstep(0.0, _EdgeFade, input.uv.x) * smoothstep(0.0, _EdgeFade, 1.0 - input.uv.x);
                 clip(cover - 0.02h);   // write no depth where there's no person
                 half3 rgb = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;
                 if (_Beauty > 0.001h) rgb = Beautify(uv, rgb);

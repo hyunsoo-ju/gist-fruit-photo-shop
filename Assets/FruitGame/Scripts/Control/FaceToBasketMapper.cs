@@ -34,7 +34,7 @@ namespace FruitGame
         {
             if (!HasTarget) return;
 
-            float x = config.basketXLimit * SoftClamp(Normalise(tracker.FaceCenter.x));
+            float x = config.basketXLimit * SoftClamp(Normalise(tracker.PlayFaceCenter.x));
             targetX = filter.Filter(x, Time.unscaledDeltaTime);
         }
 

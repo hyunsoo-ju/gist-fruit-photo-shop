@@ -7,7 +7,7 @@ namespace FruitGame
 {
     /// <summary>
     /// Runs BlazeFace (short range) on the webcam feed with Unity Inference Engine and tracks one face (Docs/DESIGN.md §9).
-    /// The 3:4 webcam frame is letterboxed into the model's 128×128 input; scores filtering + NMS are baked
+    /// The webcam frame (9:16 or 16:9) is letterboxed into the model's 128×128 input; scores filtering + NMS are baked
     /// into the graph (as in Unity's BlazeDetectionSample). Results are in the webcam Output's UV space
     /// (0..1, origin bottom-left, already mirrored), so they line up with what's on screen.
     /// </summary>
@@ -30,6 +30,10 @@ namespace FruitGame
         /// <summary>Face box in webcam-output UV (0..1, origin bottom-left, mirrored like the screen).</summary>
         public Rect FaceRect { get; private set; }
         public Vector2 FaceCenter => FaceRect.center;
+        /// <summary>The face box relative to the 3:4 play area (CameraFrame.ToPlay): what calibration and the basket use,
+        /// so head movement means the same whatever the camera's or the screen's shape.</summary>
+        public Rect PlayFaceRect => CameraFrame.ToPlay(FaceRect);
+        public Vector2 PlayFaceCenter => PlayFaceRect.center;
         public float Score { get; private set; }
         /// <summary>
         /// BlazeFace's six keypoints in the same UV space as FaceRect: 0 right eye, 1 left eye, 2 nose tip,
@@ -121,7 +125,7 @@ namespace FruitGame
             }
         }
 
-        /// <summary>Draws the 3:4 frame centred in a black 128×128 square (pillarboxed) for the model.</summary>
+        /// <summary>Draws the frame centred in a black 128×128 square (pillar- or letterboxed) for the model.</summary>
         void Letterbox(Texture src)
         {
             float aspect = (float)src.width / src.height;

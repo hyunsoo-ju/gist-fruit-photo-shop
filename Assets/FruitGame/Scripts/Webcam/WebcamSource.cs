@@ -4,7 +4,8 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Opens a webcam and keeps a mirrored, centre-cropped 3:4 copy of its frames in Output (Docs/DESIGN.md §9).
+    /// Opens a webcam and keeps a mirrored copy of its whole frames in Output, at the camera's own shape with the long
+    /// side at most 960 pixels (Docs/DESIGN.md §9). CameraFrame describes where it sits on screen and in the play area.
     /// Camera choice: GameConfig.preferredCameraName if it matches, otherwise the first camera that isn't the
     /// laptop's built-in one (e.g. an iPhone via Continuity Camera, or a USB webcam), otherwise any camera.
     /// </summary>
@@ -13,7 +14,6 @@ namespace FruitGame
         [SerializeField] GameConfig config;
         [SerializeField] Vector2Int requestedSize = new Vector2Int(1280, 720);
         [SerializeField] int requestedFps = 30;
-        [SerializeField] Vector2Int outputSize = new Vector2Int(540, 720);
         [SerializeField] bool mirror = true;
         [Tooltip("Seconds without a frame before the camera counts as not delivering (e.g. a closed laptop lid).")]
         [SerializeField] float noFrameTimeout = 3f;
@@ -30,12 +30,9 @@ namespace FruitGame
         WebCamTexture cam;
         float startedAt;
 
-        void OnEnable()
-        {
-            Output = new RenderTexture(outputSize.x, outputSize.y, 0, RenderTextureFormat.ARGB32) { name = "Webcam 3x4" };
-            Output.Create();
-            StartCoroutine(Open());
-        }
+        const int OutputLongSide = 960;
+
+        void OnEnable() => StartCoroutine(Open());
 
         void OnDisable()
         {
@@ -46,13 +43,28 @@ namespace FruitGame
                 Destroy(cam);
                 cam = null;
             }
-            if (Output != null)
-            {
-                Output.Release();
-                Destroy(Output);
-                Output = null;
-            }
+            ReleaseOutput();
             HasFrames = false;
+        }
+
+        /// <summary>(Re)creates Output at the camera frame's shape, once the frame size is known.</summary>
+        void MakeOutput(int width, int height)
+        {
+            float k = (float)OutputLongSide / Mathf.Max(width, height);
+            var size = new Vector2Int(Mathf.RoundToInt(width * k / 2f) * 2, Mathf.RoundToInt(height * k / 2f) * 2);
+            if (Output != null && Output.width == size.x && Output.height == size.y) return;
+            ReleaseOutput();
+            Output = new RenderTexture(size.x, size.y, 0, RenderTextureFormat.ARGB32) { name = $"Webcam {size.x}x{size.y}" };
+            Output.Create();
+            CameraFrame.Aspect = (float)size.x / size.y;
+        }
+
+        void ReleaseOutput()
+        {
+            if (Output == null) return;
+            Output.Release();
+            Destroy(Output);
+            Output = null;
         }
 
         IEnumerator Open()
@@ -113,6 +125,7 @@ namespace FruitGame
                     Status = $"Live: {DeviceName} {cam.width}×{cam.height}";
                     Debug.Log($"[FruitGame] Webcam: {Status}, rotation {cam.videoRotationAngle}°, vflip {cam.videoVerticallyMirrored}");
                 }
+                MakeOutput(cam.width, cam.height);
                 Blit();
             }
             else if (!HasFrames && Time.unscaledTime - startedAt > noFrameTimeout)
@@ -121,20 +134,13 @@ namespace FruitGame
             }
         }
 
-        /// <summary>Centre-crops the frame to the output aspect, mirrors it, and corrects vertical flip.</summary>
+        /// <summary>Copies the whole frame, mirrored, with vertical flip corrected.</summary>
         void Blit()
         {
-            float srcAspect = (float)cam.width / cam.height;
-            float dstAspect = (float)outputSize.x / outputSize.y;
-            float sx = 1f, sy = 1f;
-            if (srcAspect > dstAspect) sx = dstAspect / srcAspect;
-            else sy = srcAspect / dstAspect;
-            float ox = (1f - sx) * 0.5f, oy = (1f - sy) * 0.5f;
-
-            var scale = new Vector2(sx, sy);
-            var offset = new Vector2(ox, oy);
-            if (mirror) { scale.x = -sx; offset.x = ox + sx; }
-            if (cam.videoVerticallyMirrored) { scale.y = -sy; offset.y = oy + sy; }
+            var scale = Vector2.one;
+            var offset = Vector2.zero;
+            if (mirror) { scale.x = -1f; offset.x = 1f; }
+            if (cam.videoVerticallyMirrored) { scale.y = -1f; offset.y = 1f; }
             Graphics.Blit(cam, Output, scale, offset);
         }
 

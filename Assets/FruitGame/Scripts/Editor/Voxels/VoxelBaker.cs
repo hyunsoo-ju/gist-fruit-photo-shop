@@ -13,6 +13,8 @@ namespace FruitGame.EditorTools
     ///   (a few clean colours per fruit), set as the type's visual and atlas. The pile dithers the same palette.
     /// - <b>Scene</b>: every <see cref="VoxelSource"/> in the open scene gets a block mesh built from its original
     ///   mesh at its own scale, keeping its materials.
+    /// - <b>Props</b>: the crate pack (crate and barrel for the walls, and the basin used as the basket) becomes voxel prefabs at
+    ///   set sizes, coloured from their textures through a shared prop palette, for the crate walls and the basket.
     /// Re-run either after changing block sizes or models; assets are overwritten in place, so references survive.
     /// </summary>
     public static class VoxelBaker
@@ -163,6 +165,142 @@ namespace FruitGame.EditorTools
             AssetDatabase.SaveAssets();
             log.Insert(0, $"{bakes.Count} fruit types, {palette.Count} palette colours\n");
             return log.ToString();
+        }
+
+        const string PropPalettePath = OutDir + "/PropPalette.png";
+        const string PropModels = "Assets/FruitGame/Art/Models/Props";
+
+        /// <summary>Prop model, its largest size in metres once baked, block size and colour count.</summary>
+        static readonly (string model, float size, float block, int colors)[] Props =
+        {
+            ("Box", 0.7f, 0.044f, 5), ("barrel", 0.6f, 0.044f, 5), ("basin", 1.6f, 0.063f, 5),
+        };
+
+        [MenuItem("FruitGame/Voxels/Bake Props")]
+        public static string BakeProps()
+        {
+            EnsureFolder(OutDir + "/Props");
+            var palette = new List<Color>();
+            var meshes = new List<(string name, Mesh mesh)>();
+            var readable = new Dictionary<Texture, Texture2D>();
+            var log = new System.Text.StringBuilder();
+            foreach (var (modelName, size, block, colors) in Props)
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>($"{PropModels}/{modelName}.fbx");
+                if (model == null) { log.AppendLine($"{modelName}: missing"); continue; }
+                var src = new VoxelMesher.Source();
+                var slots = new List<(Texture2D tex, Color tint)>();
+                // Keep the import's root rotation (these FBX files are Z-up; the importer stands them up).
+                var rootInv = Matrix4x4.Translate(-model.transform.position);
+                foreach (var mf in model.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if (mf.sharedMesh == null) continue;
+                    var mats = mf.GetComponent<Renderer>().sharedMaterials;
+                    int offset = src.positions.Count == 0 ? 0 : src.slotCount;
+                    for (int s = 0; s < mf.sharedMesh.subMeshCount; s++)
+                    {
+                        var m = s < mats.Length ? mats[s] : null;
+                        var tex = m != null && m.HasProperty("_BaseMap") ? m.GetTexture("_BaseMap") as Texture2D : null;
+                        slots.Add((Readable(tex, readable), m != null && m.HasProperty("_BaseColor") ? m.GetColor("_BaseColor") : Color.white));
+                    }
+                    VoxelMesher.Add(src, mf.sharedMesh, rootInv * mf.transform.localToWorldMatrix, offset);
+                }
+                src.sampleColor = (uv, slot) =>
+                {
+                    var (tex, tint) = slots[Mathf.Clamp(slot, 0, slots.Count - 1)];
+                    var c = (tex != null ? tex.GetPixelBilinear(uv.x, uv.y) : Color.white) * tint;
+                    // The basin's rope handles are near-black burlap, which reads as holes in blocks: make them rope.
+                    if (modelName == "basin" && c.grayscale < 0.25f) c = Rope;
+                    return c;
+                };
+                src.edit = PropEdit(modelName);
+                var min = src.positions[0];
+                var max = src.positions[0];
+                foreach (var p in src.positions) { min = Vector3.Min(min, p); max = Vector3.Max(max, p); }
+                float extent = Mathf.Max(max.x - min.x, Mathf.Max(max.y - min.y, max.z - min.z));
+                float c0 = extent / (size / block);
+                int baseSlot = palette.Count;
+                var result = VoxelMesher.Build(src, new Vector3(c0, c0, c0), modelName + "_Vox", colors, i => PaletteUv(baseSlot + i));
+                palette.AddRange(result.colors);
+                // The mesh is in model units; scale it to metres so the prefab needs no scale.
+                var mesh = result.mesh;
+                var verts = mesh.vertices;
+                float k = size / extent;
+                for (int i = 0; i < verts.Length; i++) verts[i] *= k;
+                mesh.vertices = verts;
+                mesh.RecalculateBounds();
+                meshes.Add((modelName, SaveMesh(mesh, $"{OutDir}/Props/{modelName}_Vox.asset")));
+                log.AppendLine($"{modelName}: {size / block:F0} blocks across, {result.colors.Length} colours, {result.faces} faces");
+            }
+            if (palette.Count > PaletteSide * PaletteSide) return $"palette overflow: {palette.Count} colours";
+            WritePalette(PropPalettePath, palette);
+            var mat = PropVoxelMaterial();
+            mat.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(PropPalettePath));
+            foreach (var (name, mesh) in meshes)
+            {
+                var go = new GameObject(name + "_Vox", typeof(MeshFilter), typeof(MeshRenderer));
+                go.GetComponent<MeshFilter>().sharedMesh = mesh;
+                go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                PrefabUtility.SaveAsPrefabAsset(go, $"{OutDir}/Props/{name}_Vox.prefab");
+                Object.DestroyImmediate(go);
+            }
+            AssetDatabase.SaveAssets();
+            return log.ToString();
+        }
+
+        static readonly Color Rope = new Color(0.72f, 0.56f, 0.36f);
+        static readonly Color GrooveWood = new Color(0.42f, 0.26f, 0.12f);
+        static readonly Color LidWood = new Color(0.66f, 0.42f, 0.22f);
+
+        /// <summary>Per-prop block edits: plank grooves on the crate, a closed lid on the barrel.</summary>
+        static System.Func<Vector3Int, Vector3Int, Vector3Int, bool, bool, int, (VoxelMesher.CellEdit, Color)> PropEdit(string modelName)
+        {
+            const int Frame = 2, Plank = 4;
+            const int PosX = 1, NegX = 2, PosY = 4, PosZ = 16, NegZ = 32;
+            var keep = (VoxelMesher.CellEdit.Keep, default(Color));
+            switch (modelName)
+            {
+                case "Box":
+                    // Hidden inside: solid dark wood, so carved grooves show depth. On each side and the top, a block-deep
+                    // groove every few blocks between the frame borders, so the planks read.
+                    return (c, min, max, solid, sampled, exposed) =>
+                    {
+                        if (!solid) return keep;
+                        if (exposed == 0) return sampled ? keep : (VoxelMesher.CellEdit.Fill, GrooveWood);
+                        bool Inner(int v, int lo, int hi) => v - lo >= Frame && hi - v >= Frame;
+                        bool Groove(int v, int lo) => (v - lo - Frame) % Plank == Plank - 1;
+                        var remove = (VoxelMesher.CellEdit.Remove, default(Color));
+                        if (exposed == PosY)
+                            return Inner(c.x, min.x, max.x) && Inner(c.z, min.z, max.z) && Groove(c.x, min.x) ? remove : keep;
+                        bool sideX = exposed == PosX || exposed == NegX, sideZ = exposed == PosZ || exposed == NegZ;
+                        if (!sideX && !sideZ) return keep; // edges and corners: the frame
+                        int u = sideX ? c.z : c.x, ulo = sideX ? min.z : min.x, uhi = sideX ? max.z : max.x;
+                        return Inner(u, ulo, uhi) && Inner(c.y, min.y, max.y) && Groove(u, ulo) ? remove : keep;
+                    };
+                case "barrel":
+                    // The lid sits below the rim; fill up to the rim so it doesn't read as a hole.
+                    return (c, min, max, solid, sampled, exposed) =>
+                    {
+                        if (solid || c.y < max.y - 2 || c.y > max.y) return keep;
+                        float cx = (min.x + max.x) * 0.5f, cz = (min.z + max.z) * 0.5f;
+                        float r = Mathf.Min(max.x - min.x, max.z - min.z) * 0.5f;
+                        float dx = c.x - cx, dz = c.z - cz;
+                        return dx * dx + dz * dz < r * r ? (VoxelMesher.CellEdit.Fill, LidWood) : keep;
+                    };
+                default:
+                    return null;
+            }
+        }
+
+        static Material PropVoxelMaterial()
+        {
+            var path = OutDir + "/Props/Prop_Voxel.mat";
+            var m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (m != null) return m;
+            m = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "Prop_Voxel" };
+            m.SetFloat("_Smoothness", 0.1f);
+            AssetDatabase.CreateAsset(m, path);
+            return m;
         }
 
         static Vector2 PaletteUv(int i) => new Vector2((i % PaletteSide + 0.5f) / PaletteSide, (i / PaletteSide + 0.5f) / PaletteSide);

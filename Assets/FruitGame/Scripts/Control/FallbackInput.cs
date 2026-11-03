@@ -37,7 +37,7 @@ namespace FruitGame
                 targetX += axis * config.keyboardBasketSpeed * Time.unscaledDeltaTime;
             }
 
-            // The mouse only steers while the pointer is over the 3:4 game frame.
+            // The mouse only steers while the pointer is over the game frame.
             var mouse = Mouse.current;
             if (mouse != null && worldCamera != null)
             {

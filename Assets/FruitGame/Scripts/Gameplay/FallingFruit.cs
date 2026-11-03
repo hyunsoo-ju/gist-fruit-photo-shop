@@ -31,6 +31,8 @@ namespace FruitGame
         public event Action<FallingFruit, Outcome> OnResolved;
         /// <summary>Raised on every new contact with the basket before the fruit is resolved.</summary>
         public event Action<FallingFruit> OnHitBasket;
+        /// <summary>A fruit bounced off a side wall: the contact point on the wall, and its sideways speed.</summary>
+        public static event Action<Vector3, float> WallBounced;
 
         GameConfig config;
         BasketController basket;
@@ -103,6 +105,7 @@ namespace FruitGame
             float wall = config.wallX - Radius;
             if ((p.x > wall && v.x > 0f) || (p.x < -wall && v.x < 0f))
             {
+                WallBounced?.Invoke(new Vector3(Mathf.Sign(p.x) * config.wallX, p.y, p.z), Mathf.Abs(v.x));
                 v.x = -v.x;
                 vx = v.x;
             }

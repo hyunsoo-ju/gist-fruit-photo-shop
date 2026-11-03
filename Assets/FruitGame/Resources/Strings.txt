@@ -5,6 +5,8 @@ start.play	시작	Play
 start.calibrate	보정하기	Calibrate
 hud.go	시작!	Go!
 hud.lives	목숨 {0}	Lives {0}
+hud.scoreboard	점수표	Scoreboard
+hud.noCatch	아직 없어요	None yet
 pause.title	잠깐 멈춤	Paused
 pause.resume	계속하기	Resume
 common.mainMenu	처음으로	Main menu

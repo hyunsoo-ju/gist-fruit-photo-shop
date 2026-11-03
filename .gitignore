@@ -59,9 +59,14 @@ Assets/FruitGame/Art/Models/Fruits/*
 Assets/FruitGame/Art/Models/FruitsPolyOne/*
 !Assets/FruitGame/Art/Models/FruitsPolyOne/*.meta
 
+# Low poly crates pack (crate, bucket, basin, barrel): source and licence unknown, so treated the same way.
+Assets/FruitGame/Art/Models/Props/*
+!Assets/FruitGame/Art/Models/Props/*.meta
+
 # Voxel meshes baked from those models (modified versions): rebuilt by FruitGame > Voxels > Bake Fruit / Bake Scene.
 Assets/FruitGame/Art/Voxels/Fruit/*.asset
 Assets/FruitGame/Art/Voxels/World/*Tree*.asset
+Assets/FruitGame/Art/Voxels/Props/*.asset
 
 # Orchard illustration from Photo Booth 2: source and licence unknown.
 Assets/FruitGame/Art/Backdrops/OrchardIllustration.png

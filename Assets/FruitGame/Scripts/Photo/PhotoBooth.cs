@@ -10,8 +10,9 @@ namespace FruitGame
 {
     /// <summary>
     /// Photo booth (M7, Docs/DESIGN.md §10): pose → 3·2·1 → flash → capture → preview with Save / Retake / Done.
-    /// The capture renders the game camera off-screen at full 1080×1440 with the basket and any fruit in play hidden
-    /// and the round's pile switched to full colour. The print is a four-cut: the three action shots ActionShots took
+    /// Every shot is a 3:4 portrait picture of the middle of the view, whatever the screen layout: a crop of the
+    /// landscape view, or a slightly closer view in portrait. The capture renders the game camera off-screen with the
+    /// basket and any fruit in play hidden and the round's pile switched to full colour. The print is a four-cut: the three action shots ActionShots took
     /// during the round plus this final shot (Retake only replaces the final one).
     /// </summary>
     public class PhotoBooth : MonoBehaviour
@@ -27,7 +28,8 @@ namespace FruitGame
         [SerializeField] PhotoFrame frame;
         [SerializeField] GameObject[] hideDuringPhoto;
         [SerializeField] AudioFeedback audioFeedback;
-        [SerializeField] Vector2Int photoSize = new Vector2Int(1080, 1440);
+        const float PhotoAspect = 3f / 4f;
+        const int MinPhotoHeight = 1440;
         [SerializeField] int countdownSeconds = 3;
 
         [Header("UI")]
@@ -51,6 +53,7 @@ namespace FruitGame
         public bool Running => step != Step.Off;
         public Texture2D LastPhoto { get; private set; }
         public int ActionShotCount => actionShots.Count;
+        public Texture2D ActionShot(int index) => index >= 0 && index < actionShots.Count ? actionShots[index] : null;
 
         readonly List<Texture2D> actionShots = new List<Texture2D>();
         Texture2D finalShot;
@@ -236,11 +239,20 @@ namespace FruitGame
             step = Step.Preview;
         }
 
-        /// <summary>Renders the game camera (no UI) into a full-resolution photo.</summary>
+        /// <summary>
+        /// Renders the game camera (no UI) into a 3:4 portrait photo of the middle of the view. Its size is a whole
+        /// multiple of the game pixels it covers (at least 1440 tall), so every game pixel stays a sharp square.
+        /// </summary>
         Texture2D RenderPhoto()
         {
-            var rt = RenderTexture.GetTemporary(photoSize.x, photoSize.y, 24, RenderTextureFormat.ARGB32);
+            float viewAspect = ScreenLayout.Aspect;
+            // Game pixels from top to bottom of the photo: all of them in landscape, a 3:4 band across in portrait.
+            float gameRows = ScreenLayout.Reference.y * config.renderScale * Mathf.Min(1f, viewAspect / PhotoAspect);
+            int scale = Mathf.CeilToInt(MinPhotoHeight / gameRows);
+            var size = new Vector2Int(Mathf.RoundToInt(gameRows * scale * PhotoAspect), Mathf.RoundToInt(gameRows * scale));
+            var rt = RenderTexture.GetTemporary(size.x, size.y, 24, RenderTextureFormat.ARGB32);
             var oldRect = gameCamera.rect;
+            float oldFov = gameCamera.fieldOfView;
             var oldTarget = gameCamera.targetTexture;
             gameCamera.rect = new Rect(0f, 0f, 1f, 1f);
             // The pixel render's layers must show this moment (basket hidden, pile in full colour) before compositing.
@@ -251,16 +263,21 @@ namespace FruitGame
             var stack = camData != null ? camData.cameraStack : null;
             var stacked = stack != null ? stack.Where(c => c != null && c.enabled).ToList() : new List<Camera>();
             foreach (var c in stacked) c.enabled = false;
+            // The pixel layers were drawn for the whole view above; a narrower field of view in portrait now shows the
+            // 3:4 band of them (in landscape the 3:4 target simply crops the sides).
+            if (viewAspect < PhotoAspect)
+                gameCamera.fieldOfView = 2f * Mathf.Atan(Mathf.Tan(oldFov * 0.5f * Mathf.Deg2Rad) * viewAspect / PhotoAspect) * Mathf.Rad2Deg;
             gameCamera.targetTexture = rt;
             gameCamera.Render();
             foreach (var c in stacked) c.enabled = true;
             gameCamera.targetTexture = oldTarget;
             gameCamera.rect = oldRect;
+            gameCamera.fieldOfView = oldFov;
 
             var prev = RenderTexture.active;
             RenderTexture.active = rt;
-            var tex = new Texture2D(photoSize.x, photoSize.y, TextureFormat.RGB24, false) { name = "Photo" };
-            tex.ReadPixels(new Rect(0, 0, photoSize.x, photoSize.y), 0, 0);
+            var tex = new Texture2D(size.x, size.y, TextureFormat.RGB24, false) { name = "Photo" };
+            tex.ReadPixels(new Rect(0, 0, size.x, size.y), 0, 0);
             tex.Apply();
             RenderTexture.active = prev;
             RenderTexture.ReleaseTemporary(rt);

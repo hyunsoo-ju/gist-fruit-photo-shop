@@ -29,6 +29,7 @@ namespace FruitGame
         static readonly int MaskTexId = Shader.PropertyToID("_MaskTex");
         static readonly int UseMaskId = Shader.PropertyToID("_UseMask");
         static readonly int OffsetId = Shader.PropertyToID("_Offset");
+        static readonly int EdgeFadeId = Shader.PropertyToID("_EdgeFade");
         static readonly int MainTexId = Shader.PropertyToID("_MainTex");
         static readonly int LiveId = Shader.PropertyToID("_Live");
         static readonly int DesaturateId = Shader.PropertyToID("_Desaturate");
@@ -65,12 +66,13 @@ namespace FruitGame
         {
             if (useIllustration && illustration != null)
             {
-                // Centre-crop the illustration to the 3:4 view, ungraded.
-                float aspect = (float)illustration.width / illustration.height, view = 3f / 4f;
+                // Centre-crop the illustration to the view, ungraded.
+                float aspect = (float)illustration.width / illustration.height, view = CameraFrame.Aspect;
                 var st = aspect < view
                     ? new Vector4(1f, aspect / view, 0f, (1f - aspect / view) * 0.5f)
                     : new Vector4(view / aspect, 1f, (1f - view / aspect) * 0.5f, 0f);
                 displayMaterial.SetVector(MainTexStId, st);
+                displayMaterial.SetFloat(EdgeFadeId, CameraFrame.EdgeFade);
                 displayMaterial.SetTexture(MainTexId, illustration);
                 displayMaterial.SetFloat(LiveId, 1f);
                 displayMaterial.SetFloat(DesaturateId, 0f);
@@ -79,6 +81,7 @@ namespace FruitGame
                 return;
             }
             displayMaterial.SetVector(MainTexStId, new Vector4(1f, 1f, 0f, 0f));
+            displayMaterial.SetFloat(EdgeFadeId, CameraFrame.EdgeFade);
             bool live = source != null && source.HasFrames && source.Output != null;
             displayMaterial.SetFloat(LiveId, live ? 1f : 0f);
             if (!live) return;

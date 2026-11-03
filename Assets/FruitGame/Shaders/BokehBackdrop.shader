@@ -12,6 +12,7 @@ Shader "FruitGame/Bokeh Backdrop"
         _Brighten("Brighten", Range(0.5, 2)) = 1.08
         _Tint("Tint", Color) = (0.663, 0.776, 0.867, 1)
         _TintAmount("Tint Amount", Range(0, 1)) = 0.12
+        _EdgeFade("Edge Fade (uv, 0 = off)", Float) = 0
     }
 
     SubShader
@@ -38,16 +39,18 @@ Shader "FruitGame/Bokeh Backdrop"
                 half _Brighten;
                 half4 _Tint;
                 half _TintAmount;
+                float _EdgeFade;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
-            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; };
+            struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; float quadX : TEXCOORD1; };
 
             Varyings vert(Attributes input)
             {
                 Varyings o;
                 o.positionCS = TransformObjectToHClip(input.positionOS.xyz);
-                o.uv = input.uv * _MainTex_ST.xy + _MainTex_ST.zw; // the illustration backdrop is cropped to 3:4
+                o.uv = input.uv * _MainTex_ST.xy + _MainTex_ST.zw; // the illustration backdrop is cropped to the quad
+                o.quadX = input.uv.x;
                 return o;
             }
 
@@ -60,6 +63,8 @@ Shader "FruitGame/Bokeh Backdrop"
                 half luma = dot(rgb, half3(0.299h, 0.587h, 0.114h));
                 rgb = lerp(rgb, luma.xxx, _Desaturate) * _Brighten;
                 rgb = lerp(rgb, _Tint.rgb, _TintAmount);
+                // A camera frame narrower than the view fades into the sky at its left and right edges.
+                if (_EdgeFade > 0.0) rgb = lerp(_Tint.rgb, rgb, smoothstep(0.0, _EdgeFade, input.quadX) * smoothstep(0.0, _EdgeFade, 1.0 - input.quadX));
                 return half4(saturate(rgb), 1);
             }
             ENDHLSL

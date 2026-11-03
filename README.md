@@ -8,7 +8,7 @@
 
 ![화면 구성](Docs/images/01-screen-layout.svg)
 
-> **다음 작업:** 세로 9:16·가로 16:9 화면 지원(M16), 난이도 조정(M16.1), DSLR 카메라와 SELPHY 프린터 연결(M17), 마무리(M6)를 진행합니다. 아래 [로드맵](#로드맵)을 참고하십시오.
+> **다음 작업:** 난이도 조정(M16.1), DSLR 카메라와 SELPHY 프린터 연결(M17), 마무리(M6)를 진행합니다. 아래 [로드맵](#로드맵)을 참고하십시오.
 
 ## 진행 방식
 
@@ -37,7 +37,7 @@
 | **M13** 3D UI ✅ | 키캡처럼 눌리는 버튼, 복셀 점수·타이머를 만들었습니다. |
 | **M14** 사진 액자 ✅ | 네컷 사진(게임 중 세 장 + 마지막 사진)과 휴대폰 다운로드 페이지를 새 스타일로 바꿨습니다. |
 | **M15** 한국어화 ✅ | 게임 안의 모든 문구를 한국어로 옮겼습니다(F3로 영어 전환). |
-| **M16** 세로·가로 화면 | 세로 9:16과 가로 16:9 화면을 모두 지원합니다. 플레이 영역의 크기는 그대로 두고, 가로 화면에서는 과일이 튕겨 나오는 과일 상자 벽을 세우며 양옆에 점수와 네컷 진행 상황을 보여 줍니다. 큰 모니터에 맞게 UI를 작게 다시 배치합니다. |
+| **M16** 세로·가로 화면 (검토 중) | 세로 9:16과 가로 16:9 화면을 모두 지원합니다. 플레이 영역의 크기는 그대로 두고, 가로 화면에서는 과일이 튕겨 나오는 과일 상자 벽을 세우며 양옆에 점수와 네컷 진행 상황을 보여 줍니다. 큰 모니터에 맞게 UI를 작게 다시 배치합니다. |
 | **M16.1** 난이도 조정 | 게임을 더 어렵게 만듭니다. 바구니 크기나 고개를 움직여야 하는 범위는 그대로 두고, 더 빨라지는 과일, 짧아지는 간격, 막바지의 두 개 동시 낙하, 황금 과일과 연속 받기 보너스 등으로 난이도를 올립니다. |
 | **M17** 행사 장비 연결 | DSLR 카메라를 Elgato 4K X 캡처 보드로 연결해 입력으로 사용하고, Canon SELPHY CP1500으로 엽서 크기(100 × 148 mm)의 네컷 사진을 인쇄합니다. |
 | **M6** 마무리 | 실제 장비로 플레이해 보며 난이도를 최종 조정하고, 운영자용 설정 화면, 대기 화면, 화면 전환 효과, 효과음과 배경음, 키오스크용 macOS·Windows 빌드 등 마무리 작업을 합니다. |
@@ -60,9 +60,10 @@
 | `002_Pine_Tree.fbx`, `003_Oak_Tree.fbx`, `005_Cypress_Tree.fbx` | `Assets/FruitGame/Art/Models/Trees/` | Game Dev Skill Up의 *Low Poly Trees Asset Pack (Lite Version)*. 재배포 금지 |
 | `Apple_01.fbx` … `Pineapple_02.fbx`(9종 × 2), `FruitAtlas.png`, `FruitAtlas_Far.png` | `Assets/FruitGame/Art/Models/Fruits/` | *Low Poly Food* 팩(`Fruits/*/<이름>_01·02.fbx`, 아틀라스는 팩의 `Texture.png`) |
 | `SM_Fruits_*.fbx` 8개, `PolyOneAtlas.png`, `PolyOneAtlas_Far.png` | `Assets/FruitGame/Art/Models/FruitsPolyOne/` | Unity Asset Store의 *PolyOne Free Fruits*(아틀라스는 `Texture_BaseColor_v02.png`를 2048로 줄인 것) |
+| `Box.fbx`, `barrel.fbx`, `basin.fbx`와 각 텍스처 | `Assets/FruitGame/Art/Models/Props/` | 프로젝트 담당자가 제공한 low poly crates 팩(라이선스 확인 필요) |
 | `OrchardIllustration.png` (선택) | `Assets/FruitGame/Art/Backdrops/` | 출처 확인 필요(기본값에서는 사용하지 않음) |
 
-프로젝트를 연 뒤 **FruitGame ▸ Voxels ▸ Bake Fruit**와 **Bake Scene**을 실행하면, 위 모델로 만든 복셀 메시(역시 저장소에서 제외됨)가 다시 생성됩니다.
+프로젝트를 연 뒤 **FruitGame ▸ Voxels ▸ Bake Fruit**, **Bake Scene**, **Bake Props**를 실행하면, 위 모델로 만든 복셀 메시(역시 저장소에서 제외됨)가 다시 생성됩니다.
 
 ## 문서
 
