@@ -205,6 +205,22 @@ namespace FruitGame
         [Tooltip("Part of the camera name to prefer (e.g. \"iPhone\"). Empty = first non-built-in camera, else any.")]
         public string preferredCameraName = "Symplectomorphism";
 
+        [Header("Printing (Docs/DESIGN.md §14, M17)")]
+        [Tooltip("Printer name as the OS knows it (macOS: lpstat -p). Empty = the system default printer.")]
+        public string printerName = "";
+        [Tooltip("Paper size option for the print (the SELPHY's borderless postcard: Postcard.Fullbleed).")]
+        public string printMedia = "Postcard.Fullbleed";
+        [Tooltip("Copies per Print press (2 for pairs).")]
+        [Range(1, 4)] public int printCopies = 1;
+        [Tooltip("About how long one print takes, for the waiting message (the SELPHY postcard: about 40 s).")]
+        public float printSeconds = 40f;
+        [Tooltip("Sheets the paper tray holds when full.")]
+        public int trayCapacity = 18;
+        [Tooltip("Prints per ink cassette (RP-108: 36).")]
+        public int inkCapacity = 36;
+        [Tooltip("Warn staff when this few sheets or prints of ink are left.")]
+        public int printWarnAt = 3;
+
         [Header("Fallback input")]
         public float keyboardBasketSpeed = 7f;
 

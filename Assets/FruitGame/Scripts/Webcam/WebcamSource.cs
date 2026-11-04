@@ -6,8 +6,9 @@ namespace FruitGame
     /// <summary>
     /// Opens a webcam and keeps a mirrored copy of its whole frames in Output, at the camera's own shape with the long
     /// side at most 960 pixels (Docs/DESIGN.md §13). CameraFrame describes where it sits on screen and in the play area.
-    /// Camera choice: GameConfig.preferredCameraName if it matches, otherwise the first camera that isn't the
-    /// laptop's built-in one (e.g. an iPhone via Continuity Camera, or a USB webcam), otherwise any camera.
+    /// Camera choice: the camera staff picked in the camera menu (F4, remembered across restarts), else
+    /// GameConfig.preferredCameraName if it matches, otherwise the first camera that isn't the laptop's built-in one
+    /// (e.g. an iPhone via Continuity Camera, or a USB webcam), otherwise any camera.
     /// </summary>
     public class WebcamSource : MonoBehaviour
     {
@@ -31,6 +32,32 @@ namespace FruitGame
         float startedAt;
 
         const int OutputLongSide = 960;
+        const string ChoiceKey = "FruitGame.camera";
+
+        /// <summary>The camera picked in the camera menu, or empty for the automatic choice.</summary>
+        public static string Choice => PlayerPrefs.GetString(ChoiceKey, "");
+
+        /// <summary>
+        /// Switches to a camera by name (empty or null = the automatic choice) and remembers it. The current Output stays
+        /// until the new camera's first frame, so nothing that reads it sees a missing texture.
+        /// </summary>
+        public void Use(string deviceName)
+        {
+            if (string.IsNullOrEmpty(deviceName)) PlayerPrefs.DeleteKey(ChoiceKey);
+            else PlayerPrefs.SetString(ChoiceKey, deviceName);
+            PlayerPrefs.Save();
+            StopAllCoroutines();
+            if (cam != null)
+            {
+                cam.Stop();
+                Destroy(cam);
+                cam = null;
+            }
+            HasFrames = false;
+            Failed = false;
+            Status = "Switching camera";
+            StartCoroutine(Open());
+        }
 
         void OnEnable() => StartCoroutine(Open());
 
@@ -97,6 +124,11 @@ namespace FruitGame
 
         string PickDevice(WebCamDevice[] devices)
         {
+            string chosen = Choice;
+            if (!string.IsNullOrEmpty(chosen))
+                foreach (var d in devices)
+                    if (d.name == chosen) return d.name;
+
             string preferred = config != null ? config.preferredCameraName : null;
             if (!string.IsNullOrEmpty(preferred))
                 foreach (var d in devices)

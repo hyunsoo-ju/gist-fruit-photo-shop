@@ -5,7 +5,8 @@ namespace FruitGame
 {
     /// <summary>
     /// The background pile (Docs/DESIGN.md §12). Each caught fruit's copy drops from above into a narrow invisible box
-    /// behind the person: one fruit deep, so it stacks like a 2D heap but tumbles and looks 3D.
+    /// behind the person: one fruit deep, so it stacks like a 2D heap but tumbles and looks 3D. It sits on a raised
+    /// platform of crates, so the heap shows above the player's shoulders.
     /// Anti-glitch measures: simple colliders, continuous collision, gentle depenetration, spawning only into
     /// free space, extra solver iterations, freezing settled fruit, a cap on the count, and its own physics layer.
     /// </summary>
@@ -22,13 +23,34 @@ namespace FruitGame
         [SerializeField] float landSoundCooldown = 0.1f;
         [SerializeField] float shrinkTime = 0.3f;
 
+        [Header("Crate heap")]
+        [Tooltip("Crate for the heap under the pile (the crate pack's Box, as on the walls). Empty = the pile sits on the ground.")]
+        [SerializeField] GameObject crate;
+        [Tooltip("Barrel mixed in with the crates (the crate pack's barrel).")]
+        [SerializeField] GameObject barrel;
+        [Tooltip("Height of the heap above the ground: about 2.1 m lifts the pile just above the shoulders in the usual framing.")]
+        [SerializeField] float heapHeight = 2.1f;
+        [Tooltip("About one in this many pieces is a barrel.")]
+        [SerializeField, Min(1)] int barrelEvery = 3;
+        [Tooltip("Each piece is scaled by a random factor in this range.")]
+        [SerializeField] Vector2 heapSize = new Vector2(0.8f, 1.15f);
+        [Tooltip("Pieces lean by up to this many degrees, so the heap looks jumbled.")]
+        [SerializeField] float heapTilt = 12f;
+        [Tooltip("Each piece is darkened by a random brightness in this range (with a slight warm or cool shift) so the heap sits back behind the player.")]
+        [SerializeField] Vector2 crateBrightness = new Vector2(0.62f, 0.85f);
+        [SerializeField] int crateSeed = 11;
+
         const string LayerName = "Pile";
 
         readonly List<PileFruit> fruits = new List<PileFruit>();
+        // The crate heap's renderers with their own (full-colour) materials, and the hazed copies used during play.
+        readonly List<(MeshRenderer renderer, Material full, Material haze)> heapRenderers = new List<(MeshRenderer, Material, Material)>();
+        readonly Dictionary<Material, Material> heapHaze = new Dictionary<Material, Material>();
         PhysicsMaterial material;
         int layer = -1;
         int mask = Physics.DefaultRaycastLayers;
         float depth;
+        float floorY;
         float lastLandSound = -1f;
 
         public int Count => fruits.Count;
@@ -58,12 +80,87 @@ namespace FruitGame
                 frictionCombine = PhysicsMaterialCombine.Maximum,
                 bounceCombine = PhysicsMaterialCombine.Minimum
             };
+            floorY = BuildPlatform();
             BuildContainer();
+        }
+
+        /// <summary>
+        /// A messy heap of crates and barrels across the back (Docs/DESIGN.md §12), like the side walls: columns of pieces,
+        /// each its own size, colour and lean, stacked to about `heapHeight`, so the caught fruit heaps up above the
+        /// player's shoulders instead of behind the torso. Drawn on the Back layer (behind the player); each piece also gets
+        /// a box collider on the pile's layer, so fruit settle on the uneven tops. Returns the height of a backup floor just
+        /// under the heap's top, which stops fruit dropping down the gaps between pieces.
+        /// </summary>
+        float BuildPlatform()
+        {
+            if (crate == null || heapHeight <= 0f) return config.pileFloorY;
+            int back = LayerMask.NameToLayer(PixelRenderer.BackLayer);
+            var rng = new System.Random(crateSeed);
+            float Rand(float a, float b) => Mathf.Lerp(a, b, (float)rng.NextDouble());
+            var root = new GameObject("Crate Heap").transform;
+            root.SetParent(transform, false);
+            var block = new MaterialPropertyBlock();
+            float top = config.pileFloorY + heapHeight;
+            float x = -config.pileHalfWidth - 0.15f;
+            while (x < config.pileHalfWidth + 0.15f)
+            {
+                // A column: pieces stacked until they reach the heap's top, the last one allowed to poke above it.
+                float y = config.pileFloorY;
+                float columnWidth = 0f;
+                while (y < top - 0.2f)
+                {
+                    bool isBarrel = barrel != null && rng.Next(barrelEvery) == 0;
+                    var prefab = isBarrel ? barrel : crate;
+                    var size = prefab.GetComponent<MeshFilter>().sharedMesh.bounds.size;
+                    float scale = Rand(heapSize.x, heapSize.y) * 0.7f / Mathf.Max(size.x, size.z);
+                    var piece = Instantiate(prefab, root);
+                    piece.name = isBarrel ? "Heap Barrel" : "Heap Crate";
+                    var tilt = Quaternion.Euler(Rand(-heapTilt, heapTilt) * 0.5f, 0f, Rand(-heapTilt, heapTilt));
+                    piece.transform.localRotation = tilt * Quaternion.Euler(0f, isBarrel ? rng.Next(360) : rng.Next(4) * 90f + Rand(-8f, 8f), 0f);
+                    piece.transform.localScale = Vector3.one * scale;
+                    float h = size.y * scale, w = Mathf.Max(size.x, size.z) * scale;
+                    // Sink each piece a little into the one below, so the leaning stack doesn't float.
+                    piece.transform.localPosition = new Vector3(x + w * 0.5f + Rand(-0.08f, 0.08f), y + h * 0.5f - 0.04f, Rand(-0.12f, 0.12f));
+                    y += h * Rand(0.86f, 0.95f);
+                    columnWidth = Mathf.Max(columnWidth, w);
+
+                    float v = Rand(crateBrightness.x, crateBrightness.y);
+                    float warm = Rand(-0.06f, 0.06f);
+                    var tint = new Color(v * (1f + warm), v, v * (1f - warm), 1f);
+                    foreach (var rend in piece.GetComponentsInChildren<MeshRenderer>())
+                    {
+                        // Hazed toward the sky like the pile fruit (the same dither material, with the props' palette),
+                        // back to full colour in the photo (SetPhotoMode).
+                        var full = rend.sharedMaterial;
+                        var haze = HeapHaze(full);
+                        heapRenderers.Add((rend, full, haze));
+                        rend.sharedMaterial = haze;
+                        if (back >= 0) rend.gameObject.layer = back;
+                        rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                        rend.GetPropertyBlock(block);
+                        block.SetColor("_BaseColor", tint);
+                        rend.SetPropertyBlock(block);
+                    }
+                    // The collider lives on a child on the pile's layer (the piece itself renders on Back).
+                    var col = new GameObject("Collider");
+                    col.transform.SetParent(piece.transform, false);
+                    if (layer >= 0) col.layer = layer;
+                    var box = col.AddComponent<BoxCollider>();
+                    var bounds = prefab.GetComponent<MeshFilter>().sharedMesh.bounds;
+                    box.center = bounds.center;
+                    box.size = bounds.size;
+                    box.sharedMaterial = material;
+                }
+                // Columns overlap a little and vary in spacing, so the front isn't a neat grid.
+                x += columnWidth * Rand(0.78f, 0.92f);
+            }
+            return top - 0.35f;
         }
 
         void OnDestroy()
         {
             if (material != null) Destroy(material);
+            foreach (var haze in heapHaze.Values) Destroy(haze);
         }
 
         void BuildContainer()
@@ -75,11 +172,11 @@ namespace FruitGame
             depth = config.fruitSize * maxScale * config.pileDepthFactor;
 
             float w = config.pileHalfWidth;
-            float wallH = config.pileSpawnY - config.pileFloorY + 2f;
-            float wallY = config.pileFloorY + wallH * 0.5f;
+            float wallH = config.pileSpawnY - floorY + 2f;
+            float wallY = floorY + wallH * 0.5f;
             const float t = 0.5f;
 
-            Box("Floor", new Vector3(0f, config.pileFloorY - t * 0.5f, 0f), new Vector3(w * 2f + 2f * t, t, depth + 2f * t));
+            Box("Floor", new Vector3(0f, floorY - t * 0.5f, 0f), new Vector3(w * 2f + 2f * t, t, depth + 2f * t));
             Box("Wall L", new Vector3(-w - t * 0.5f, wallY, 0f), new Vector3(t, wallH, depth + 2f * t));
             Box("Wall R", new Vector3(w + t * 0.5f, wallY, 0f), new Vector3(t, wallH, depth + 2f * t));
             Box("Wall Front", new Vector3(0f, wallY, -(depth + t) * 0.5f), new Vector3(w * 2f, wallH, t));
@@ -153,8 +250,21 @@ namespace FruitGame
         }
 
         /// <summary>Photo booth: show the pile in full colour (true) or back to the hazed background look.</summary>
+        /// <summary>The pile's haze material with a prop material's texture (one copy per prop material).</summary>
+        Material HeapHaze(Material full)
+        {
+            if (full == null || hazeMaterial == null) return full;
+            if (heapHaze.TryGetValue(full, out var haze)) return haze;
+            haze = new Material(hazeMaterial) { name = full.name + " (Pile Haze)" };
+            if (full.HasProperty("_BaseMap")) haze.SetTexture("_BaseMap", full.GetTexture("_BaseMap"));
+            heapHaze[full] = haze;
+            return haze;
+        }
+
         public void SetPhotoMode(bool on)
         {
+            foreach (var (renderer, full, haze) in heapRenderers)
+                if (renderer != null) renderer.sharedMaterial = on ? full : haze;
             if ((on ? photoMaterial : hazeMaterial) == null) return;
             foreach (var f in fruits)
             {

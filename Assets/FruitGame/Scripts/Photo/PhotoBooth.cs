@@ -22,7 +22,7 @@ namespace FruitGame
         [SerializeField] Camera gameCamera;
         [SerializeField] GameConfig config;
         [SerializeField] FruitPile pile;
-        [Tooltip("The player cut-out; the booth turns its beauty filter on while open.")]
+        [Tooltip("The player cut-out; its beauty filter is on all the time, so every cut of the print matches.")]
         [SerializeField] PersonCutout cutout;
         [Tooltip("Adds the border, caption, logos and scores. Without it the raw scene is saved.")]
         [SerializeField] PhotoFrame frame;
@@ -47,6 +47,8 @@ namespace FruitGame
 
         [Header("Sharing (M7d)")]
         [SerializeField] PhotoShare share;
+        [Tooltip("Sends the card to the booth printer (M17).")]
+        [SerializeField] Printer printer;
         [SerializeField] GameObject phonePanel;
         [SerializeField] RawImage qrImage;
         [SerializeField] TMP_Text phoneLink;
@@ -67,27 +69,33 @@ namespace FruitGame
         int lastShown;
         float flashT = -1f;
         int score;
-        int bestScore;
         bool saved;
+        bool printed;
         string savedPath;
 
         /// <summary>Turns a link into a QR code texture. Null until a QR encoder is added; the link is shown as text.</summary>
         public static Func<string, Texture2D> QrEncoder;
 
-        public void Open(int roundScore, int best)
+        public void Open(int roundScore)
         {
             score = roundScore;
-            bestScore = best;
             panel.SetActive(true);
             pile.SetPhotoMode(true);
-            if (cutout != null)
-            {
-                cutout.BeautyStrength = config != null ? config.beautyStrength : 1f;
-                cutout.BigEyeStrength = config != null ? config.bigEye : 0.4f;
-                cutout.SlimStrength = config != null ? config.faceSlim : 0.4f;
-            }
+            ApplyBeauty();
             SetHidden(true);
             EnterPose();
+        }
+
+        // The beauty filter stays on all the time (not just in the booth), so the action shots taken mid-round match the
+        // final shot on the print.
+        void Start() => ApplyBeauty();
+
+        void ApplyBeauty()
+        {
+            if (cutout == null) return;
+            cutout.BeautyStrength = config != null ? config.beautyStrength : 1f;
+            cutout.BigEyeStrength = config != null ? config.bigEye : 0.4f;
+            cutout.SlimStrength = config != null ? config.faceSlim : 0.4f;
         }
 
         /// <summary>"Take photo" button.</summary>
@@ -113,12 +121,22 @@ namespace FruitGame
             savedText.text = Strings.Get("photo.saved");
         }
 
-        /// <summary>Print button: saves (once) and sends the photo to the default printer.</summary>
+        /// <summary>
+        /// Print button: saves (once) and sends the card to the booth printer, once per photo, then says roughly when it
+        /// will come out (a SELPHY postcard takes about 40 s, longer with other prints queued in front).
+        /// </summary>
         public void Print()
         {
-            if (step != Step.Preview || LastPhoto == null || share == null) return;
+            if (step != Step.Preview || LastPhoto == null || printer == null) return;
+            if (printed) return;
             string path = EnsureSaved();
-            savedText.text = Strings.Get(share.Print(path) ? "photo.printing" : "photo.printFail");
+            if (printer.Print(path, out int ahead))
+            {
+                printed = true;
+                int wait = printer.WaitSeconds(ahead);
+                savedText.text = ahead > 0 ? Strings.Get("photo.printQueued", ahead, wait) : Strings.Get("photo.printing", wait);
+            }
+            else savedText.text = Strings.Get("photo.printFail");
         }
 
         /// <summary>Phone button: saves (once), publishes the photo on the local network and shows the link / QR.</summary>
@@ -183,7 +201,6 @@ namespace FruitGame
             step = Step.Off;
             panel.SetActive(false);
             pile.SetPhotoMode(false);
-            if (cutout != null) cutout.BeautyStrength = 0f;
             SetHidden(false);
             Closed?.Invoke();
         }
@@ -192,6 +209,7 @@ namespace FruitGame
         {
             step = Step.Pose;
             saved = false;
+            printed = false;
             poseGroup.SetActive(true);
             previewGroup.SetActive(false);
             countdownText.gameObject.SetActive(false);
@@ -251,7 +269,7 @@ namespace FruitGame
             if (frame != null)
             {
                 var cuts = new List<Texture2D>(actionShots) { finalShot };
-                LastPhoto = frame.Compose(cuts, score, bestScore);
+                LastPhoto = frame.Compose(cuts, score);
             }
             else LastPhoto = Instantiate(finalShot);
 

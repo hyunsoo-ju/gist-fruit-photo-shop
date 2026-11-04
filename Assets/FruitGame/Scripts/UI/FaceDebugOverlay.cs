@@ -50,7 +50,7 @@ namespace FruitGame
                 string face = tracker != null ? $"{tracker.Status} · {tracker.Rate:0} det/s" : "no tracker";
                 string centre = tracker != null && tracker.HasFace ? $" · play u={tracker.PlayFaceCenter.x:0.00}" : "";
                 string seg = segmenter != null ? $"\nSegmentation: {segmenter.Status} · {segmenter.Rate:0}/s" : "";
-                status.text = $"{cam}\n{face}{centre}{seg}  (F1)";
+                status.text = $"{cam}\n{face}{centre}{seg}  (F1 · F4 camera)";
             }
         }
     }

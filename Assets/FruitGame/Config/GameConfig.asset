@@ -76,9 +76,13 @@ MonoBehaviour:
   auditoryFallSpeed: 2.3
   auditoryDriftCap: 0.4
   auditoryFruitDelay: 1
-  auditoryAssistRadiusScale: 1
-  auditoryAssistStrengthScale: 1
+  auditoryAssistRadius: 2.2
+  auditoryAssistStrength: 5.5
+  auditoryAssistExtraSpeedCap: 1.3
   easyFallSpeedMax: 3.8
+  easyAssistRadius: 1.8
+  easyAssistStrength: 4
+  easyAssistExtraSpeedCap: 1
   easyDriftCapMax: 1.2
   sensitivity: 1
   deadZone: 0.02
@@ -105,8 +109,15 @@ MonoBehaviour:
   renderScale: 0.5
   pileDither: 0.5
   farDither: 0.55
-  playerOutline: 3
+  playerOutline: 0
   playerOutlineColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
   language: 0
   preferredCameraName: Symplectomorphism
+  printerName: 
+  printMedia: Postcard.Fullbleed
+  printCopies: 1
+  printSeconds: 40
+  trayCapacity: 18
+  inkCapacity: 36
+  printWarnAt: 3
   keyboardBasketSpeed: 7

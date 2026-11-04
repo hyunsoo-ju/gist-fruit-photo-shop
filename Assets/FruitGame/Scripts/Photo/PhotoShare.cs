@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,14 +8,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace FruitGame
 {
     /// <summary>
-    /// Getting the photo to the player (M7d, Docs/DESIGN.md §14):
-    /// • Print: sends the saved PNG to the system's default printer (macOS `lp`, Windows shell "print" verb).
-    /// • Phone: a tiny HTTP server on this computer serves each shared photo at an unguessable link
+    /// Getting the photo to the player's phone (M7d, Docs/DESIGN.md §14; printing is Printer's job): a tiny HTTP server on this computer serves each shared photo at an unguessable link
     ///   (http://LAN-IP:port/p/ID) that phones on the same Wi-Fi open (via QR code or by typing it).
     ///   Links expire after `linkLifetimeMinutes`; nothing leaves the local network.
     /// </summary>
@@ -24,8 +20,6 @@ namespace FruitGame
     {
         [SerializeField] int port = 8765;
         [SerializeField] float linkLifetimeMinutes = 15f;
-        [Tooltip("Printer name for macOS `lp -d` (empty = system default printer).")]
-        [SerializeField] string printerName = "";
 
         class Entry { public byte[] Png; public DateTime Expires; }
 
@@ -35,45 +29,6 @@ namespace FruitGame
         volatile bool running;
 
         public string LastError { get; private set; }
-
-        /// <summary>Prints a saved photo. Returns false (with LastError) if printing couldn't start.</summary>
-        public bool Print(string path)
-        {
-            try
-            {
-                ProcessStartInfo psi;
-                if (Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXEditor)
-                {
-                    string dest = string.IsNullOrEmpty(printerName) ? "" : $"-d \"{printerName}\" ";
-                    psi = new ProcessStartInfo("/usr/bin/lp", $"{dest}-o fit-to-page \"{path}\"")
-                    {
-                        UseShellExecute = false, RedirectStandardError = true, RedirectStandardOutput = true, CreateNoWindow = true
-                    };
-                    using var p = Process.Start(psi);
-                    p.WaitForExit(5000);
-                    if (p.HasExited && p.ExitCode != 0)
-                    {
-                        LastError = p.StandardError.ReadToEnd().Trim();
-                        Debug.LogWarning($"[FruitGame] Print failed: {LastError}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    psi = new ProcessStartInfo(path) { Verb = "print", UseShellExecute = true, CreateNoWindow = true };
-                    Process.Start(psi);
-                }
-                LastError = null;
-                Debug.Log($"[FruitGame] Sent to printer: {path}");
-                return true;
-            }
-            catch (Exception e)
-            {
-                LastError = e.Message;
-                Debug.LogWarning($"[FruitGame] Print failed: {e.Message}");
-                return false;
-            }
-        }
 
         /// <summary>Makes the photo downloadable on the local network and returns its link (null if unavailable).</summary>
         public string Publish(byte[] png)

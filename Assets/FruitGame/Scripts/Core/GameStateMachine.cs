@@ -135,7 +135,7 @@ namespace FruitGame
         {
             if (State != GameState.GameOver || photoBooth == null) return;
             SetState(GameState.Photo);
-            photoBooth.Open(Stats.Score, SaveData.BestScore);
+            photoBooth.Open(Stats.Score);
         }
 
         /// <summary>Calibrate button / C key: re-run calibration from the menu or game over screen.</summary>
