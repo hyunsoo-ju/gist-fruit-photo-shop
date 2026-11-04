@@ -28,6 +28,10 @@ namespace FruitGame
         [SerializeField] PhotoFrame frame;
         [SerializeField] GameObject[] hideDuringPhoto;
         [SerializeField] AudioFeedback audioFeedback;
+        [Tooltip("Guides the pose by voice in the auditory assist mode (M18).")]
+        [SerializeField] Narrator narrator;
+        [SerializeField] FaceTracker tracker;
+        [SerializeField] float poseGuideEvery = 3f;
         const float PhotoAspect = 3f / 4f;
         const int MinPhotoHeight = 1440;
         [SerializeField] int countdownSeconds = 3;
@@ -192,6 +196,26 @@ namespace FruitGame
             previewGroup.SetActive(false);
             countdownText.gameObject.SetActive(false);
             if (phonePanel != null) phonePanel.SetActive(false);
+            if (ByEar) narrator.Say("pose_intro");
+            nextGuide = Time.unscaledTime + poseGuideEvery;
+        }
+
+        bool ByEar => Difficulty.Auditory && narrator != null;
+        float nextGuide;
+
+        /// <summary>By ear: tells the player where to move from the face's position in the photo (3:4 play area).</summary>
+        void GuidePose()
+        {
+            if (!ByEar || narrator.IsSpeaking || Time.unscaledTime < nextGuide) return;
+            nextGuide = Time.unscaledTime + poseGuideEvery;
+            if (tracker == null || !tracker.HasFace) { narrator.Say("pose_noface"); return; }
+            var face = tracker.PlayFaceRect;
+            // The picture is mirrored like a mirror: a face left of centre is the player's left, so they move right.
+            if (face.center.x < 0.38f) narrator.Say("pose_right");
+            else if (face.center.x > 0.62f) narrator.Say("pose_left");
+            else if (face.width < 0.16f) narrator.Say("pose_closer");
+            else if (face.width > 0.42f) narrator.Say("pose_back");
+            else narrator.Say("pose_good");
         }
 
         void Update()
@@ -204,6 +228,7 @@ namespace FruitGame
                 if (a <= 0f) { flashT = -1f; flash.gameObject.SetActive(false); }
             }
 
+            if (step == Step.Pose) GuidePose();
             if (step != Step.Countdown) return;
             countdownLeft -= Time.unscaledDeltaTime;
             int shown = Mathf.CeilToInt(countdownLeft);
@@ -212,6 +237,7 @@ namespace FruitGame
                 lastShown = shown;
                 countdownText.text = shown.ToString();
                 if (audioFeedback != null) audioFeedback.PlayCountdownTick();
+                if (ByEar && shown <= 3) narrator.SayNow("count_" + shown);
             }
             if (countdownLeft <= 0f) Capture();
         }
@@ -232,6 +258,7 @@ namespace FruitGame
             flash.gameObject.SetActive(true);
             flashT = 0f;
             if (audioFeedback != null) audioFeedback.PlayShutter();
+            if (ByEar) narrator.Say("photo_done");
 
             previewImage.texture = LastPhoto;
             savedText.text = "";

@@ -23,17 +23,19 @@ namespace FruitGame
 
         [Header("Falling fruit")]
         public float fallSpeedStart = 2.7f;
-        public float fallSpeedMax = 3.8f;
+        public float fallSpeedMax = 4.05f;
         public float driftCapStart = 0.7f;
-        public float driftCapMax = 1.2f;
+        public float driftCapMax = 1.8f;
         [Tooltip("Exponent of the ease-in curve that ramps difficulty over the round (1 = linear).")]
-        public float difficultyCurve = 2f;
+        public float difficultyCurve = 1f;
         public Vector2 spinDegPerSec = new Vector2(120f, 240f);
         public float spawnXRange = 2.1f;
         public float spawnY = 3.6f;
+        [Tooltip("Gap before the next fruit at the start of the round; it shrinks to nextFruitDelayEnd by the end.")]
         public float nextFruitDelay = 0.6f;
+        public float nextFruitDelayEnd = 0.3f;
         [Tooltip("Visual diameter every fruit is normalised to.")]
-        public float fruitSize = 0.88f;
+        public float fruitSize = 0.7f;
 
         [Header("Play area")]
         public float wallX = 2.25f;
@@ -43,10 +45,12 @@ namespace FruitGame
         public float despawnY = -4.2f;
 
         [Header("Basket")]
-        public float basketMouthWidth = 1.6f;
-        public float basketXLimit = 1.45f;
-        public float basketMaxSpeed = 18f;
-        public float basketHeight = 0.8f;
+        public float basketMouthWidth = 1.3f;
+        public float basketXLimit = 1.55f;
+        public float basketMaxSpeed = 10f;
+        [Tooltip("The basket eases toward its target over about this long (SmoothDamp), so sudden head moves don't slam it into fruit.")]
+        public float basketSmoothTime = 0.08f;
+        public float basketHeight = 0.65f;
         [Tooltip("Bottom radius as a fraction of the mouth radius (the tub tapers).")]
         public float basketTaper = 0.75f;
         public float basketWallThickness = 0.08f;
@@ -56,6 +60,15 @@ namespace FruitGame
         public float knockedGravity = 9f;
         [Range(0f, 1f)] public float fruitBounciness = 0.45f;
         [Range(0f, 1f)] public float fruitFriction = 0.3f;
+        [Tooltip("A knocked fruit's sideways speed is capped at this (m/s).")]
+        public float knockedMaxSideSpeed = 2.2f;
+        [Tooltip("A knocked fruit's upward speed is capped at this (m/s).")]
+        public float knockedMaxUpSpeed = 2.5f;
+        [Tooltip("Basket hits harder than the first value (m/s) bounce less, down to the bounce scale at the second.")]
+        public Vector2 hardHitRange = new Vector2(2f, 7f);
+        [Range(0.1f, 1f)] public float hardHitBounceScale = 0.35f;
+        [Tooltip("A knocked fruit resting on or in the basket's mouth this long counts as caught (no fruit gets stuck there).")]
+        public float restCatchTime = 0.35f;
         [Tooltip("A knocked fruit that hasn't landed in the basket or dropped past the miss line after this long counts as missed.")]
         public float knockedTimeout = 4f;
 
@@ -72,21 +85,70 @@ namespace FruitGame
         public float pileFreezeTime = 1.5f;
 
         [Header("Assist")]
-        public float assistRadius = 1.8f;
-        public float assistStrength = 4f;
-        public float assistExtraSpeedCap = 1.0f;
+        public float assistRadius = 2.6f;
+        public float assistStrength = 7f;
+        public float assistExtraSpeedCap = 1.6f;
+        [Tooltip("Assist strength at the end of the round, as a fraction of its start (it fades over the round).")]
+        [Range(0f, 1f)] public float assistEndLevel = 1f;
+        [Tooltip("The assist follows a moving basket: at this sideways speed (m/s), or just after, it pulls at full strength.")]
+        public float assistFullAtSpeed = 1.2f;
+        [Tooltip("How long (s) the pull lingers after the basket stops.")]
+        public float assistLinger = 0.6f;
+        [Tooltip("Pull left for a basket that sits still (fraction of full).")]
+        [Range(0f, 1f)] public float assistIdleLevel = 0.15f;
+
+        [Header("Harder round (Docs/DESIGN.md §4, M16.1)")]
+        [Tooltip("Fruit dropped per 10 s at the end of the round. The rate climbs in a straight line from the opening pace " +
+                 "(one fall plus the gap, about 3.7 per 10 s) to this, so the round speeds up evenly.")]
+        public float endDropsPer10s = 9f;
+        [Tooltip("Most fruit in the air at once.")]
+        [Min(1)] public int maxFruitInAir = 3;
+        [Tooltip("Fruit drop at least this far (m) from the basket: the first value at the start, the second by the end " +
+                 "(not in Easy), so a basket left in one place catches little.")]
+        public Vector2 spawnAwayFromBasket = new Vector2(0.5f, 1.3f);
+        [Tooltip("Chance that a fruit is golden: faster, worth goldenPoints.")]
+        [Range(0f, 1f)] public float goldenChance = 1f / 12f;
+        public float goldenSpeedFactor = 1.25f;
+        public int goldenPoints = 3;
+        [Tooltip("Chance that a spawn is a bomb, once bombAfterSeconds of the round have passed.")]
+        [Range(0f, 1f)] public float bombChance = 0.125f;
+        public float bombAfterSeconds = 15f;
+        [Tooltip("Points lost for catching a bomb (the score never drops below 0).")]
+        public int bombPenalty = 5;
+        [Tooltip("From this many catches in a row, every catch scores comboMultiplier times.")]
+        public int comboFrom = 5;
+        public int comboMultiplier = 2;
+
+        [Header("Auditory assist mode (Docs/DESIGN.md §11, M18)")]
+        [Tooltip("Steady fall speed (m/s), no ramp.")]
+        public float auditoryFallSpeed = 2.3f;
+        public float auditoryDriftCap = 0.4f;
+        [Tooltip("Pause after each fruit before the next (s).")]
+        public float auditoryFruitDelay = 1f;
+        [Tooltip("Assist in the auditory mode: always on (it doesn't need the basket moving), at this radius (m), strength (m/s²) and extra sideways speed cap (m/s).")]
+        public float auditoryAssistRadius = 2.2f;
+        public float auditoryAssistStrength = 5.5f;
+        public float auditoryAssistExtraSpeedCap = 1.3f;
+
+        [Header("Easy (the gentle round)")]
+        public float easyFallSpeedMax = 3.8f;
+        [Tooltip("Assist in Easy: the original gentle assist, always on, at this radius (m), strength (m/s²) and extra sideways speed cap (m/s).")]
+        public float easyAssistRadius = 1.8f;
+        public float easyAssistStrength = 4f;
+        public float easyAssistExtraSpeedCap = 1f;
+        public float easyDriftCapMax = 1.2f;
 
         [Header("Face control (Docs/DESIGN.md §6)")]
         [Range(0.6f, 1.6f)] public float sensitivity = 1f;
         [Tooltip("Dead zone in normalised t (fraction of the calibrated range), so it scales with each player's range.")]
-        public float deadZone = 0.04f;
+        public float deadZone = 0.02f;
         [Tooltip("Where the face → basket mapping stops being linear and eases into the travel limit.")]
         [Range(0.5f, 0.99f)] public float softClampKnee = 0.8f;
         public float calibMinRangePerSide = 0.03f;
         [Tooltip("One-Euro filter on basket x (metres): lower = smoother at rest.")]
-        public float oneEuroMinCutoff = 1.2f;
+        public float oneEuroMinCutoff = 1.0f;
         [Tooltip("One-Euro filter: higher = less lag when moving fast.")]
-        public float oneEuroBeta = 0.4f;
+        public float oneEuroBeta = 0.5f;
         [Tooltip("Calibration: how still the face must be (± in webcam u) to count as holding a pose. Raise for tremor.")]
         public float steadyTolerance = 0.015f;
         [Tooltip("Calibration: how long a pose must be held.")]
@@ -147,10 +209,41 @@ namespace FruitGame
         public float keyboardBasketSpeed = 7f;
 
         public float FallSpeedAt(float progress01) =>
-            Mathf.Lerp(fallSpeedStart, fallSpeedMax, Ease(progress01));
+            Difficulty.Auditory ? auditoryFallSpeed
+                : Mathf.Lerp(fallSpeedStart, Difficulty.Easy ? easyFallSpeedMax : fallSpeedMax, Ease(progress01));
 
         public float DriftCapAt(float progress01) =>
-            Mathf.Lerp(driftCapStart, driftCapMax, Ease(progress01));
+            Difficulty.Auditory ? auditoryDriftCap
+                : Mathf.Lerp(driftCapStart, Difficulty.Easy ? easyDriftCapMax : driftCapMax, Ease(progress01));
+
+        /// <summary>Gap before the next fruit: shrinks over the round (steady in Easy).</summary>
+        public float NextFruitDelayAt(float progress01) =>
+            Difficulty.Auditory ? auditoryFruitDelay
+                : Difficulty.Easy ? nextFruitDelay : Mathf.Lerp(nextFruitDelay, nextFruitDelayEnd, Ease(progress01));
+
+        /// <summary>
+        /// Time between drops (−1 in Easy, which waits for each fruit to land). The drop rate climbs in a straight line
+        /// from the opening pace (one fruit's fall plus the gap, the same as one at a time) to endDropsPer10s, so the
+        /// round speeds up by the same amount every few seconds; late on, the next fruit drops before the last lands.
+        /// </summary>
+        public float DropIntervalAt(float progress01)
+        {
+            if (Difficulty.Gentle) return -1f;
+            float startRate = 1f / ((spawnY - rimY) / fallSpeedStart + nextFruitDelay);
+            float endRate = Mathf.Max(startRate, endDropsPer10s / 10f);
+            return 1f / Mathf.Lerp(startRate, endRate, Mathf.Clamp01(progress01));
+        }
+
+        /// <summary>The assist's reach (m) for the current mode.</summary>
+        public float AssistRadius => Difficulty.Auditory ? auditoryAssistRadius : Difficulty.Easy ? easyAssistRadius : assistRadius;
+        /// <summary>The assist's strength (m/s²) for the current mode.</summary>
+        public float AssistStrength => Difficulty.Auditory ? auditoryAssistStrength : Difficulty.Easy ? easyAssistStrength : assistStrength;
+        /// <summary>How much faster than the drift cap the assist may push a fruit sideways (m/s), for the current mode.</summary>
+        public float AssistExtraSpeedCap => Difficulty.Auditory ? auditoryAssistExtraSpeedCap : Difficulty.Easy ? easyAssistExtraSpeedCap : assistExtraSpeedCap;
+
+        /// <summary>Assist strength factor: fades over the round (full in Easy).</summary>
+        public float AssistLevelAt(float progress01) =>
+            Difficulty.Gentle ? 1f : Mathf.Lerp(1f, assistEndLevel, Mathf.Clamp01(progress01));
 
         public bool UsesTimer => endCondition != EndCondition.Lives;
         public bool UsesLives => endCondition != EndCondition.Timer;

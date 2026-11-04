@@ -5,8 +5,12 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Spawns exactly one fruit at a time. The next fruit only appears after the current one
-    /// is caught or missed, plus GameConfig.nextFruitDelay.
+    /// Spawns the fruit (Docs/DESIGN.md §4–§5). Normally one at a time: the next appears after the current one is caught
+    /// or missed, plus a gap that shrinks over the round. Except in Easy, fruit also drop on a beat
+    /// (GameConfig.DropIntervalAt) that starts at that same pace and quickens evenly, so later in the round the next fruit
+    /// drops before the last one lands (never more than two in the air). Each spawn may be golden or (after bombAfterSeconds)
+    /// a bomb. The assist fades over the round. Easy (Difficulty.Easy) keeps one at a time, steady gaps, full assist and
+    /// no bombs.
     /// </summary>
     public class FruitSpawner : MonoBehaviour
     {
@@ -18,6 +22,8 @@ namespace FruitGame
         [SerializeField] Material greyboxMaterial;
         [Tooltip("Material for fruit in play (rim-lit so they pop against the hazed pile). Leave empty to keep the model's own.")]
         [SerializeField] Material liveMaterial;
+        [Tooltip("Voxel bomb visual (Bake Props), with a \"Fuse Tip\" child for the burning fuse.")]
+        [SerializeField] GameObject bombPrefab;
 
         /// <summary>Raised when the current fruit is caught or missed.</summary>
         public event Action<FallingFruit, FallingFruit.Outcome> FruitResolved;
@@ -26,12 +32,21 @@ namespace FruitGame
 
         /// <summary>Round progress 0..1, used for the difficulty ramp.</summary>
         public Func<float> Progress { get; set; } = () => 0f;
+        /// <summary>Seconds into the round, for when bombs may start.</summary>
+        public Func<float> Elapsed { get; set; } = () => 0f;
 
         public IReadOnlyList<FruitType> FruitTypes => fruitTypes;
         public bool Spawning { get; private set; }
-        public bool HasActiveFruit => current != null && !current.Resolved;
+        public bool HasActiveFruit
+        {
+            get
+            {
+                foreach (var f in active) if (f != null && !f.Resolved) return true;
+                return false;
+            }
+        }
 
-        FallingFruit current;
+        readonly List<FallingFruit> active = new List<FallingFruit>();
         float nextSpawnTime = -1f;
         PhysicsMaterial fruitMaterial;
         readonly Dictionary<FruitType, Material> materials = new Dictionary<FruitType, Material>();
@@ -40,6 +55,7 @@ namespace FruitGame
         {
             Spawning = true;
             nextSpawnTime = Time.time;
+            lastSpawnTime = -1f;
         }
 
         /// <summary>Stops new spawns. A fruit already in the air is allowed to finish.</summary>
@@ -54,54 +70,100 @@ namespace FruitGame
             StopSpawning();
             foreach (var f in GetComponentsInChildren<FallingFruit>())
                 Destroy(f.gameObject);
-            current = null;
+            active.Clear();
         }
+
+        float lastSpawnTime = -1f;
 
         void Update()
         {
-            if (Spawning && !HasActiveFruit && nextSpawnTime >= 0f && Time.time >= nextSpawnTime)
+            active.RemoveAll(f => f == null || f.Resolved);
+            float progress = Mathf.Clamp01(Progress());
+            if (assist != null) assist.roundLevel = config.AssistLevelAt(progress);
+            if (!Spawning) return;
+
+            float beat = config.DropIntervalAt(progress);
+            bool afterLanding = active.Count == 0 && nextSpawnTime >= 0f && Time.time >= nextSpawnTime;
+            // On the beat (later in the round): the next drops on time, even while the last is still falling.
+            bool onBeat = beat > 0f && active.Count < config.maxFruitInAir && lastSpawnTime >= 0f && Time.time >= lastSpawnTime + beat;
+            if (afterLanding || onBeat)
             {
                 nextSpawnTime = -1f;
                 Spawn();
             }
         }
 
+        /// <summary>A drop x at least spawnAwayFromBasket from the basket (growing over the round; uniform in Easy).</summary>
+        float SpawnX(float progress)
+        {
+            float range = config.spawnXRange;
+            if (Difficulty.Gentle || basket == null) return UnityEngine.Random.Range(-range, range);
+            float away = Mathf.Lerp(config.spawnAwayFromBasket.x, config.spawnAwayFromBasket.y, progress);
+            float bx = basket.X;
+            // The allowed stretches either side of the basket, picked in proportion to their length.
+            float leftLen = Mathf.Max(0f, (bx - away) - (-range));
+            float rightLen = Mathf.Max(0f, range - (bx + away));
+            if (leftLen + rightLen <= 0.01f) return bx < 0f ? range : -range;
+            float r = UnityEngine.Random.value * (leftLen + rightLen);
+            return r < leftLen ? -range + r : bx + away + (r - leftLen);
+        }
+
+        FallingFruit.Kind PickKind()
+        {
+            if (!Difficulty.Gentle && Elapsed() >= config.bombAfterSeconds && bombPrefab != null
+                && UnityEngine.Random.value < config.bombChance)
+                return FallingFruit.Kind.Bomb;
+            return UnityEngine.Random.value < config.goldenChance ? FallingFruit.Kind.Golden : FallingFruit.Kind.Fruit;
+        }
+
         void Spawn()
         {
-            var type = PickType();
+            var kind = PickKind();
+            var type = kind == FallingFruit.Kind.Bomb ? null : PickType();
             float progress = Mathf.Clamp01(Progress());
-            float fall = config.FallSpeedAt(progress);
+            float fall = config.FallSpeedAt(progress) * (kind == FallingFruit.Kind.Golden ? config.goldenSpeedFactor : 1f);
             float cap = config.DriftCapAt(progress);
 
-            var go = new GameObject(type != null ? $"Fruit_{type.displayName}" : "Fruit");
+            var go = new GameObject(kind == FallingFruit.Kind.Bomb ? "Bomb" : type != null ? $"Fruit_{type.displayName}" : "Fruit");
             go.transform.SetParent(transform, false);
-            go.transform.position = new Vector3(
-                UnityEngine.Random.Range(-config.spawnXRange, config.spawnXRange), config.spawnY, 0f);
+            go.transform.position = new Vector3(SpawnX(progress), config.spawnY, 0f);
             go.transform.rotation = UnityEngine.Random.rotation;
-            BuildVisual(go.transform, type);
+            if (kind == FallingFruit.Kind.Bomb)
+            {
+                var model = Instantiate(bombPrefab, go.transform);
+                NormaliseSize(model.transform, config.fruitSize);
+                go.AddComponent<BombFuse>();
+            }
+            else BuildVisual(go.transform, type);
             // Step a whole game pixel at a time in the pixel render (Docs/DESIGN.md §3).
             foreach (Transform model in go.transform) model.gameObject.AddComponent<PixelSnap>().renderScale = config.renderScale;
-            if (liveMaterial != null)
+            if (liveMaterial != null && kind != FallingFruit.Kind.Bomb)
                 foreach (var r in go.GetComponentsInChildren<Renderer>())
                 {
                     var live = FruitType.WithAtlas(liveMaterial, type != null ? type.atlas : null);
+                    if (kind == FallingFruit.Kind.Golden) live = FruitType.Golden(liveMaterial);
                     var mats = r.sharedMaterials;
                     for (int i = 0; i < mats.Length; i++) mats[i] = live;
                     r.sharedMaterials = mats;
                 }
+            if (kind == FallingFruit.Kind.Golden) go.AddComponent<GoldenSparkle>().radius = config.fruitSize * 0.45f;
 
-            current = go.AddComponent<FallingFruit>();
-            current.Init(type, config, basket, assist, fall, UnityEngine.Random.Range(-cap, cap), cap, FruitMaterial());
-            current.OnResolved += HandleResolved;
-            current.OnHitBasket += HandleHitBasket;
-            FruitSpawned?.Invoke(current);
+            var fruit = go.AddComponent<FallingFruit>();
+            fruit.Init(type, kind, config, basket, assist, fall, UnityEngine.Random.Range(-cap, cap), cap, FruitMaterial());
+            fruit.OnResolved += HandleResolved;
+            fruit.OnHitBasket += HandleHitBasket;
+            active.Add(fruit);
+            lastSpawnTime = Time.time;
+            FruitSpawned?.Invoke(fruit);
         }
 
         void HandleResolved(FallingFruit fruit, FallingFruit.Outcome outcome)
         {
             fruit.OnResolved -= HandleResolved;
             fruit.OnHitBasket -= HandleHitBasket;
-            if (Spawning) nextSpawnTime = Time.time + config.nextFruitDelay;
+            active.Remove(fruit);
+            // The next fruit follows once nothing is in the air (late in the round, it may already have dropped).
+            if (Spawning && active.Count == 0) nextSpawnTime = Time.time + config.NextFruitDelayAt(Mathf.Clamp01(Progress()));
             FruitResolved?.Invoke(fruit, outcome);
         }
 

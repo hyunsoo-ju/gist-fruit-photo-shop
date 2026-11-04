@@ -41,6 +41,26 @@ namespace FruitGame
         static readonly Dictionary<(Material, Texture2D), Material> retextured = new Dictionary<(Material, Texture2D), Material>();
 
         /// <summary>mat with its base map swapped for tex (shared, cached per pair); mat itself when tex is empty.</summary>
+        static readonly Dictionary<Material, Material> golden = new Dictionary<Material, Material>();
+        static readonly Color Gold = new Color32(0xF5, 0xC0, 0x2E, 0xFF);
+
+        /// <summary>A golden version of a fruit material (Docs/DESIGN.md §4): plain gold instead of the fruit's colours,
+        /// so the shape still reads. Cached per source material.</summary>
+        public static Material Golden(Material mat)
+        {
+            if (mat == null) return null;
+            if (!golden.TryGetValue(mat, out var m) || m == null)
+            {
+                m = new Material(mat) { name = mat.name + "_Golden" };
+                if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", Texture2D.whiteTexture);
+                if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", Texture2D.whiteTexture);
+                if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Gold);
+                if (m.HasProperty("_RimColor")) m.SetColor("_RimColor", new Color(1f, 0.95f, 0.7f));
+                golden[mat] = m;
+            }
+            return m;
+        }
+
         public static Material WithAtlas(Material mat, Texture2D tex)
         {
             if (mat == null || tex == null) return mat;

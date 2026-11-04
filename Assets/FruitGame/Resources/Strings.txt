@@ -1,12 +1,16 @@
 # FruitGame string table (Docs/DESIGN.md §11). key<TAB>Korean (in-game tone: 해요체)<TAB>English. \n = new line; {0}, {1} = values.
 start.title	과일을 받아요!	Catch the fruit!
-start.hint	고개를 움직여서 바구니를 옮겨요	Move your head to steer the basket
+start.hint	머리를 움직여서 바구니를 옮겨요	Move your head to steer the basket
 start.play	시작	Play
 start.calibrate	보정하기	Calibrate
+start.easy	쉬움 모드	Easy mode
+start.auditory	소리로 하기	Play by sound
+start.auditoryTag	소리 모드	Sound mode
 hud.go	시작!	Go!
 hud.lives	목숨 {0}	Lives {0}
 hud.scoreboard	점수표	Scoreboard
 hud.noCatch	아직 없어요	None yet
+hud.combo	{0}연속! 점수 ×{1}	{0} in a row! ×{1}
 pause.title	잠깐 멈춤	Paused
 pause.resume	계속하기	Resume
 common.mainMenu	처음으로	Main menu
@@ -17,13 +21,14 @@ over.heading	시간 끝!	Time's up!
 over.newBest	최고 기록!	New best!
 over.best	최고 {0}점	Best {0}
 over.missed	놓친 과일 {0}개	Missed {0}
+over.bombs	폭탄 {0}개	Bombs {0}
 over.none	받은 과일이 없어요	No fruit caught
 over.playAgain	다시 하기	Play again
 over.photo	사진 찍기	Photo
 calib.centre	카메라를 똑바로 봐 주세요	Look straight at the camera
-calib.left	◀ 고개를 왼쪽으로\n<size=64>편한 만큼만 돌려요</size>	◀ Move your head left\n<size=64>as far as is comfortable</size>
-calib.right	고개를 오른쪽으로 ▶\n<size=64>편한 만큼만 돌려요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
-calib.try	해 봐요!\n<size=64>고개를 움직여서 바구니를 옮겨 봐요</size>	Try it!\n<size=64>Move your head to steer the basket</size>
+calib.left	◀ 머리를 왼쪽으로\n<size=64>편한 만큼만 움직여요</size>	◀ Move your head left\n<size=64>as far as is comfortable</size>
+calib.right	머리를 오른쪽으로 ▶\n<size=64>편한 만큼만 움직여요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
+calib.try	해 봐요!\n<size=64>머리를 움직여서 바구니를 옮겨 봐요</size>	Try it!\n<size=64>Move your head to steer the basket</size>
 calib.looking	얼굴을 찾고 있어요…	Looking for your face…
 calib.closer	조금 더 가까이 와 주세요	Move a little closer
 calib.farther	조금만 뒤로 가 주세요	Move back a little

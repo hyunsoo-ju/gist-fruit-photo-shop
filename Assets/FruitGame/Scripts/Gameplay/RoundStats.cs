@@ -5,7 +5,8 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Score plus caught/missed counts per fruit type for one round.
+    /// Score plus caught/missed counts per fruit type for one round, the streak for the combo, and golden fruit and
+    /// bombs caught.
     /// </summary>
     public class RoundStats
     {
@@ -13,6 +14,10 @@ namespace FruitGame
         public int TotalCaught { get; private set; }
         public int TotalMissed { get; private set; }
         public int Streak { get; private set; }
+        public int GoldenCaught { get; private set; }
+        public int BombsCaught { get; private set; }
+        /// <summary>Points rules (golden, combo, bomb); set once by the game.</summary>
+        public GameConfig Config { get; set; }
 
         readonly Dictionary<FruitType, int> caught = new Dictionary<FruitType, int>();
         readonly Dictionary<FruitType, int> missed = new Dictionary<FruitType, int>();
@@ -32,6 +37,8 @@ namespace FruitGame
             TotalCaught = 0;
             TotalMissed = 0;
             Streak = 0;
+            GoldenCaught = 0;
+            BombsCaught = 0;
             caught.Clear();
             missed.Clear();
             history.Clear();
@@ -39,16 +46,29 @@ namespace FruitGame
             ScoreChanged?.Invoke(0, 0);
         }
 
-        public int RecordCatch(FruitType type, float elapsed)
+        public int RecordCatch(FruitType type, FallingFruit.Kind kind, float elapsed)
         {
-            int points = ScoreRules.PointsFor(type, this);
+            Streak++;
+            int points = ScoreRules.PointsFor(type, kind, Streak, Config);
             Score += points;
             TotalCaught++;
-            Streak++;
+            if (kind == FallingFruit.Kind.Golden) GoldenCaught++;
             caught[type] = caught.TryGetValue(type, out var n) ? n + 1 : 1;
             history.Add(new Vector2(elapsed, Score));
             ScoreChanged?.Invoke(Score, points);
             return points;
+        }
+
+        /// <summary>A caught bomb: loses bombPenalty points (never below 0) and breaks the streak. Returns the change.</summary>
+        public int RecordBomb(float elapsed)
+        {
+            int loss = Mathf.Min(Score, Config.bombPenalty);
+            Score -= loss;
+            Streak = 0;
+            BombsCaught++;
+            history.Add(new Vector2(elapsed, Score));
+            ScoreChanged?.Invoke(Score, -loss);
+            return -loss;
         }
 
         public void RecordMiss(FruitType type)

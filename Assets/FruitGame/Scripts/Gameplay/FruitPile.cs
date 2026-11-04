@@ -98,7 +98,8 @@ namespace FruitGame
         }
 
         /// <summary>Drops a copy of a caught fruit onto the pile.</summary>
-        public void Add(FruitType type)
+        /// <param name="golden">A golden catch: the pile copy is gold too.</param>
+        public void Add(FruitType type, bool golden = false)
         {
             if (fruits.Count >= config.pileMax) RemoveOldest();
 
@@ -108,7 +109,7 @@ namespace FruitGame
             spawner.BuildVisual(go.transform, type);
             if (layer >= 0)
                 foreach (var child in go.GetComponentsInChildren<Transform>()) child.gameObject.layer = layer;
-            MakeBackground(go, type);
+            MakeBackground(go, type, golden);
 
             float radius = FitCollider(go);
             go.transform.position = FreeSpawnPoint(radius);
@@ -128,6 +129,7 @@ namespace FruitGame
             var fruit = go.AddComponent<PileFruit>();
             fruit.Init(config.pileFreezeSpeed, config.pileFreezeTime);
             fruit.Type = type;
+            fruit.Golden = golden;
             fruit.Landed += HandleLanded;
             fruits.Add(fruit);
         }
@@ -136,9 +138,9 @@ namespace FruitGame
         /// Background look: hazed material, and no shadows either way, so pile fruit sit flat in the distance
         /// and never read as a falling fruit.
         /// </summary>
-        void MakeBackground(GameObject go, FruitType type)
+        void MakeBackground(GameObject go, FruitType type, bool golden)
         {
-            var haze = FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
+            var haze = golden ? FruitType.Golden(hazeMaterial) : FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
             foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -158,8 +160,9 @@ namespace FruitGame
             {
                 if (f == null) continue;
                 var type = f.Type;
-                var mat = on ? FruitType.WithAtlas(photoMaterial, type != null ? type.atlas : null)
-                             : FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
+                var mat = f.Golden ? FruitType.Golden(on ? photoMaterial : hazeMaterial)
+                    : on ? FruitType.WithAtlas(photoMaterial, type != null ? type.atlas : null)
+                         : FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
                 foreach (var r in f.GetComponentsInChildren<Renderer>())
                 {
                     var mats = r.sharedMaterials;

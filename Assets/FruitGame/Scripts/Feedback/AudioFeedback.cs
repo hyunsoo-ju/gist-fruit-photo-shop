@@ -21,7 +21,8 @@ namespace FruitGame
 
         void Awake() => source = GetComponent<AudioSource>();
 
-        public void PlayCatch() => Play(catchPop, Random.Range(0.95f, 1.08f));
+        public void PlayCatch(bool golden = false) => Play(catchPop, golden ? 1.35f : Random.Range(0.95f, 1.08f));
+        public void PlayBomb() => Play(missThud, 0.55f, 1.2f);
         public void PlayRimGraze() => Play(rimTink);
         public void PlayWallBump() => Play(pileLand, Random.Range(1.25f, 1.4f), 0.6f);
         public void PlayMiss() => Play(missThud);

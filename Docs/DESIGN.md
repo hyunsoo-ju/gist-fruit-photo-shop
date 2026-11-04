@@ -28,7 +28,7 @@ This document describes the MVP as it should be. Where the current build doesn't
 | Style | **Pixel / voxel**: voxel models, a gently pixelated render, Neo둥근모 Pro pixel font, keycap-style 3D UI |
 | Language | **Korean first** (in-game tone: 해요체), English as a fallback |
 | Session | A **60 s timed round**. A lives counter is coded in but switched off. |
-| Accessibility | Per-player calibration of head movement, so even a small comfortable range covers the whole basket travel; forgiving rules; large, high-contrast UI |
+| Accessibility | Per-player calibration of head movement, so even a small comfortable range covers the whole basket travel; forgiving rules; large, high-contrast UI; an **auditory assist mode** for blind and low-vision players (binaural parking-sensor beeps and a Korean narrator, M18) |
 | Output | A four-cut photo on a **100 × 148 mm postcard** (1800 × 1200 at 300 dpi, M17), printed on the SELPHY or downloaded over local Wi-Fi via QR code. Until M17: a 1080 × 1440 image. |
 
 ---
@@ -91,18 +91,19 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 
 ## 4. Rules & scoring
 
-- **Caught** = points for that fruit type (all 1 for now). The fruit pops into the basket, then a copy drops onto the background pile.
+- **Caught** = points for that fruit type (all 1; golden 3; ×2 in a combo). The fruit pops into the basket, then a copy drops onto the background pile.
 - **Missed** = no penalty in timed mode; it only costs time. The miss is counted. The fruit falls off-screen behind the bottom bushes.
 - **Round timer:** 60 s, top-right. It pauses whenever the game pauses. The last 10 s pulse.
 - **Lives (coded, off):** `LivesCounter` and a lives HUD exist and are tested, but `GameConfig.endCondition = Timer` keeps them inactive. Switching to `Lives` (or `TimerOrLives`) makes 3 misses end the round, with no other code change.
-- **Difficulty ramp:** driven by elapsed round time. Fall speed goes from 2.7 to 3.8 m/s and the drift cap from 0.7 to 1.2 m/s along an ease-in curve. It stays easy on purpose.
-- **Harder round (M16.1):** the current round is too easy, so it gets harder through **pace and variety, never through more head movement**: calibration still maps each player's own range to the full basket travel, and the basket keeps its size. Candidate levers, tried in this order and tuned by playtest:
-  1. A steeper ramp: fall speed toward about 5 m/s and the drift cap toward about 1.8 m/s by the end of the round, with more wall bounces.
-  2. Less waiting: the gap before the next fruit shrinks from 0.6 s to about 0.3 s over the round.
-  3. **Two fruit at once** in the last 20 s: the next fruit drops when the current one passes half height.
-  4. The assist fades over the round (full at the start, about half by the end).
-  5. Scoring variety: a rare, faster **golden fruit** worth 3, a **combo** bonus for consecutive catches, and possibly a **rotten fruit** to dodge (no points, and it never joins the pile).
-  The target is a catch rate of roughly 40–50 % for a first-timer and 70–80 % for a practised player, read from the round stats. An **Easy** option in the staff settings keeps today's gentle curve for players who need it.
+- **The round gets harder through pace and variety, never through more head movement** (M16.1): calibration still maps each player's own range to the full basket travel, and the basket keeps its size.
+  - **Everything ramps evenly** (linear over the round, no steps): fall speed 2.7 → 4.05 m/s (1.5×) and the drift cap 0.7 → 1.8 m/s, so wall bounces become common. The assist stays at full strength all round.
+  - **Drops away from the basket:** each fruit drops at least 0.5 m from where the basket is at the start of the round, growing to 1.3 m by the end (`spawnAwayFromBasket`; not in Easy), so the player has to move to it.
+  - **Pace:** fruit drop on a beat whose rate climbs in a straight line, from the opening pace (one fruit's fall plus a 0.6 s gap: 3.7 per 10 s) to **9 per 10 s** at the end (`endDropsPer10s`), the same increase every 10 s. Since fruit fall only 1.5× faster by the end while the rate climbs to 9 per 10 s, more of them share the screen late on (up to `maxFruitInAir`, 3). *An earlier version switched to two at once with 20 s left and ramped along a squared curve; that felt like the game suddenly doubled in speed.*
+  - **Golden fruit** (1 in 12): gold all over with a sparkle trail, 25 % faster, worth **3**; it joins the pile in gold.
+  - **Combo:** from the **5th catch in a row**, every catch scores **×2**, with a "N연속! 점수 ×2" pop under the score. A missed fruit or a caught bomb resets the streak.
+  - **Bomb** (1 in 8, from 15 s in): a dark voxel bomb whose fuse burns at the tip, throwing sparks; the assist never pulls it, and letting it fall past costs nothing. Catching it blows it up (a burst of fire and smoke blocks, a low thud) and costs **5 points** (never below 0), with a red "−5" pop. Bombs never join the pile; game over lists them ("폭탄 n개").
+  - **Easy** keeps the earlier gentle round (fall speed to 3.8 m/s, drift to 1.2, each fruit waits for the last to land plus 0.6 s, the original gentle assist (1.8 m, strength 4, always on), no bombs; golden fruit and combos stay). Staff press **E** on the title screen ("쉬움 모드" shows under Calibrate); it switches back off when the round ends.
+  - **Target:** about 40–50 % of fruit caught for a first-timer and 70–80 % for a practised player, read from the round stats; final values are tuned in M6. *Measured with nobody moving the basket: 29 % of fruit caught and a score of about 5 (it was 68 % before the assist followed the basket's movement). Still to check with real players: the catch rate when moving, and the eased basket's feel.*
 - **Best score** is saved in PlayerPrefs.
 
 ### Fruit types & scoring hooks
@@ -121,18 +122,18 @@ Every fruit is its own type, even though all are worth the same for now, so vari
 
 | Property | Spec |
 |---|---|
-| Spawn position | Random x in ±2.1 m, at y = +3.6, just above the top edge, so fruit appears to drop out of the canopy |
+| Spawn position | Random x in ±2.1 m, at least `spawnAwayFromBasket` (0.5 → 1.3 m over the round) from the basket, at y = +3.6, just above the top edge, so fruit appears to drop out of the canopy |
 | Vertical speed | **Constant** per fruit: 2.7 m/s at the start, ramping to at most 3.8 m/s |
 | Sideways speed | Random but capped: \|vx\| ≤ 0.7 m/s at the start, up to 1.2 m/s, wide enough that wall bounces are common and visible |
 | Walls | Walls at x = ±2.25 reflect vx, so fruit never leaves the play column sideways. They're shown as voxel crate stacks with bounce feedback (§3), which matters in landscape, where the screen is much wider than the column. |
 | Spin | 120–240 °/s around a random axis, fast enough to read the fruit's shape. Cosmetic during the scripted fall. |
-| Size | Every fruit is normalised to about **0.88 m** across (`fruitSize` × the type's `sizeScale`), whatever its model scale |
+| Size | Every fruit is normalised to about **0.70 m** across (`fruitSize` × the type's `sizeScale`), whatever its model scale |
 
 ### Two-phase movement with real basket collisions
 Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 
 1. **Scripted fall:** every physics step its velocity is held at `(vx, −vy)`, so the constant downward speed stays exact. The assist (§7) nudges vx and the walls reflect it.
-2. **Knocked:** the moment it touches the basket (rim, side wall or floor edge), the scripted fall stops and physics takes over. The fruit bounces (bounciness 0.45) and falls under `knockedGravity` (9 m/s²). The assist no longer applies, so a basket that arrives late *bangs the fruit away* instead of swallowing it. The basket is a kinematic Rigidbody moved with `MovePosition`, so a fast basket also shoves fruit sideways.
+2. **Knocked:** the moment it touches the basket (rim, side wall or floor edge), the scripted fall stops and physics takes over. The fruit bounces (bounciness 0.45, less for hard hits: from 2 m/s of impact the bounce scales down to 35 % at 7 m/s) and falls under `knockedGravity` (9 m/s²). Knocked speeds are capped (2.2 m/s sideways, 2.5 m/s upward), so the basket never flings fruit across the screen. A knocked fruit that comes back down into the tub is caught as usual, and one that comes to rest on the rim or in the mouth for 0.35 s counts as caught too, so nothing sits there unresolved and blocks the next fruit; one still unresolved after 4 s is caught if it's on the basket and otherwise missed and dropped through. The assist no longer applies, so a basket that arrives late *bangs the fruit away* instead of swallowing it. The basket is a kinematic Rigidbody moved with `MovePosition`, eased (below), so it nudges fruit rather than slamming them.
 
 ### Catch / miss detection
 - **Caught:** the fruit's centre is inside the tub (below the rim, between the tapered inner walls), detected by a trigger inside the basket. That covers clean drops and lucky bounces off the rim.
@@ -147,8 +148,8 @@ Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 | Property | Spec |
 |---|---|
 | Axis | Follows face tracking on x only; y is fixed with the rim at −2.0 (roughly chest height) |
-| Size | Mouth **1.6 m** wide (a third of the screen), 0.8 m tall, tapering to 0.75 × at the bottom. The model is the crate pack's wooden **basin**, voxelised (§12) with its rim on the catch line, tilted 5° toward the camera so the mouth reads. |
-| Travel | x clamped to ±1.45 m so the basket never leaves the screen |
+| Size | Mouth **1.3 m** wide, 0.65 m tall, tapering to 0.75 × at the bottom. The model is the crate pack's wooden **basin**, voxelised (§12) with its rim on the catch line, tilted 5° toward the camera so the mouth reads. |
+| Travel | x clamped to ±1.55 m, so the basket reaches the crate walls but never passes them |
 | Movement | The player's **own comfortable range** maps to the **full** basket travel |
 
 ![Face to basket mapping](images/04-face-to-basket.svg)
@@ -156,10 +157,10 @@ Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 ### Mapping, per frame
 1. `u` = horizontal centre of the tracked face box in the **mirrored** camera image, measured across the **3:4 play area** (the middle 3:4 of the camera frame, the part the photos show; 0…1 across it). Mirroring means moving left moves the basket left, like a mirror. Because `u` is relative to the play area rather than the screen, a calibration means the same in portrait and landscape, and with any camera shape.
 2. `t = (u − u_centre) / (u_centre − u_left)` left of centre, and `(u − u_centre) / (u_right − u_centre)` right of centre. Each side uses its **own** measured range, so a player who turns further one way still reaches both edges. **Sensitivity** (0.6×–1.6×) scales on top.
-3. Dead zone: `|t| < 0.04 → 0`, so small head jitter at rest doesn't move the basket.
+3. Dead zone: `|t| < 0.02 → 0`, so small head jitter at rest doesn't move the basket while small deliberate moves still do.
 4. `x = limit · softclamp(t)`: linear through the middle, easing into ±limit past the 0.8 knee, so overshooting your range doesn't feel like hitting a wall.
-5. A **One-Euro filter** on x (min cutoff 1.2, β 0.4): smooth when still, responsive when moving fast.
-6. `MoveTowards` with a max speed of 18 m/s to absorb tracker glitches.
+5. A **One-Euro filter** on x (min cutoff 1.0, β 0.5): smooth when still, responsive when moving fast.
+6. The basket **eases** toward that x (`SmoothDamp`, about 0.08 s, at most 10 m/s), which absorbs tracker glitches and keeps it from slamming into fruit.
 
 > The basket deliberately moves further than the face does on screen, so it won't sit exactly under the player's chin. Crossing the whole camera shot with your head is unviable, especially for players with limited neck or upper-body movement.
 
@@ -190,8 +191,8 @@ Accessibility details:
 
 A slight attractor with a capped radius, to make the game forgiving:
 
-- Only acts on the current falling fruit, only during its **scripted fall** (never once knocked), only while it's **above the rim**, and only within **R = 1.8 m** of the basket mouth.
-- Adds a **horizontal** acceleration toward the basket's x: `a = strength · (1 − d/R)` with strength 4 m/s², capped so vx never exceeds the drift cap + 1.0 m/s.
+- Only acts on the current falling fruit, only during its **scripted fall** (never once knocked), only while it's **above the rim**, and only within **R = 2.6 m** of the basket mouth. It never fades during the round, but it **follows a moving basket**: full strength while the basket moves at 1.2 m/s or more, lingering about 0.6 s after it stops, and only 15 % for a basket that sits still. Players reaching for a fruit get the full, wide pull; standing still doesn't pay off.
+- Adds a **horizontal** acceleration toward the basket's x: `a = strength · (1 − d/R)` with strength 7 m/s² (× the movement factor above), capped so vx never exceeds the drift cap + 1.6 m/s.
 - Never touches vertical speed, so the constant fall speed holds.
 - It noticeably pulls near-misses in, but a basket that's too late still gets hit and knocks the fruit away. Strength 0 turns it off ("Assist: Off / Low / Normal" in settings, M6).
 
@@ -341,7 +342,7 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 
 | Screen | Contents | Shortcut |
 |---|---|---|
-| **Title** | Voxel title with icon and English line, the hint, **Play**, **Calibrate** | Space / Enter = play |
+| **Title** | Voxel title with icon and English line, the hint, **Play**, **Calibrate** | Space / Enter = play; E = Easy for the next round |
 | **Calibration** | Pose prompts with arrows, the steady ring around the face, **Try it** with **Looks good** / **Redo**, **Back** | Esc = back |
 | **Playing** | Score, timer, **II** pause button at the top centre | P / Esc = pause |
 | **Pause** | Dimmed game, **Resume**, **Main menu** (abandons the round) | P / Esc / Space = resume |
@@ -353,6 +354,20 @@ A staff **Settings** panel (M6), opened with **F4** or by holding the top-left c
 ### Juice & audio
 - A catch squashes the basket for 0.12 s and bursts a few block particles; a miss plays a soft thud; a rustle from the canopy telegraphs each spawn.
 - Sounds: pop (catch), tink (rim), thud (miss), rustle (spawn), pile land, countdown tick, round over, and the camera shutter (action shots and the final shot). All short, one mixer, nothing loud. A gentle ambience loop is a polish item.
+
+### Auditory assist mode (M18)
+A mode for blind and low-vision players: the round is played by ear, and a Korean narrator talks the player through it. It's built on the Game Accessibility Guidelines' advice (use every property of a sound, keep spatial cues consistent, don't overload the player, test with blind players).
+
+- **Turning it on:** a **"소리로 하기"** keycap on the title screen (for a companion or staff to press) or the staff key **A**; the narrator confirms ("소리 모드를 켰어요") and a "소리 모드" tag shows. Like Easy, it switches off when the round ends.
+- **An even gentler round than Easy:** fruit fall steadily (2.3 m/s, no ramp; about 2.4 s from the canopy to the basket), one at a time with a 1 s pause between them, dropping anywhere; the assist reaches 2.2 m at strength 5.5 (about 80 % of the normal assist) and is always on (it doesn't depend on the basket moving); no bombs. Golden fruit stay, with their own sparkly beep.
+- **The beep (headphones):** the falling fruit sounds like a **parking sensor** heard from the basket:
+  - **Direction is binaural:** the beep is placed left or right by how far the fruit is to the side of the basket, with an interaural time difference (up to about 0.65 ms, Woodworth's formula), a level difference and a softened far ear, so it sits at a precise angle rather than just in one ear. Straight above the basket it's centred.
+  - **Beeps speed up** as the basket lines up under the fruit (about 1.5 per second when far, 15 per second when close) and become a **steady tone** when the basket is right under it.
+  - **Pitch rises** as the fruit falls closer to the basket, so the player hears it about to land.
+  - A bright rising **chime** on a catch (sparklier for a golden fruit) and a soft falling **note** on a miss. The beep ducks while the narrator speaks.
+- **The narrator** (Korean, fast and lively, pre-rendered with Google Cloud Text-to-Speech, ko-KR-Neural2-B at 1.5× speed and +5 semitones): explains the objective before the countdown, counts down, announces the time left and the score at 45, 30 and 15 seconds ("30초 남았어요, 지금 12점!"), says the final score (not the fruit-by-fruit tally), asks whether to take a photo (a companion presses **사진 찍기**), then guides the pose from face tracking ("조금 왼쪽으로", "조금 가까이", "좋아요, 그대로!") and counts the shot. It also talks the player through calibration: an introduction, each pose (straight ahead, left, right), "hold still" once they're steady (the progress ring can't be seen), "좋아요!" after each pose, "a little further left/right", closer or farther back, "looking for your face", how to accept or redo (a companion presses the button), and a closing line. Every line is a clip rendered once by `Tools/render_narration.py` from `Assets/FruitGame/Audio/Narration/lines.tsv` (scores 0–99 are their own clips), so it works offline and on Windows.
+- **Rendering the voice:** `python3 Tools/render_narration.py --engine google --force` with `GOOGLE_TTS_API_KEY` set (or signed in with `gcloud`); `--voice`, `--rate` and `--pitch` pick the voice (default ko-KR-Neural2-B at 1.5× speed, +5 semitones, the user's pick); it renders 6 lines at a time with a progress bar. `--engine say` makes quick macOS previews for testing.
+- **Blind test (staff):** **F5** blanks the screen to black (the HUD too) while still playing, so a sighted tester can check the round can be played by ear alone.
 
 ### Booth operation & finish (M6)
 - **Attract mode:** after 30 s on the title screen with nobody in front of the camera, a short loop plays: the title drops in again, a ghost basket catches a few fruit, and sample four-cuts slide past. A face in front of the camera brings back the title.
@@ -377,6 +392,7 @@ A staff **Settings** panel (M6), opened with **F4** or by holding the top-left c
 | Trees | **Low Poly Trees (Lite)**: oak, pine, cypress | Voxelised for the foreground and far layers. Licence forbids redistribution: keep out of public repos. |
 | Bushes, grass, flowers, rocks | **Kenney Nature Kit** (CC0), recoloured to the tree greens | Voxelised for the bottom edge |
 | Basket | The **basin** from a low-poly crate pack (provided by the project owner; licence to confirm, kept out of the repo) | Voxelised by Bake Props at 1.6 m across, rope handles recoloured; the earlier generated tub (`FruitGame Extras/Basket/make_basket.py`) is kept, switched off, in the scene |
+| Bomb | **Low Poly Bomb** (provided by the project owner; licence to confirm, kept out of the repo) | Voxelised by Bake Props at 0.88 m with its grey body darkened toward black and a "Fuse Tip" marker for the burning fuse |
 | Crate walls | **Box** and **barrel** from the same crate pack | Voxelised by Bake Props (crate 0.7 m with carved plank grooves, barrel 0.6 m with its recessed lid filled) |
 | Orchard illustration | Pixel-art orchard from Photo Booth 2 | Title screen background; optional game backdrop |
 | Pixel buttons | Photo Booth 2's pixel buttons | Reference for the keycap button style |
@@ -404,23 +420,35 @@ Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Ed
 | `endCondition` | `Timer` | `Timer` / `Lives` / `TimerOrLives` |
 | `roundDuration` / `countdownSeconds` | 60 s / 3 | |
 | `lives` | 3 | only when the end condition includes lives |
-| `fallSpeedStart` / `fallSpeedMax` | 2.7 / 3.8 m/s | eased over the round (`difficultyCurve` 2) |
-| `driftCapStart` / `driftCapMax` | 0.7 / 1.2 m/s | |
+| `fallSpeedStart` / `fallSpeedMax` | 2.7 / 4.05 m/s | over the round (`difficultyCurve` 1 = linear) |
+| `driftCapStart` / `driftCapMax` | 0.7 / 1.8 m/s | |
+| `nextFruitDelay` → `nextFruitDelayEnd` | 0.6 → 0.3 s | the gap after a fruit lands (the beat below usually comes first) |
+| `endDropsPer10s` | 9 | the drop rate at the end; it climbs linearly from about 3.7 per 10 s |
+| `assistEndLevel` | 1 | assist strength at the end of the round (1 = no fade) |
+| `maxFruitInAir` / `spawnAwayFromBasket` | 3 / 0.5 → 1.3 m | |
+| `assistFullAtSpeed` / `assistLinger` / `assistIdleLevel` | 1.2 m/s / 0.6 s / 0.15 | the assist follows a moving basket (normal round only) |
+| `easyAssistRadius` / `easyAssistStrength` / `easyAssistExtraSpeedCap` | 1.8 m / 4 m/s² / 1.0 m/s | Easy: the original assist, always on |
+| `auditoryAssistRadius` / `auditoryAssistStrength` / `auditoryAssistExtraSpeedCap` | 2.2 m / 5.5 m/s² / 1.3 m/s | auditory mode, always on |
+| `goldenChance` / `goldenSpeedFactor` / `goldenPoints` | 1/12 / 1.25 / 3 | |
+| `bombChance` / `bombAfterSeconds` / `bombPenalty` | 1/8 / 15 s / 5 | |
+| `comboFrom` / `comboMultiplier` | 5 / ×2 | |
+| `easyFallSpeedMax` / `easyDriftCapMax` | 3.8 / 1.2 m/s | Easy's ramp |
 | `spinDegPerSec` | 120–240 | |
-| `spawnXRange` / `spawnY` / `nextFruitDelay` | ±2.1 m / 3.6 / 0.6 s | |
-| `fruitSize` | 0.88 m | × each type's `sizeScale` |
+| `spawnXRange` / `spawnY` | ±2.1 m / 3.6 | |
+| `fruitSize` | 0.70 m | × each type's `sizeScale` |
 | `wallX` / `rimY` / `missY` / `despawnY` | 2.25 / −2.0 / −2.6 / −4.2 | |
-| `basketMouthWidth` / `basketHeight` / `basketTaper` / `basketWallThickness` | 1.6 m / 0.8 m / 0.75 / 0.08 | colliders are built from these and the model scaled to match |
-| `basketXLimit` / `basketMaxSpeed` | 1.45 m / 18 m/s | |
+| `basketMouthWidth` / `basketHeight` / `basketTaper` / `basketWallThickness` | 1.3 m / 0.65 m / 0.75 / 0.08 | colliders are built from these and the model scaled to match |
+| `basketXLimit` / `basketMaxSpeed` / `basketSmoothTime` | 1.55 m / 10 m/s / 0.08 s | |
 | `knockedGravity` / `fruitBounciness` / `fruitFriction` / `knockedTimeout` | 9 m/s² / 0.45 / 0.3 / 4 s | physics after a basket hit |
+| `knockedMaxSideSpeed` / `knockedMaxUpSpeed` / `hardHitRange` / `hardHitBounceScale` / `restCatchTime` | 2.2 / 2.5 m/s / 2–7 m/s / 0.35 / 0.35 s | |
 | `pileZ` / `pileDepthFactor` | 3.6 / 1.15 × largest fruit | |
 | `pileFloorY` / `pileHalfWidth` / `pileSpawnY` | −3.6 / 3.0 / 3.6 | |
 | `pileMax` / `pileFreezeSpeed` / `pileFreezeTime` | 40 / 0.05 m/s / 1.5 s | |
-| `assistRadius` / `assistStrength` / `assistExtraSpeedCap` | 1.8 m / 4 m/s² / 1.0 m/s | strength 0 = off |
+| `assistRadius` / `assistStrength` / `assistExtraSpeedCap` | 2.6 m / 7 m/s² / 1.6 m/s | strength 0 = off |
 | `sensitivity` | 1.0 | 0.6–1.6 |
-| `deadZone` / `softClampKnee` | 0.04 / 0.8 | in t units |
+| `deadZone` / `softClampKnee` | 0.02 / 0.8 | in t units |
 | `calibMinRangePerSide` | 0.03 | |
-| `oneEuroMinCutoff` / `oneEuroBeta` | 1.2 / 0.4 | basket x in metres |
+| `oneEuroMinCutoff` / `oneEuroBeta` | 1.0 / 0.5 | basket x in metres |
 | `steadyTolerance` / `steadyHoldTime` | 0.015 / 1.0 s | raise for tremor |
 | `faceLostPauseDelay` / `faceReturnGrace` | 1.0 s / 1.0 s | |
 | `photoCaption` | "GIST Fruit Photo Shop" | `{date}` is available if a date is wanted later |
@@ -454,8 +482,8 @@ Assets/FruitGame/
   Scenes/     Game.unity
   Shaders/    PersonCutout  BeautyPrep  MaskSmooth  BokehBlur  BokehBackdrop  FruitRim  PixelText  DitherFade  PixelComposite  VoxelTitle
   Scripts/
-    Core/      GameConfig, GameStateMachine, SaveData, RoundTimer, LivesCounter, ScreenLayout, ViewFill
-    Art/       VoxelSource, PixelRenderer, PixelSnap, BlockMesh, VoxelTitle, SceneryBands, FarHills
+    Core/      GameConfig, GameStateMachine, SaveData, RoundTimer, LivesCounter, ScreenLayout, ViewFill, Difficulty
+    Art/       VoxelSource, PixelRenderer, PixelSnap, BlockMesh, VoxelTitle, SceneryBands, FarHills, BlockFx, BombFuse, GoldenSparkle
     Control/   BasketInputSource, FallbackInput, BasketInputRouter, FaceToBasketMapper, OneEuroFilter, CalibrationData, CalibrationController
     Gameplay/  FruitType, ScoreRules, RoundStats, FruitSpawner, FallingFruit, BasketController, BasketAssist, FruitPile, PileFruit, CrateWalls
     Webcam/    WebcamSource, CameraFrame, FaceTracker, PersonSegmenter, PersonCutout, FaceMesh, BokehBackdrop
@@ -502,12 +530,13 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | **M14** | Photo frame restyle + four-cut | ✅ The print is a **four-cut**: `ActionShots` takes three shots during the round (15/30/45 s, with a small 3·2·1 counter, light flashes and a shutter) and the booth's final shot completes the 2 × 2 grid, highlighted with a darker orange outline. The print is a cream card with the pixel title, an orange pixel frame and pixel-panel placeholders. The phone page is restyled to match (pixel font, keycap button), and the camera shutter sound (CC0) is used for every shot. *Checked: a full round with three action shots and the final shot composed into the print, every phone-page route, and the page at phone size.* |
 | **M15** | Korean localisation | ✅ About 70 strings in `Resources/Strings.txt` (Korean 해요체 + English), `Strings` / `LocalizedText` / `LanguageSwitch` (Korean by default, F3 flips), 26 scene labels and every code-set message (HUD, calibration, photo booth, phone page, fruit names) through the table. Fit measured for every string in both languages (104/104 after enlarging the face-lost title layout, letting the logo placeholders wrap, and giving the print-failure message two lines). *Checked: Korean start and game-over screens, the English flip (including the game-over lines), and the phone page in Korean.* |
 | **M15.1** | Labmate setup manual | ✅ Kept outside the repo, in `~/Documents/3D Assets/FruitGame Private Share/`: `FruitGame 설치 안내.md` (Korean: clone, unzip the shared files into the project **before** first opening Unity, open, optional re-bake, run, troubleshooting, licences), four zips of the repo-excluded files at their project paths (1 Model · 2 Fruit · 3 Trees · 4 Extras, each with its licence note in an ignored `FruitGame-licences/` folder), and `make-private-zips.sh` to rebuild them. *Checked: a clean copy of the repo plus the four zips gives exactly the working project's files, with no orphan `.meta`.* |
-| **M16** | Two orientations at booth scale | **Built, in review.** `ScreenLayout` (replaces `PortraitLetterbox`: 9:16 or 16:9 from the window, letterboxed, the field of view fitted around a fixed play column, live switching), the pixel layers, webcam prep, cut-out, calibration ring and photo size following the layout, `ViewFill` for the full-frame quads; `CrateWalls` (crates and barrels from the voxelised crate pack, sizes and tints varied, fruit on the outer barrels, bounce wobble, chips and knock), the voxelised basin as the basket, `FarHills` under the side trees, `SceneryBands` (canopy band and ground bank), side plants from Build Orchard; the booth-scale canvas (`uiPixelScale` 3), `AspectLayout` poses for the HUD, title screen, game over and the 3D title, the landscape `SidePanels` (점수표 with the live graph and tally, a three-slot 3:4 film strip), every photo 3:4 portrait, the whole camera frame kept and fitted to the view's height (edges faded when narrower than the view), face control and calibration measured in the 3:4 play area, the debug overlay on top, the landscape title and buttons centred vertically and the film strip centred under the timer, and a larger portrait photo preview. *Checked in both orientations with the camera off: title, a round with action shots filling the film strip, game over, the photo preview, live switching, 340–355 fps in the Editor. Still to do: re-check the matte with a live camera (none was sending frames), the preview screen's landscape arrangement moves to M17 with the postcard print.* |
-| **M16.1** | Harder round | The difficulty levers in §4, added one at a time with `GameConfig` values, and checked against the target catch rates in short playtests; the Easy option keeps today's curve. *Done when:* a practised player is challenged by the end of the round and a first-timer still catches about half. |
+| **M16** | Two orientations at booth scale | ✅ `ScreenLayout` (replaces `PortraitLetterbox`: 9:16 or 16:9 from the window, letterboxed, the field of view fitted around a fixed play column, live switching), the pixel layers, webcam prep, cut-out, calibration ring and photo size following the layout, `ViewFill` for the full-frame quads; `CrateWalls` (crates and barrels from the voxelised crate pack, sizes and tints varied, fruit on the outer barrels, bounce wobble, chips and knock), the voxelised basin as the basket, `FarHills` under the side trees, `SceneryBands` (canopy band and ground bank), side plants from Build Orchard; the booth-scale canvas (`uiPixelScale` 3), `AspectLayout` poses for the HUD, title screen, game over and the 3D title, the landscape `SidePanels` (점수표 with the live graph and tally, a three-slot 3:4 film strip), every photo 3:4 portrait, the whole camera frame kept and fitted to the view's height (edges faded when narrower than the view), face control and calibration measured in the 3:4 play area, the debug overlay on top, the landscape title and buttons centred vertically and the film strip centred under the timer, and a larger portrait photo preview. *Checked in both orientations with the camera off: title, a round with action shots filling the film strip, game over, the photo preview, live switching, 340–355 fps in the Editor. Still to do: re-check the matte with a live camera (none was sending frames), the preview screen's landscape arrangement moves to M17 with the postcard print.* |
+| **M16.1** | Harder round | ✅ An even ramp (linear fall speed, drift and assist; a drop rate that climbs in a straight line, overlapping late on: `GameConfig.DropIntervalAt`), golden fruit (`FruitType.Golden`, `GoldenSparkle`), the ×2 combo from 5 in a row (`ScoreRules`), bombs from the user's low-poly bomb (voxelised by Bake Props, darkened, with `BombFuse` sparks at the fuse tip and a `BlockFx` explosion), score popups, the bombs line on game over, and Easy on E (`Difficulty`). *Checked in play with the camera off: bombs and golden fruit fall and score as designed, the combo pop, the game-over line; the drop rate 3.7 → 9 per 10 s in even steps (about 38 drops a round); an idle basket catches 35–40 %.* |
+| **M18** | Auditory assist mode | **Built, in review.** The mode in §11: the toggle (keycap + A), the gentler auditory round, the binaural parking-sensor beep synthesised in code (ITD, ILD, head shadow, rate, steady tone, pitch, golden timbre, catch chime and miss note), the narrator (script, Google TTS render script, clip playback with ducking, announcements at 45/30/15 s, final score, photo prompt and pose guidance, calibration prompts) and the F5 blind test. *Done when:* a sighted tester with the screen blanked can catch most fruit by ear, and the narration runs through a whole visit; then a playtest with a blind player. *Checked in play with the camera off: the keycap and A toggle with the spoken confirmation, the intro holding the countdown, the 45/30/15 s announcements with scores, the final score and photo prompt, pose guidance and the shutter line, the mode turning off after the visit, the F5 cover; the binaural render measured (left/right level 0.22/0.08 and 0.73 ms delay at 90°, centred at 0°). The narration clips in the project are macOS previews until rendered with Google Cloud TTS.* |
 | **M17** | Booth hardware | **Camera:** the DSLR → Elgato 4K X input (device match, resolution, frame rate, rotation), latency measured against a webcam (with the separate tracking webcam as the fallback), the camera checklist. **Printer:** the print at paper size (postcard 1800 × 1200 with the four 3:4 cuts in a row; other paper profiles once the film is known), the SELPHY over USB-C borderless at exact size, the print queue with status, the paper/ink counter and copies. *Done when:* a real round on the DSLR prints correctly on the CP1500 and the phone download still works. |
 | **M6** | Polish & builds | **Final gameplay tuning** from playtests on the booth hardware (difficulty values, assist, scoring, timing); a finished UI pass and the staff Settings panel; attract mode and walk-away reset; transitions, ambience and UI sounds; assist tuning and juice; debug overlay off by default; photo auto-delete; the lab logo decision; kiosk macOS and Windows builds with camera permission prompts; a playtest with real visitors on the booth hardware. |
 
-**Dependencies:** M8 gated M10 and M11; M12–M15 needed M9. **M16** comes before the printer half of **M17** (the print layouts follow the shot aspect) and before **M6** (which polishes the final layouts). **M16.1** follows M16 directly, so difficulty is tuned in the final layouts; its values get their last adjustment in M6. The camera half of M17 can start any time.
+**Dependencies:** M8 gated M10 and M11; M12–M15 needed M9. **M18** comes next, before M17 (asked, 2026-11-05). **M16** comes before the printer half of **M17** (the print layouts follow the shot aspect) and before **M6** (which polishes the final layouts). **M16.1** follows M16 directly, so difficulty is tuned in the final layouts; its values get their last adjustment in M6. The camera half of M17 can start any time.
 
 ### Open questions
 1. **Lab logo:** TBD; there may not be one. The frame keeps a placeholder until then (or the slot can be dropped).
@@ -574,3 +603,8 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | 51 | M16 details (2026-11-03) | The booth UI scale is a larger canvas (short side 1440 units) rather than resized elements, so every sprite and font size stays on its pixel grid with no per-element edits. The portrait extra height is filled by a canopy band (fruit drop out of the leaves) and a ground bank (missed fruit vanish behind it), built from block grids like the title. The crates are placeholders: the user will supply a low-poly crate model to voxelise. Portrait keeps the HUD over the play area, under the canopy (asked, 2026-11-03); landscape puts the title left and buttons right, and the game-over panel wide. |
 | 52 | M16 review (2026-11-04) | Every photo is 3:4 portrait in both layouts (the print's cuts), so the landscape film strip shows the three action shots at 3:4 rather than the whole screen. The walls use the user's low-poly crate pack (crates and barrels only), voxelised with plank grooves and varied in size and tint; its basin is the basket. Far hills give the side trees ground to stand on, with a soft top-to-bottom gradient (strong bands looked like a layer cake). The pack's licence is unknown, so it's kept out of the repo and shared in the private zips (zip 5). |
 | 53 | Camera frame (2026-11-04) | The booth camera will most likely send 3:4 portrait, so the camera frame is kept whole at its own shape instead of being cropped to the screen: fitted to the view's height, with faded edges when it's narrower than the view (landscape), cropped at the sides when wider. Face positions are measured in the 3:4 play area, so calibrating in one layout and playing in the other no longer changes the sensitivity. |
+| 54 | Harder round (2026-11-04) | Bombs replace the rotten fruit idea (the user's low-poly bomb, with a burning fuse), costing 5 points; golden fruit and a ×2 combo from 5 in a row reward skill. Easy is a staff key (E) on the title screen until the M6 settings panel, and resets after each round. |
+| 55 | Even pacing (2026-11-05) | The first harder round switched to two fruit at once with 20 s left on top of a squared speed curve, which felt like a sudden doubling. Now every lever is linear, and the drop rate itself climbs in a straight line (3.7 → 9 per 10 s), so the round speeds up by the same amount every few seconds. |
+| 56 | Basket feel and assist (2026-11-05) | The basket eases toward the head (SmoothDamp, 10 m/s cap) instead of snapping at 18 m/s, and tracking is finer (smaller dead zone). Knocked fruit have capped speeds and hard hits bounce less; fruit resting on the rim count as caught, so none get stuck. Fruit fall only 1.5× faster by the end while the drop rate climbs the same, so more share the screen. Fruit drop away from the basket, and the assist is wider and stronger and never fades, but follows the basket's movement, so a still basket catches about 29 % (68 % without that). |
+| 57 | Smaller basket and fruit (2026-11-05) | With the assist following the basket, the round felt too easy, so the basket shrank to a 1.3 m mouth (0.65 m deep; the voxel basin scaled to match) and fruit to 0.70 m across, keeping the assist as it was. Basket travel widened to ±1.55 m so it still reaches the walls. |
+| 58 | Auditory assist mode (2026-11-05) | For blind and low-vision players: parking-sensor beeps (faster then steady when lined up, pitch rising as the fruit nears) placed binaurally by the fruit's offset from the basket, for headphones; a Korean narrator from Google Cloud TTS (chosen over the macOS voice for liveliness); a keycap plus staff key A; fruit and golden fruit only; an F5 blank-screen test. |

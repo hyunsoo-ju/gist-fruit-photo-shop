@@ -17,28 +17,35 @@ MonoBehaviour:
   lives: 3
   countdownSeconds: 3
   fallSpeedStart: 2.7
-  fallSpeedMax: 3.8
+  fallSpeedMax: 4.05
   driftCapStart: 0.7
-  driftCapMax: 1.2
-  difficultyCurve: 2
+  driftCapMax: 1.8
+  difficultyCurve: 1
   spinDegPerSec: {x: 120, y: 240}
   spawnXRange: 2.1
   spawnY: 3.6
   nextFruitDelay: 0.6
-  fruitSize: 0.88
+  nextFruitDelayEnd: 0.3
+  fruitSize: 0.7
   wallX: 2.25
   rimY: -2
   missY: -2.6
   despawnY: -4.2
-  basketMouthWidth: 1.6
-  basketXLimit: 1.45
-  basketMaxSpeed: 18
-  basketHeight: 0.8
+  basketMouthWidth: 1.3
+  basketXLimit: 1.55
+  basketMaxSpeed: 10
+  basketSmoothTime: 0.08
+  basketHeight: 0.65
   basketTaper: 0.75
   basketWallThickness: 0.08
   knockedGravity: 9
   fruitBounciness: 0.45
   fruitFriction: 0.3
+  knockedMaxSideSpeed: 2.2
+  knockedMaxUpSpeed: 2.5
+  hardHitRange: {x: 2, y: 7}
+  hardHitBounceScale: 0.35
+  restCatchTime: 0.35
   knockedTimeout: 4
   pileZ: 3.6
   pileDepthFactor: 1.15
@@ -48,15 +55,37 @@ MonoBehaviour:
   pileMax: 40
   pileFreezeSpeed: 0.05
   pileFreezeTime: 1.5
-  assistRadius: 1.8
-  assistStrength: 4
-  assistExtraSpeedCap: 1
+  assistRadius: 2.6
+  assistStrength: 7
+  assistExtraSpeedCap: 1.6
+  assistEndLevel: 1
+  assistFullAtSpeed: 1.2
+  assistLinger: 0.6
+  assistIdleLevel: 0.15
+  endDropsPer10s: 9
+  maxFruitInAir: 3
+  spawnAwayFromBasket: {x: 0.5, y: 1.3}
+  goldenChance: 0.083333336
+  goldenSpeedFactor: 1.25
+  goldenPoints: 3
+  bombChance: 0.125
+  bombAfterSeconds: 15
+  bombPenalty: 5
+  comboFrom: 5
+  comboMultiplier: 2
+  auditoryFallSpeed: 2.3
+  auditoryDriftCap: 0.4
+  auditoryFruitDelay: 1
+  auditoryAssistRadiusScale: 1
+  auditoryAssistStrengthScale: 1
+  easyFallSpeedMax: 3.8
+  easyDriftCapMax: 1.2
   sensitivity: 1
-  deadZone: 0.04
+  deadZone: 0.02
   softClampKnee: 0.8
   calibMinRangePerSide: 0.03
-  oneEuroMinCutoff: 1.2
-  oneEuroBeta: 0.4
+  oneEuroMinCutoff: 1
+  oneEuroBeta: 0.5
   steadyTolerance: 0.015
   steadyHoldTime: 1
   faceLostPauseDelay: 1

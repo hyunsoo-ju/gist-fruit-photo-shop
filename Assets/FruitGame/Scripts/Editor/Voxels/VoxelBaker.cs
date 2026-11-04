@@ -13,7 +13,7 @@ namespace FruitGame.EditorTools
     ///   (a few clean colours per fruit), set as the type's visual and atlas. The pile dithers the same palette.
     /// - <b>Scene</b>: every <see cref="VoxelSource"/> in the open scene gets a block mesh built from its original
     ///   mesh at its own scale, keeping its materials.
-    /// - <b>Props</b>: the crate pack (crate and barrel for the walls, and the basin used as the basket) becomes voxel prefabs at
+    /// - <b>Props</b>: the crate pack (crate and barrel for the walls, and the basin used as the basket) and the bomb become voxel prefabs at
     ///   set sizes, coloured from their textures through a shared prop palette, for the crate walls and the basket.
     /// Re-run either after changing block sizes or models; assets are overwritten in place, so references survive.
     /// </summary>
@@ -173,7 +173,7 @@ namespace FruitGame.EditorTools
         /// <summary>Prop model, its largest size in metres once baked, block size and colour count.</summary>
         static readonly (string model, float size, float block, int colors)[] Props =
         {
-            ("Box", 0.7f, 0.044f, 5), ("barrel", 0.6f, 0.044f, 5), ("basin", 1.6f, 0.063f, 5),
+            ("Box", 0.7f, 0.044f, 5), ("barrel", 0.6f, 0.044f, 5), ("basin", 1.6f, 0.063f, 5), ("low_poly_bomb", 0.88f, 0.044f, 5),
         };
 
         [MenuItem("FruitGame/Voxels/Bake Props")]
@@ -211,6 +211,12 @@ namespace FruitGame.EditorTools
                     var c = (tex != null ? tex.GetPixelBilinear(uv.x, uv.y) : Color.white) * tint;
                     // The basin's rope handles are near-black burlap, which reads as holes in blocks: make them rope.
                     if (modelName == "basin" && c.grayscale < 0.25f) c = Rope;
+                    // The bomb's grey body reads as stone; darken its unsaturated colours toward black (the fuse stays).
+                    if (modelName == "low_poly_bomb")
+                    {
+                        Color.RGBToHSV(c, out _, out float sat, out _);
+                        if (sat < 0.25f) c = new Color(c.r * 0.38f, c.g * 0.4f, c.b * 0.46f, c.a);
+                    }
                     return c;
                 };
                 src.edit = PropEdit(modelName);
@@ -241,6 +247,7 @@ namespace FruitGame.EditorTools
                 var go = new GameObject(name + "_Vox", typeof(MeshFilter), typeof(MeshRenderer));
                 go.GetComponent<MeshFilter>().sharedMesh = mesh;
                 go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+                if (name == "low_poly_bomb") AddFuseTip(go.transform, mesh);
                 PrefabUtility.SaveAsPrefabAsset(go, $"{OutDir}/Props/{name}_Vox.prefab");
                 Object.DestroyImmediate(go);
             }
@@ -290,6 +297,17 @@ namespace FruitGame.EditorTools
                 default:
                     return null;
             }
+        }
+
+        /// <summary>Marks the top of the bomb's fuse (its highest blocks) for the burning-fuse effect (BombFuse).</summary>
+        static void AddFuseTip(Transform root, Mesh mesh)
+        {
+            var verts = mesh.vertices;
+            float top = verts.Max(v => v.y);
+            var tip = verts.Where(v => v.y >= top - 0.01f).Aggregate(Vector3.zero, (a, v) => a + v) / verts.Count(v => v.y >= top - 0.01f);
+            var marker = new GameObject("Fuse Tip").transform;
+            marker.SetParent(root, false);
+            marker.localPosition = tip + Vector3.up * 0.02f;
         }
 
         static Material PropVoxelMaterial()

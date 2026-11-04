@@ -15,6 +15,8 @@ namespace FruitGame
         public bool Frozen => body != null && body.isKinematic;
         /// <summary>Which fruit this is (for its atlas when the pile switches material).</summary>
         public FruitType Type { get; set; }
+        /// <summary>A golden catch (shown in gold).</summary>
+        public bool Golden { get; set; }
 
         Rigidbody body;
         float freezeSpeed;

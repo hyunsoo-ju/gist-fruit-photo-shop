@@ -28,6 +28,8 @@ namespace FruitGame
         [SerializeField] RectTransform ring;
         [SerializeField] Image ringFill;
         [SerializeField] GameObject tryButtons;
+        [Tooltip("Speaks the prompts in the auditory assist mode (M18).")]
+        [SerializeField] Narrator narrator;
 
         /// <summary>Raised when calibration ends: (accepted, thenPlay).</summary>
         public event Action<bool, bool> Finished;
@@ -46,8 +48,11 @@ namespace FruitGame
             previous = mapper.Calibration;
             working = CalibrationData.Default;
             panel.SetActive(true);
+            if (ByEar) narrator.SayNow("calib_intro");
             Enter(Step.Centre);
         }
+
+        bool ByEar => Difficulty.Auditory && narrator != null;
 
         /// <summary>"Looks good": save and finish.</summary>
         public void Accept()
@@ -55,6 +60,7 @@ namespace FruitGame
             if (step != Step.Try) return;
             working.Save();
             mapper.Calibration = working;
+            if (ByEar) narrator.SayNow("calib_done");
             Finish(true);
         }
 
@@ -63,6 +69,7 @@ namespace FruitGame
         {
             if (step == Step.Idle) return;
             working = CalibrationData.Default;
+            if (ByEar) narrator.SayNow("calib_redo");
             Enter(Step.Centre);
         }
 
@@ -89,6 +96,13 @@ namespace FruitGame
             steadySince = -1f;
             tryButtons.SetActive(next == Step.Try);
             ring.gameObject.SetActive(false);
+            holdSpoken = false;
+            // By ear: "좋아요!" for the pose just held, then the next prompt (queued after anything already speaking).
+            if (ByEar)
+            {
+                if (next != Step.Centre) narrator.Say("calib_ok");
+                narrator.Say(next == Step.Centre ? "calib_centre" : next == Step.Left ? "calib_left" : next == Step.Right ? "calib_right" : "calib_try");
+            }
             switch (next)
             {
                 case Step.Centre: title.text = Strings.Get("calib.centre"); break;
@@ -110,6 +124,7 @@ namespace FruitGame
             if (tracker == null || !tracker.HasFace)
             {
                 hint.text = Strings.Get("calib.looking");
+                Prompt("calib_looking");
                 ring.gameObject.SetActive(false);
                 history.Clear();
                 steadySince = -1f;
@@ -121,8 +136,8 @@ namespace FruitGame
             PlaceRing(CameraFrame.ToView(tracker.FaceRect));
 
             // Too far or too close makes tracking unreliable; don't count the hold until it's fixed.
-            if (face.width < 0.12f) { Hold(false, Strings.Get("calib.closer")); return; }
-            if (face.width > 0.45f) { Hold(false, Strings.Get("calib.farther")); return; }
+            if (face.width < 0.12f) { Prompt("calib_closer"); Hold(false, Strings.Get("calib.closer")); return; }
+            if (face.width > 0.45f) { Prompt("calib_farther"); Hold(false, Strings.Get("calib.farther")); return; }
 
             float u = face.center.x;
             float now = Time.unscaledTime;
@@ -140,14 +155,25 @@ namespace FruitGame
                     if (Hold(steady, Strings.Get("calib.holdStill"))) { working.centre = u; Enter(Step.Left); }
                     break;
                 case Step.Left:
-                    if (u > working.centre - minRange) { Hold(false, "A little further left"); break; }
+                    if (u > working.centre - minRange) { Prompt("calib_more_left"); Hold(false, "A little further left"); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.left = u; Enter(Step.Right); }
                     break;
                 case Step.Right:
-                    if (u < working.centre + minRange) { Hold(false, "A little further right"); break; }
+                    if (u < working.centre + minRange) { Prompt("calib_more_right"); Hold(false, "A little further right"); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.right = u; Enter(Step.Try); }
                     break;
             }
+        }
+
+        float lastPrompt = -10f;
+        bool holdSpoken;
+
+        /// <summary>By ear: a distance prompt, at most every few seconds.</summary>
+        void Prompt(string key)
+        {
+            if (!Difficulty.Auditory || narrator == null || narrator.IsSpeaking || Time.unscaledTime - lastPrompt < 4f) return;
+            lastPrompt = Time.unscaledTime;
+            narrator.Say(key);
         }
 
         /// <summary>Advances the hold timer while steady; returns true once held long enough.</summary>
@@ -160,7 +186,12 @@ namespace FruitGame
                 ringFill.fillAmount = 0f;
                 return false;
             }
-            if (steadySince < 0f) steadySince = Time.unscaledTime;
+            if (steadySince < 0f)
+            {
+                steadySince = Time.unscaledTime;
+                // By ear: once per pose, tell the player to hold it there (the ring that shows progress can't be seen).
+                if (ByEar && !holdSpoken && !narrator.IsSpeaking) { holdSpoken = true; narrator.Say("calib_hold"); }
+            }
             float progress = Mathf.Clamp01((Time.unscaledTime - steadySince) / config.steadyHoldTime);
             ringFill.fillAmount = progress;
             return progress >= 1f;

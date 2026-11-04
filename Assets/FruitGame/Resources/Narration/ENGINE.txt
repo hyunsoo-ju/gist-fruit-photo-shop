@@ -1,0 +1,1 @@
+google ko-KR-Neural2-B rate 1.5

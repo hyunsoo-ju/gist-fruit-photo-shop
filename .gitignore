@@ -73,3 +73,6 @@ Assets/FruitGame/Art/Backdrops/OrchardIllustration.png
 
 # Licence notes that come with the privately shared asset zips (see the setup manual).
 /FruitGame-licences/
+
+# Python bytecode from Tools/
+__pycache__/

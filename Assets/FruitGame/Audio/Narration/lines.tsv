@@ -1,0 +1,43 @@
+# Narrator lines for the auditory assist mode (Docs/DESIGN.md §11, M18), in-game Korean (해요체), fast and lively.
+# key<TAB>text. A key with {n} is rendered once per number 0–99 ({n} in the text becomes the number).
+# Render with Tools/render_narration.py into Assets/FruitGame/Resources/Narration/<key>.wav.
+mode_on	소리 모드를 켰어요! 헤드폰을 써 주세요.
+mode_off	소리 모드를 껐어요.
+intro	과일 받기 게임이에요! 과일이 떨어지면 삐삐 소리가 나요. 소리가 들리는 쪽으로 머리를 움직여서 바구니를 옮겨 주세요. 삐삐 소리가 점점 빨라지다가 길게 이어지면, 바구니가 바로 밑에 있는 거예요! 시간은 1분, 많이 받아 봐요!
+count_3	셋!
+count_2	둘!
+count_1	하나!
+go	시작!
+golden	황금 과일!
+time_45	45초 남았어요!
+time_30	30초 남았어요!
+time_15	15초 남았어요!
+score_now_{n}	지금 {n}점!
+time_up	끝! 정말 잘했어요!
+score_final_{n}	최종 점수는 {n}점이에요!
+best_new	오늘의 최고 기록이에요!
+photo_ask	이제 기념사진을 찍어 볼까요? 함께 온 분께 사진 찍기 버튼을 눌러 달라고 해 주세요.
+pose_intro	사진을 찍을게요! 카메라 쪽을 보고 활짝 웃어 주세요.
+pose_left	조금 왼쪽으로요!
+pose_right	조금 오른쪽으로요!
+pose_closer	조금만 앞으로 와 주세요!
+pose_back	조금만 뒤로 가 주세요!
+pose_good	좋아요, 그대로요!
+pose_noface	얼굴이 안 보여요. 카메라 앞으로 와 주세요.
+photo_done	찰칵! 멋진 사진이 나왔어요!
+calib_intro	먼저 머리 움직임을 맞출게요. 제 말을 따라 머리를 움직여 주세요.
+calib_centre	정면을 보고 잠깐 멈춰 주세요.
+calib_left	이제 머리를 왼쪽으로 편한 만큼 움직이고 멈춰 주세요.
+calib_right	이번엔 머리를 오른쪽으로 편한 만큼 움직이고 멈춰 주세요.
+calib_try	다 됐어요! 머리를 움직여서 바구니를 옮겨 보세요. 괜찮으면 함께 온 분께 좋아요 버튼을, 다시 하려면 다시 하기 버튼을 눌러 달라고 해 주세요.
+calib_closer	카메라에 조금 더 가까이 와 주세요.
+calib_farther	조금만 뒤로 가 주세요.
+calib_hold	좋아요, 그대로 멈춰 주세요!
+calib_ok	좋아요!
+calib_more_left	조금만 더 왼쪽으로 움직여 주세요.
+calib_more_right	조금만 더 오른쪽으로 움직여 주세요.
+calib_looking	얼굴을 찾고 있어요. 카메라 앞에 서 주세요.
+calib_redo	처음부터 다시 맞춰 볼게요.
+calib_done	맞추기 끝! 이제 게임을 할 수 있어요.
+paused	얼굴이 안 보여서 잠깐 멈췄어요. 카메라 앞으로 돌아와 주세요.
+resumed	다시 시작해요!

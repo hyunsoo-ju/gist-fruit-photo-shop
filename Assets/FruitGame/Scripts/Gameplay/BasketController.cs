@@ -31,11 +31,14 @@ namespace FruitGame
         Rigidbody body;
         Collider[] solids;
         float targetX;
+        float velocityX;
         float squashT = -1f;
         float wobbleT = -1f;
         Vector3 visualBaseScale;
 
         public void SetInput(BasketInputSource source) => input = source;
+        /// <summary>The basket's current sideways speed (m/s).</summary>
+        public float VelocityX => velocityX;
 
         public void ResetPosition()
         {
@@ -141,7 +144,8 @@ namespace FruitGame
         void FixedUpdate()
         {
             var p = body.position;
-            p.x = Mathf.MoveTowards(p.x, targetX, config.basketMaxSpeed * Time.fixedDeltaTime);
+            // Eased, with a speed cap: smooth to watch and gentle on fruit it bumps into.
+            p.x = Mathf.SmoothDamp(p.x, targetX, ref velocityX, config.basketSmoothTime, config.basketMaxSpeed, Time.fixedDeltaTime);
             p.y = config.rimY;
             body.MovePosition(p);
         }
