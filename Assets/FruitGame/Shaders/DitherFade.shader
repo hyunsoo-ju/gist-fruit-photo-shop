@@ -1,4 +1,4 @@
-// Distant layers in the pixel style (Docs/DESIGN.md §3): simple lit plus an ordered (Bayer 4x4) dither toward a fade colour.
+// Distant layers in the pixel style (Docs/DESIGN.md §4): simple lit plus an ordered (Bayer 4x4) dither toward a fade colour.
 // The fade is quantised into _Levels steps and dithered between neighbouring steps on a screen grid of _DitherPixel px.
 Shader "FruitGame/Dither Fade"
 {

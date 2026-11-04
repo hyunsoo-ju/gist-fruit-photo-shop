@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The start-screen title 「지스트의 과일 사진가게」 in 3D blocks (Docs/DESIGN.md §11). Each title line is a 1-bit glyph
+    /// The start-screen title 「지스트의 과일 사진가게」 in 3D blocks (Docs/DESIGN.md §15). Each title line is a 1-bit glyph
     /// bitmap (Art/Title, rendered from Neo둥근모 at 16 px, 1 pixel = 1 block) extruded in the sticker style: cream
     /// letters, a pink outline one block further back, and a dark shadow block behind, offset down-right. The voxel camera
     /// icon sits beside the first line. The title is cut into strips and slices that drop in like fruit and stack into

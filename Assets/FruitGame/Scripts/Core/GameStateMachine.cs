@@ -17,7 +17,7 @@ namespace FruitGame
 
     /// <summary>
     /// Runs the round: start menu → countdown → playing → (last fruit lands) → game over.
-    /// Docs/DESIGN.md §2. Every transition is a public method so on-screen buttons (and later face gestures)
+    /// Docs/DESIGN.md §3. Every transition is a public method so on-screen buttons (and later face gestures)
     /// can drive it; the keyboard shortcuts call the same methods. Calibrate is reserved for M3.
     /// </summary>
     public class GameStateMachine : MonoBehaviour

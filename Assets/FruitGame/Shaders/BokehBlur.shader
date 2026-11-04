@@ -1,4 +1,4 @@
-// Blur passes for the bokeh backdrop (used with Graphics.Blit, Docs/DESIGN.md §9).
+// Blur passes for the bokeh backdrop (used with Graphics.Blit, Docs/DESIGN.md §13).
 // Pass 0 (Prep): webcam colour weighted by "not person" → rgb·w, a = w. Blurring this premultiplied pair and
 //                dividing by alpha afterwards averages only room pixels, so the player doesn't smear into the bokeh.
 // Pass 1 (Kawase): one Kawase blur step at offset _Offset texels; repeat with growing offsets for a wide blur.

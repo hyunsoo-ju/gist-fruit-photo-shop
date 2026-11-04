@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The L5 backdrop: the webcam room, heavily blurred into soft bokeh (Docs/DESIGN.md §9). The player is masked out
+    /// The L5 backdrop: the webcam room, heavily blurred into soft bokeh (Docs/DESIGN.md §13). The player is masked out
     /// before blurring, so the room fills in around them instead of their outline smearing behind the cut-out.
     /// Shows a plain fallback colour until the camera is live; works without a mask too (just blurs everything).
     /// </summary>
@@ -19,7 +19,7 @@ namespace FruitGame
         [SerializeField] float[] passes = { 0.5f, 1.5f, 2.5f, 3.5f, 4.5f };
         [Tooltip("Off: show the plain, sharp camera image behind the scene (no blur, masking or colour grade).")]
         [SerializeField] bool bokeh = false;
-        [Tooltip("Show a pixel-art illustration instead of the camera (Docs/DESIGN.md §3, L5).")]
+        [Tooltip("Show a pixel-art illustration instead of the camera (Docs/DESIGN.md §4, L5).")]
         [SerializeField] bool useIllustration = false;
         [SerializeField] Texture2D illustration;
 

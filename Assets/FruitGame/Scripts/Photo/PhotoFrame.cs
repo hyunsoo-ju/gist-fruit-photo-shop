@@ -2,14 +2,15 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace FruitGame
 {
     /// <summary>
-    /// Composes the souvenir print (Docs/DESIGN.md §10) in the pixel style: a cream card with the pixel title on top,
+    /// Composes the souvenir print (Docs/DESIGN.md §14) in the pixel style: a cream card with the pixel title on top,
     /// a pink pixel frame holding the four-cut grid (2 × 2: the action shots from the round, then the final shot, which
-    /// gets a light grey outline), and along the bottom the lab logo · score + best · school logo.
+    /// gets a light grey outline), and along the bottom the event logo · score + best · school logo.
     /// Built on a dedicated off-screen canvas rendered by its own camera into a 1080 × 1440 texture.
     /// Logos fall back to labelled placeholder boxes until real textures are assigned; without a title image the
     /// caption text is shown instead.
@@ -29,11 +30,12 @@ namespace FruitGame
         [SerializeField] TMP_Text best;
 
         [Header("Logos (leave empty for placeholders)")]
-        [SerializeField] Texture2D labLogo;
+        [Tooltip("Event logo (Festival NADA & nest NADA), bottom left.")]
+        [SerializeField, FormerlySerializedAs("labLogo")] Texture2D eventLogo;
         [SerializeField] Texture2D schoolLogo;
-        [SerializeField] RawImage labLogoImage;
+        [SerializeField, FormerlySerializedAs("labLogoImage")] RawImage eventLogoImage;
         [SerializeField] RawImage schoolLogoImage;
-        [SerializeField] GameObject labPlaceholder;
+        [SerializeField, FormerlySerializedAs("labPlaceholder")] GameObject eventPlaceholder;
         [SerializeField] GameObject schoolPlaceholder;
         [SerializeField] Vector2Int size = new Vector2Int(1080, 1440);
         [Tooltip("Share of the vertical crop taken from the bottom (0 = keep the bottom edge, 0.5 = centred).")]
@@ -81,7 +83,7 @@ namespace FruitGame
             caption.text = config.photoCaption.Replace("{date}", DateTime.Now.ToString("yyyy.MM.dd"));
             score.text = roundScore.ToString();
             best.text = Strings.Get("print.best", Mathf.Max(bestScore, roundScore));
-            SetLogo(labLogo, labLogoImage, labPlaceholder);
+            SetLogo(eventLogo, eventLogoImage, eventPlaceholder);
             SetLogo(schoolLogo, schoolLogoImage, schoolPlaceholder);
 
             Canvas.ForceUpdateCanvases();

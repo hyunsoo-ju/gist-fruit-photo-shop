@@ -6,7 +6,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Runs BlazeFace (short range) on the webcam feed with Unity Inference Engine and tracks one face (Docs/DESIGN.md §9).
+    /// Runs BlazeFace (short range) on the webcam feed with Unity Inference Engine and tracks one face (Docs/DESIGN.md §13).
     /// The webcam frame (9:16 or 16:9) is letterboxed into the model's 128×128 input; scores filtering + NMS are baked
     /// into the graph (as in Unity's BlazeDetectionSample). Results are in the webcam Output's UV space
     /// (0..1, origin bottom-left, already mirrored), so they line up with what's on screen.
@@ -18,7 +18,7 @@ namespace FruitGame
         [SerializeField] TextAsset anchorsCsv;
         [SerializeField, Range(0f, 1f)] float scoreThreshold = 0.6f;
         [SerializeField, Range(0f, 1f)] float iouThreshold = 0.3f;
-        [Tooltip("Stick with the previous face while it still overlaps it this much (Docs/DESIGN.md §6: several faces).")]
+        [Tooltip("Stick with the previous face while it still overlaps it this much (Docs/DESIGN.md §8: several faces).")]
         [SerializeField, Range(0f, 1f)] float stickyIou = 0.3f;
         [SerializeField] BackendType backend = BackendType.GPUCompute;
 

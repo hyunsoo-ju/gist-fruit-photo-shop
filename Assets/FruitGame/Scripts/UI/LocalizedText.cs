@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FruitGame
 {
-    /// <summary>A static label that shows its string-table entry in the current language (Docs/DESIGN.md §11).</summary>
+    /// <summary>A static label that shows its string-table entry in the current language (Docs/DESIGN.md §15).</summary>
     [RequireComponent(typeof(TMP_Text))]
     public class LocalizedText : MonoBehaviour
     {

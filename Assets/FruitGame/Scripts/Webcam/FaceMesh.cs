@@ -6,7 +6,7 @@ namespace FruitGame
 {
     /// <summary>
     /// MediaPipe Face Mesh (478 landmarks incl. irises; ONNX from astaileyyoung/FaceMeshONNX, MIT) for the photo
-    /// booth's face reshaping and makeup (Docs/DESIGN.md §10). Crops a square around the BlazeFace box, runs the mesh on
+    /// booth's face reshaping and makeup (Docs/DESIGN.md §14). Crops a square around the BlazeFace box, runs the mesh on
     /// the GPU, and maps the points back into webcam-output UV (the same space as FaceTracker / the cut-out).
     /// Only runs while Active, so gameplay doesn't pay for it.
     /// </summary>

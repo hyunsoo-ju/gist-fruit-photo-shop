@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The background pile (Docs/DESIGN.md §8). Each caught fruit's copy drops from above into a narrow invisible box
+    /// The background pile (Docs/DESIGN.md §12). Each caught fruit's copy drops from above into a narrow invisible box
     /// behind the person: one fruit deep, so it stacks like a 2D heap but tumbles and looks 3D.
     /// Anti-glitch measures: simple colliders, continuous collision, gentle depenetration, spawning only into
     /// free space, extra solver iterations, freezing settled fruit, a cap on the count, and its own physics layer.
@@ -35,7 +35,7 @@ namespace FruitGame
 
         void Awake()
         {
-            // Dithered background look (Docs/DESIGN.md §3): strength from GameConfig, on a copy so the asset isn't edited.
+            // Dithered background look (Docs/DESIGN.md §4): strength from GameConfig, on a copy so the asset isn't edited.
             if (hazeMaterial != null && hazeMaterial.HasProperty("_Fade"))
             {
                 hazeMaterial = new Material(hazeMaterial);

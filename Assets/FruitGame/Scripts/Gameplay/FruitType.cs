@@ -44,7 +44,7 @@ namespace FruitGame
         static readonly Dictionary<Material, Material> golden = new Dictionary<Material, Material>();
         static readonly Color Gold = new Color32(0xF5, 0xC0, 0x2E, 0xFF);
 
-        /// <summary>A golden version of a fruit material (Docs/DESIGN.md §4): plain gold instead of the fruit's colours,
+        /// <summary>A golden version of a fruit material (Docs/DESIGN.md §5): plain gold instead of the fruit's colours,
         /// so the shape still reads. Cached per source material.</summary>
         public static Material Golden(Material mat)
         {

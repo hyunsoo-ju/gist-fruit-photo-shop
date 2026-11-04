@@ -8,7 +8,7 @@ using UnityEngine;
 namespace FruitGame.EditorTools
 {
     /// <summary>
-    /// Bakes the voxel look (Docs/DESIGN.md §12) at the block sizes in GameConfig:
+    /// Bakes the voxel look (Docs/DESIGN.md §16) at the block sizes in GameConfig:
     /// - <b>Fruit</b>: every FruitType's source models become voxel prefabs coloured from one shared palette texture
     ///   (a few clean colours per fruit), set as the type's visual and atlas. The pile dithers the same palette.
     /// - <b>Scene</b>: every <see cref="VoxelSource"/> in the open scene gets a block mesh built from its original

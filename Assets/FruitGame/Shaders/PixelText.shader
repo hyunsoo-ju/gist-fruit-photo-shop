@@ -1,4 +1,4 @@
-// TextMeshPro UI text for a crisp pixel font (Docs/DESIGN.md §11). The atlas is a point-filtered raster atlas sampled
+// TextMeshPro UI text for a crisp pixel font (Docs/DESIGN.md §15). The atlas is a point-filtered raster atlas sampled
 // at the font's native 16 px, so one atlas texel is one glyph pixel at any font size that's a multiple of 16.
 // The outline and drop shadow are built from whole glyph pixels: the glyph is dilated by _OutlineSize texels for the
 // outline, and the outlined shape is shifted by _ShadowOffset texels for the shadow. TMP pads each glyph quad by

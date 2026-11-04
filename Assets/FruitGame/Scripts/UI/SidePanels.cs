@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// The landscape HUD in the side areas beside the play column (Docs/DESIGN.md §3, §11), shown during a round. Left,
+    /// The landscape HUD in the side areas beside the play column (Docs/DESIGN.md §4, §15), shown during a round. Left,
     /// under the score: a cream "점수표" (scoreboard) panel with the live score graph and the catch tally. Right, under
     /// the timer: a film strip of the round's three action shots, 3:4 portrait like the photos that get printed, each
     /// slot filling in as its shot is taken.

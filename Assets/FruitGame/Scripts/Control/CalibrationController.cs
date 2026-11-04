@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// The calibration stage (Docs/DESIGN.md §6): look straight → head left → head right, each captured by holding still,
+    /// The calibration stage (Docs/DESIGN.md §9): look straight → head left → head right, each captured by holding still,
     /// then a "try it" step where the basket follows the new range, with Looks good / Redo.
     /// Left and right are stored separately, so a player who can turn further one way still reaches both edges.
     /// Also drives its own UI: instruction text, a hint line, a ring that fills around the face while holding,

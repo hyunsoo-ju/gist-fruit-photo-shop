@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FruitGame
 {
-    /// <summary>One-shot game sounds. Clips are the first pick of each group (Docs/DESIGN.md §11).</summary>
+    /// <summary>One-shot game sounds. Clips are the first pick of each group (Docs/DESIGN.md §15).</summary>
     [RequireComponent(typeof(AudioSource))]
     public class AudioFeedback : MonoBehaviour
     {

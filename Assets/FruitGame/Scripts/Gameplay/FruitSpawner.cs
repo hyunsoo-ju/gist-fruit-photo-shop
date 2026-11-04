@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Spawns the fruit (Docs/DESIGN.md §4–§5). Normally one at a time: the next appears after the current one is caught
+    /// Spawns the fruit (Docs/DESIGN.md §5–§7). Normally one at a time: the next appears after the current one is caught
     /// or missed, plus a gap that shrinks over the round. Except in Easy, fruit also drop on a beat
     /// (GameConfig.DropIntervalAt) that starts at that same pace and quickens evenly, so later in the round the next fruit
     /// drops before the last one lands (never more than two in the air). Each spawn may be golden or (after bombAfterSeconds)
@@ -135,7 +135,7 @@ namespace FruitGame
                 go.AddComponent<BombFuse>();
             }
             else BuildVisual(go.transform, type);
-            // Step a whole game pixel at a time in the pixel render (Docs/DESIGN.md §3).
+            // Step a whole game pixel at a time in the pixel render (Docs/DESIGN.md §4).
             foreach (Transform model in go.transform) model.gameObject.AddComponent<PixelSnap>().renderScale = config.renderScale;
             if (liveMaterial != null && kind != FallingFruit.Kind.Bomb)
                 foreach (var r in go.GetComponentsInChildren<Renderer>())

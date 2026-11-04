@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace FruitGame.EditorTools
 {
     /// <summary>
-    /// Rebuilds triangle meshes out of blocks (Docs/DESIGN.md §12). Every grid cell a triangle passes through becomes a
+    /// Rebuilds triangle meshes out of blocks (Docs/DESIGN.md §16). Every grid cell a triangle passes through becomes a
     /// block, the enclosed inside is filled, and only faces that touch outside air are emitted. Vertices are welded on
     /// the integer grid (shared per corner, face direction and colour), so neighbouring faces meet exactly: no T-junctions,
     /// no hairline seams.

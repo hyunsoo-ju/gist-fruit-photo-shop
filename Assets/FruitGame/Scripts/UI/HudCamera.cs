@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The HUD camera for 3D UI (Docs/DESIGN.md §11): a perspective overlay camera, stacked on the main camera and seeing
+    /// The HUD camera for 3D UI (Docs/DESIGN.md §15): a perspective overlay camera, stacked on the main camera and seeing
     /// only the HUD3D layer. At PixelDistance in front of it, one world unit is one screen pixel of the base camera's
     /// viewport, so VoxelText can place block digits exactly where the HUD text would be, while the perspective shows
     /// their sides and makes moves toward the camera read as depth.

@@ -11,7 +11,7 @@ namespace FruitGame
     }
 
     /// <summary>
-    /// Every player-facing string, in Korean (in-game tone: 해요체) and English (Docs/DESIGN.md §11). The table is
+    /// Every player-facing string, in Korean (in-game tone: 해요체) and English (Docs/DESIGN.md §15). The table is
     /// Resources/Strings.txt: one line per key, "key, Korean, English" separated by tabs, "\n" for a new line and
     /// {0}, {1} for values. Load() runs on the main thread at startup (LanguageSwitch); after that, reads are safe from
     /// any thread (the phone page is built on the photo server's thread).

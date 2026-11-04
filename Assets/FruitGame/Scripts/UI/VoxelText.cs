@@ -5,7 +5,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Shows a HUD TextMeshPro text (score, timer) as 3D sticker-style block digits (Docs/DESIGN.md §11). It mirrors the
+    /// Shows a HUD TextMeshPro text (score, timer) as 3D sticker-style block digits (Docs/DESIGN.md §15). It mirrors the
     /// text, visibility and scale of the TMP object it sits on (so GameHUD's pop and pulse animations carry over), hides
     /// the TMP itself, and draws through the HUD camera, a perspective overlay camera on its own layer where one world
     /// unit is one screen pixel at its PixelDistance. One glyph pixel is one block, at the TMP's font size

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Debug view for face tracking (Docs/DESIGN.md §11, F1): an outline box on the tracked face plus a status line
+    /// Debug view for face tracking (Docs/DESIGN.md §15, F1): an outline box on the tracked face plus a status line
     /// (camera, detection score, rate, the face's position in the 3:4 play area) and a small view of the whole camera
     /// frame's person mask. The box is mapped from the camera frame to the HUD frame (CameraFrame.ToView), so it lines
     /// up with the backdrop.

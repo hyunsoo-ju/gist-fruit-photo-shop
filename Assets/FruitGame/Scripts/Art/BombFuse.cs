@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The burning fuse on a falling bomb (Docs/DESIGN.md §4): a flickering yellow-orange flame block at the fuse tip
+    /// The burning fuse on a falling bomb (Docs/DESIGN.md §5): a flickering yellow-orange flame block at the fuse tip
     /// (the "Fuse Tip" child the prop baker adds) throwing off small sparks.
     /// </summary>
     public class BombFuse : MonoBehaviour

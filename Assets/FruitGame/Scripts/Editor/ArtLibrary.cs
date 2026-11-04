@@ -6,7 +6,7 @@ namespace FruitGame.EditorTools
 {
     /// <summary>
     /// Turns imported models into game-ready prefabs: shared palette materials, no colliders,
-    /// saved under Assets/FruitGame/Prefabs/Art. Used by the scene builder (Docs/DESIGN.md §12).
+    /// saved under Assets/FruitGame/Prefabs/Art. Used by the scene builder (Docs/DESIGN.md §16).
     /// </summary>
     public static class ArtLibrary
     {

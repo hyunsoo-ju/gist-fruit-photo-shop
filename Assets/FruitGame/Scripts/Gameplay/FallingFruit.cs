@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// A falling fruit with two phases (Docs/DESIGN.md §5):
+    /// A falling fruit with two phases (Docs/DESIGN.md §7):
     /// 1. Scripted fall: a Rigidbody whose velocity is held at (vx, −fallSpeed) every step, with the
     ///    basket assist nudging vx and the side walls reflecting it.
     /// 2. Knocked: after it hits the basket, the scripted fall stops and physics takes over (bounce + gravity),

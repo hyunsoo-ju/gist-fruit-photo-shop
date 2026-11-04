@@ -9,7 +9,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Photo booth (M7, Docs/DESIGN.md §10): pose → 3·2·1 → flash → capture → preview with Save / Retake / Done.
+    /// Photo booth (M7, Docs/DESIGN.md §14): pose → 3·2·1 → flash → capture → preview with Save / Retake / Done.
     /// Every shot is a 3:4 portrait picture of the middle of the view, whatever the screen layout: a crop of the
     /// landscape view, or a slightly closer view in portrait. The capture renders the game camera off-screen with the
     /// basket and any fruit in play hidden and the round's pile switched to full colour. The print is a four-cut: the three action shots ActionShots took

@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Snaps a visual's on-screen position to the pixel render's grid (Docs/DESIGN.md §3), so moving objects step a whole
+    /// Snaps a visual's on-screen position to the pixel render's grid (Docs/DESIGN.md §4), so moving objects step a whole
     /// game pixel at a time instead of shimmering between pixels. Only the visual moves; physics stays on the parent.
     /// </summary>
     public class PixelSnap : MonoBehaviour

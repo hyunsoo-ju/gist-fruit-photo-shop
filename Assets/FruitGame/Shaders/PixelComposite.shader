@@ -1,5 +1,5 @@
 // Shows one of the half-resolution game layers on a camera-facing quad with hard (point-sampled) pixels
-// (Docs/DESIGN.md §3, PixelRenderer). The back layer is opaque; the front layer is alpha-blended over the player.
+// (Docs/DESIGN.md §4, PixelRenderer). The back layer is opaque; the front layer is alpha-blended over the player.
 Shader "Hidden/FruitGame/Pixel Composite"
 {
     Properties

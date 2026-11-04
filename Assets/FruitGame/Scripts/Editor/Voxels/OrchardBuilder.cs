@@ -7,7 +7,7 @@ using UnityEngine;
 namespace FruitGame.EditorTools
 {
     /// <summary>
-    /// Builds the scenery variety from the M8 style test into Game.unity (Docs/DESIGN.md §3, L1 and L4b):
+    /// Builds the scenery variety from the M8 style test into Game.unity (Docs/DESIGN.md §4, L1 and L4b):
     /// - <b>Far orchard</b>: six extra trees on the far hills at the sides (smaller, at varied depths), a leaf tint per
     ///   tree, fruit blocks on the camera-facing side of every canopy, and three block clouds near the top. The
     ///   centre stays open; the two big oaks also stand on the hills.
@@ -181,7 +181,7 @@ namespace FruitGame.EditorTools
                 copy.transform.localScale = src.localScale * Random.Range(0.7f, 0.95f);
             }
 
-            // Landscape sides (Docs/DESIGN.md §3): outside the crate walls the view runs to about ±5.5 m, so small trees,
+            // Landscape sides (Docs/DESIGN.md §4): outside the crate walls the view runs to about ±5.5 m, so small trees,
             // bushes and flowers continue there (off-screen in portrait).
             var smallTrees = fg.Find("Small Trees").Cast<Transform>().ToList();
             var bushes = shrubs.Cast<Transform>().Where(t => t != generated && !t.name.StartsWith("flower") && !t.name.StartsWith("grass")).ToList();

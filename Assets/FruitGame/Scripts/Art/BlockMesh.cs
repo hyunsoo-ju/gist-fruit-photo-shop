@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace FruitGame
 {
     /// <summary>
-    /// Builds a block mesh from a 3D grid of colours (Docs/DESIGN.md §11, the voxel title and icon). Only faces next to
+    /// Builds a block mesh from a 3D grid of colours (Docs/DESIGN.md §15, the voxel title and icon). Only faces next to
     /// empty cells are emitted, vertices are welded per grid corner, face direction and colour (no seams), and colours
     /// are stored as vertex colours so one material draws every block.
     /// </summary>

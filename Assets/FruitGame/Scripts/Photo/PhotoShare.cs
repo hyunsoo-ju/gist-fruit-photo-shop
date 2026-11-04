@@ -14,7 +14,7 @@ using Debug = UnityEngine.Debug;
 namespace FruitGame
 {
     /// <summary>
-    /// Getting the photo to the player (M7d, Docs/DESIGN.md §10):
+    /// Getting the photo to the player (M7d, Docs/DESIGN.md §14):
     /// • Print: sends the saved PNG to the system's default printer (macOS `lp`, Windows shell "print" verb).
     /// • Phone: a tiny HTTP server on this computer serves each shared photo at an unguessable link
     ///   (http://LAN-IP:port/p/ID) that phones on the same Wi-Fi open (via QR code or by typing it).
@@ -165,7 +165,7 @@ namespace FruitGame
         }
 
         /// <summary>
-        /// The phone page in the game's pixel style (Docs/DESIGN.md §10): cream background, the pixel title, Neo둥근모,
+        /// The phone page in the game's pixel style (Docs/DESIGN.md §14): cream background, the pixel title, Neo둥근모,
         /// the photo in a dark pixel border, and a pink keycap "Save photo" button that sinks when tapped.
         /// </summary>
         static string Page(string title, string id)

@@ -5,7 +5,7 @@ namespace FruitGame
 {
     /// <summary>
     /// Opens a webcam and keeps a mirrored copy of its whole frames in Output, at the camera's own shape with the long
-    /// side at most 960 pixels (Docs/DESIGN.md §9). CameraFrame describes where it sits on screen and in the play area.
+    /// side at most 960 pixels (Docs/DESIGN.md §13). CameraFrame describes where it sits on screen and in the play area.
     /// Camera choice: GameConfig.preferredCameraName if it matches, otherwise the first camera that isn't the
     /// laptop's built-in one (e.g. an iPhone via Continuity Camera, or a USB webcam), otherwise any camera.
     /// </summary>

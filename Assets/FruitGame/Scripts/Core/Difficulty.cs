@@ -3,7 +3,7 @@ using System;
 namespace FruitGame
 {
     /// <summary>
-    /// The round's difficulty setting (Docs/DESIGN.md §4, §11). Normal is the harder round from M16.1; Easy keeps the
+    /// The round's difficulty setting (Docs/DESIGN.md §6). Normal is the harder round from M16.1; Easy keeps the
     /// earlier gentle round (slower ramp, steady gaps, full assist, one fruit at a time, no bombs); Auditory is the
     /// auditory assist mode for blind and low-vision players (M18): gentler still, played by ear with a narrator.
     /// Staff toggle Easy with E and Auditory with A (or its keycap) on the title screen. Easy goes back to Normal when a

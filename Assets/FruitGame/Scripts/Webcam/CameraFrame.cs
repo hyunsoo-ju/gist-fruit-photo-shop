@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Where the camera image sits (Docs/DESIGN.md §9). WebcamSource keeps the whole camera frame at its own aspect; on
+    /// Where the camera image sits (Docs/DESIGN.md §13). WebcamSource keeps the whole camera frame at its own aspect; on
     /// screen it's fitted to the view's height and centred, so a frame wider than the view is cropped at the sides and a
     /// narrower one (a 3:4 camera in landscape) fills only the middle, fading out at its left and right edges.
     /// Face tracking reports positions in this whole-frame uv; calibration and the basket use them relative to the

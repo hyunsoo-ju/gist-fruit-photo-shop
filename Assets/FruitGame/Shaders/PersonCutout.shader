@@ -1,7 +1,7 @@
 // The player cut out of the webcam image (L3): colour × soft mask edge. It draws after the regular opaque
 // scene (queue Geometry+500) so it blends over the pile and backdrop, and it writes depth only where the person
-// is, so depth of field keeps the player sharp while the layers behind stay soft (Docs/DESIGN.md §9).
-// With _Beauty > 0 (photo booth, Docs/DESIGN.md §10) it also applies a SNOW/SODA-style beauty filter to the player only,
+// is, so depth of field keeps the player sharp while the layers behind stay soft (Docs/DESIGN.md §13).
+// With _Beauty > 0 (photo booth, Docs/DESIGN.md §14) it also applies a SNOW/SODA-style beauty filter to the player only,
 // ported from GPUPixel (Apache-2.0, see Art/Beauty/NOTICE.txt): guided skin smoothing, sharpening, LUT-based
 // whitening, plus cheek blush and lip tint placed from BlazeFace's face points.
 Shader "FruitGame/Person Cutout"

@@ -1,4 +1,4 @@
-# FruitGame string table (Docs/DESIGN.md §11). key<TAB>Korean (in-game tone: 해요체)<TAB>English. \n = new line; {0}, {1} = values.
+# FruitGame string table (Docs/DESIGN.md §15). key<TAB>Korean (in-game tone: 해요체)<TAB>English. \n = new line; {0}, {1} = values.
 start.title	과일을 받아요!	Catch the fruit!
 start.hint	머리를 움직여서 바구니를 옮겨요	Move your head to steer the basket
 start.play	시작	Play

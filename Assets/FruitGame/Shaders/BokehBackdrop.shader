@@ -1,4 +1,4 @@
-// Displays the blurred room on the L5 backdrop quad (Docs/DESIGN.md §9): un-premultiplies the blur (rgb / a), then a soft
+// Displays the blurred room on the L5 backdrop quad (Docs/DESIGN.md §13): un-premultiplies the blur (rgb / a), then a soft
 // grade (a little desaturation, brightening and a tint toward the scene's haze blue). Shows a plain fallback colour
 // until the camera is live.
 Shader "FruitGame/Bokeh Backdrop"

@@ -4,7 +4,7 @@ namespace FruitGame
 {
     /// <summary>
     /// A player's comfortable head range, in mirrored webcam u (0 = left edge, 1 = right edge). Left and right are
-    /// kept separately so an asymmetric range still reaches both edges (Docs/DESIGN.md §6). Saved in PlayerPrefs.
+    /// kept separately so an asymmetric range still reaches both edges (Docs/DESIGN.md §9). Saved in PlayerPrefs.
     /// </summary>
     [System.Serializable]
     public struct CalibrationData

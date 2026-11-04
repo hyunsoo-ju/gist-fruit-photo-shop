@@ -1,7 +1,7 @@
 namespace FruitGame
 {
     /// <summary>
-    /// The single place points are decided (Docs/DESIGN.md §4): a fruit scores its type's points (a golden one
+    /// The single place points are decided (Docs/DESIGN.md §5): a fruit scores its type's points (a golden one
     /// goldenPoints), doubled (comboMultiplier) from the comboFrom-th catch in a row; a caught bomb costs bombPenalty.
     /// </summary>
     public static class ScoreRules

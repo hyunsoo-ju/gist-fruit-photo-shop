@@ -12,7 +12,7 @@ namespace FruitGame
     }
 
     /// <summary>
-    /// The screen's two layouts (Docs/DESIGN.md §3): portrait 9:16 or landscape 16:9, picked from the window's shape
+    /// The screen's two layouts (Docs/DESIGN.md §4): portrait 9:16 or landscape 16:9, picked from the window's shape
     /// (or forced by GameConfig.orientation) and letterboxed in whatever window the game runs in; a separate background
     /// camera clears the bars. The camera's field of view is fitted around the fixed play column: its width in portrait,
     /// its height in landscape, so gameplay is the same size in both and only the scenery around it changes.

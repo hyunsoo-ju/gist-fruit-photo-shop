@@ -1,5 +1,5 @@
 // Live falling fruit: simple lit (main light + shadows + ambient) plus a fresnel rim highlight,
-// so the fruit in play pops against the hazed background pile (Docs/DESIGN.md §11).
+// so the fruit in play pops against the hazed background pile (Docs/DESIGN.md §15).
 Shader "FruitGame/Fruit Rim"
 {
     Properties

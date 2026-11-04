@@ -1,4 +1,4 @@
-// The voxel title and icon (Docs/DESIGN.md §11): vertex-coloured blocks, lit like the scene (main light, shadows,
+// The voxel title and icon (Docs/DESIGN.md §15): vertex-coloured blocks, lit like the scene (main light, shadows,
 // ambient), plus a diagonal band of light that sweeps across in world space (_SweepX, animated by VoxelTitle).
 Shader "FruitGame/Voxel Title"
 {

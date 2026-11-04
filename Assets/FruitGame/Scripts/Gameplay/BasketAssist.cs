@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The assist (Docs/DESIGN.md §7): a horizontal pull toward the basket mouth, only above the rim and only within
+    /// The assist (Docs/DESIGN.md §10): a horizontal pull toward the basket mouth, only above the rim and only within
     /// assistRadius. It follows a moving basket: full strength while the basket moves (or has just moved), fading to
     /// assistIdleLevel when it sits still, so reaching for fruit is helped and standing still doesn't pay off.
     /// </summary>

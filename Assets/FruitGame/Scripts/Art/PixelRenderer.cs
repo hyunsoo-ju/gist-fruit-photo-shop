@@ -5,7 +5,7 @@ using UnityEngine.Rendering.Universal;
 namespace FruitGame
 {
     /// <summary>
-    /// The pixel render (Docs/DESIGN.md §3). Two helper cameras draw the game layers at renderScale × the layout's reference size into
+    /// The pixel render (Docs/DESIGN.md §4). Two helper cameras draw the game layers at renderScale × the layout's reference size into
     /// textures with hard pixels: one for everything behind the player (layers Back and Pile: backdrop, far orchard,
     /// pile) and one for everything in front (basket, falling fruit, foreground plants, on a transparent background).
     /// This camera then draws, at full resolution: the back layer on a far quad, the sharp player (layer Person), and

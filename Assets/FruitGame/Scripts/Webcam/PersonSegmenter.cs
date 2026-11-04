@@ -5,7 +5,7 @@ namespace FruitGame
 {
     /// <summary>
     /// Keeps a person mask (R = 0 background … 1 person) for the webcam feed in Mask, aligned 1:1 with
-    /// WebcamSource.Output's UVs (Docs/DESIGN.md §9). Everything stays on the GPU.
+    /// WebcamSource.Output's UVs (Docs/DESIGN.md §13). Everything stays on the GPU.
     /// Preferred: Robust Video Matting (RVM), a video matting model that carries four recurrent state tensors
     /// from frame to frame, so hair and clothing edges stay stable; runs on the full 540×720 frame and outputs a
     /// soft alpha matte at that resolution (rounded up to RVM-friendly sizes, e.g. 576×768). Fallback: MediaPipe Selfie Segmentation at 256×256.

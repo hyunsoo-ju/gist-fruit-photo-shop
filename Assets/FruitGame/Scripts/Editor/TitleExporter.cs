@@ -6,7 +6,7 @@ using UnityEngine.Rendering.Universal;
 namespace FruitGame.EditorTools
 {
     /// <summary>
-    /// Exports the voxel title and icon as flat pixel-art PNGs (Docs/DESIGN.md §11) for the README, the photo frame,
+    /// Exports the voxel title and icon as flat pixel-art PNGs (Docs/DESIGN.md §15) for the README, the photo frame,
     /// signage and the app icon. Each is rendered with an orthographic camera at 4 px per block (lit like the scene,
     /// transparent background), then scaled up with hard pixels. The app icon is 1024 × 1024 on the sky colour.
     /// </summary>

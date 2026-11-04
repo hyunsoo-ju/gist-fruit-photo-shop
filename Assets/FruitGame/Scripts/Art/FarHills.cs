@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace FruitGame
 {
     /// <summary>
-    /// Two grassy hills in the far layer (Docs/DESIGN.md §3, L4b), one each side, that the far orchard's side trees
+    /// Two grassy hills in the far layer (Docs/DESIGN.md §4, L4b), one each side, that the far orchard's side trees
     /// stand on. Each rises from the ground beside the open middle (where the pile and the room behind the player stay
     /// visible) to a broad top running off the screen edge. Built at start from block grids at the far block size: a
     /// light grass top, then grass that darkens gradually with depth below the surface (with faint bands, barely darker

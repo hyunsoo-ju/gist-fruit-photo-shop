@@ -10,7 +10,7 @@ namespace FruitGame
     }
 
     /// <summary>
-    /// Every gameplay tunable in one asset. See Docs/DESIGN.md §13 for what each value means.
+    /// Every gameplay tunable in one asset. See Docs/DESIGN.md §17 for what each value means.
     /// </summary>
     [CreateAssetMenu(menuName = "FruitGame/Game Config", fileName = "GameConfig")]
     public class GameConfig : ScriptableObject
@@ -72,7 +72,7 @@ namespace FruitGame
         [Tooltip("A knocked fruit that hasn't landed in the basket or dropped past the miss line after this long counts as missed.")]
         public float knockedTimeout = 4f;
 
-        [Header("Background fruit pile (Docs/DESIGN.md §8)")]
+        [Header("Background fruit pile (Docs/DESIGN.md §12)")]
         [Tooltip("Centre depth of the pile container, between the person (z 2) and the bokeh (z 6).")]
         public float pileZ = 3.6f;
         [Tooltip("Container depth as a multiple of the largest fruit's diameter (one fruit deep, so it stacks like 2D).")]
@@ -97,7 +97,7 @@ namespace FruitGame
         [Tooltip("Pull left for a basket that sits still (fraction of full).")]
         [Range(0f, 1f)] public float assistIdleLevel = 0.15f;
 
-        [Header("Harder round (Docs/DESIGN.md §4, M16.1)")]
+        [Header("Harder round (Docs/DESIGN.md §5, M16.1)")]
         [Tooltip("Fruit dropped per 10 s at the end of the round. The rate climbs in a straight line from the opening pace " +
                  "(one fall plus the gap, about 3.7 per 10 s) to this, so the round speeds up evenly.")]
         public float endDropsPer10s = 9f;
@@ -138,7 +138,7 @@ namespace FruitGame
         public float easyAssistExtraSpeedCap = 1f;
         public float easyDriftCapMax = 1.2f;
 
-        [Header("Face control (Docs/DESIGN.md §6)")]
+        [Header("Face control (Docs/DESIGN.md §8)")]
         [Range(0.6f, 1.6f)] public float sensitivity = 1f;
         [Tooltip("Dead zone in normalised t (fraction of the calibrated range), so it scales with each player's range.")]
         public float deadZone = 0.02f;
@@ -156,7 +156,7 @@ namespace FruitGame
         public float faceLostPauseDelay = 1f;
         public float faceReturnGrace = 1f;
 
-        [Header("Photo booth (Docs/DESIGN.md §10)")]
+        [Header("Photo booth (Docs/DESIGN.md §14)")]
         [Tooltip("Caption along the top of the photo frame. {date} becomes today's date. Placeholder until the event name is known.")]
         public string photoCaption = "EVENT NAME · {date}";
         [Tooltip("Korean-style beauty filter on the player in the photo booth (0 = off, 1 = full).")]
@@ -166,7 +166,7 @@ namespace FruitGame
         [Tooltip("Photo booth face reshape: V-line jaw slimming (0 = off). Needs the face mesh.")]
         [Range(0f, 1f)] public float faceSlim = 0.0f;
 
-        [Header("Voxel look (Docs/DESIGN.md §3, §12)")]
+        [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]
         public float fruitBlockSize = 0.044f;
         [Tooltip("Block size in metres for the play layers: basket, foreground trees and plants.")]
@@ -176,7 +176,7 @@ namespace FruitGame
         [Tooltip("Colours per fruit after clean-up (the voxeliser snaps every block to one of these).")]
         [Range(2, 8)] public int fruitColors = 5;
 
-        [Header("Screen layout (Docs/DESIGN.md §3)")]
+        [Header("Screen layout (Docs/DESIGN.md §4)")]
         [Tooltip("Auto picks portrait 9:16 or landscape 16:9 from the window's shape.")]
         public OrientationSetting orientation = OrientationSetting.Auto;
         [Tooltip("Width of the play column at z = 0, crate walls included: the view's width in portrait.")]
@@ -186,7 +186,7 @@ namespace FruitGame
         [Tooltip("Screen pixels per UI art pixel on the 1080-pixel short side: 4 was the 3:4 build's size, 3 suits a full-size monitor.")]
         [Range(2, 4)] public int uiPixelScale = 3;
 
-        [Header("Pixel render (Docs/DESIGN.md §3)")]
+        [Header("Pixel render (Docs/DESIGN.md §4)")]
         [Tooltip("Game layers render at this fraction of the layout's reference size (1080 × 1920 or 1920 × 1080) and are scaled up with hard pixels.")]
         [Range(0.25f, 1f)] public float renderScale = 0.5f;
         [Tooltip("Dither toward the sky on the background pile (0 = full colour).")]
@@ -197,7 +197,7 @@ namespace FruitGame
         public float playerOutline = 3f;
         public Color playerOutlineColor = new Color32(0x1E, 0x22, 0x33, 0xFF);
 
-        [Header("Language (Docs/DESIGN.md §11)")]
+        [Header("Language (Docs/DESIGN.md §15)")]
         [Tooltip("Starting language; F3 flips between Korean and English at runtime.")]
         public Language language = Language.Korean;
 

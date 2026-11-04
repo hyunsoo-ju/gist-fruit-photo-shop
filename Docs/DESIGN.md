@@ -1,10 +1,10 @@
 # 지스트의 과일 사진가게 (GIST Fruit Photo Shop) — design & build reference
 
-An **interactive, accessibility-focused photo booth**. A visitor stands in front of a webcam and plays a one-minute fruit-catching game using only head movement: a basket follows their face left and right, and fruit falls one at a time from the treetops. Every catch drops onto a growing pile behind them. When the round ends, they pose in front of their pile and take home a framed photo, printed or downloaded to their phone.
+An **interactive photo booth designed first for accessibility**: anyone who walks up can play it, whatever their range of movement, eyesight or reading. A visitor stands (or sits) in front of a camera and plays a one-minute fruit-catching game using only head movement: a basket follows their face left and right, and fruit falls from the treetops. Calibration maps each player's own comfortable movement to the whole basket travel, a gentler Easy mode and a **Sound mode** for blind and low-vision players (binaural beeps and a Korean narrator) are one keypress away, and a forgiving assist helps everyone. Every catch drops onto a growing pile behind the player; when the round ends, they pose in front of it and take home a framed four-cut photo, printed or downloaded to their phone. How the booth serves each kind of player is in §2.
 
 The whole thing is styled as **pixel art and voxels**: block-built fruit, trees and basket, a gently pixelated render, a pixel font for Korean and English, and chunky 3D UI.
 
-This document describes the MVP as it should be. Where the current build doesn't match yet, the milestone that closes the gap is named (§15). The history of how each choice was made is in the decisions log (§16). Numbers are starting values to tune in playtesting. **FruitGame** is the project's short name, used in code, asset folders, shaders and menus.
+This document describes the MVP as it should be. Where the current build doesn't match yet, the milestone that closes the gap is named (§19). The history of how each choice was made is in the decisions log (§20). Numbers are starting values to tune in playtesting. **FruitGame** is the project's short name, used in code, asset folders, shaders and menus.
 
 ![Screen layout](images/01-screen-layout.svg)
 
@@ -22,35 +22,73 @@ This document describes the MVP as it should be. Where the current build doesn't
 | ML runtime | Unity Inference Engine (`com.unity.ai.inference` 2.6.1), all on-device |
 | Target | **macOS and Windows** standalone. Everything used (WebCamTexture, Inference Engine, URP, HttpListener) is cross-platform; anything macOS-only gets a Windows fallback or is flagged. |
 | Screen | **Portrait 9:16 or landscape 16:9**, chosen from the window's shape (reference 1080 × 1920 / 1920 × 1080) and letterboxed in any window; sized for a full-size monitor |
-| Booth hardware | A full-size monitor; a **DSLR** on clean HDMI through an **Elgato Game Capture 4K X**, which the computer sees as a webcam; a **Canon SELPHY CP1500** photo printer, with postcard paper assumed until the film is confirmed (§9, §10; M17). |
+| Booth hardware | A full-size monitor; a **DSLR** on clean HDMI through an **Elgato Game Capture 4K X**, which the computer sees as a webcam; a **Canon SELPHY CP1500** photo printer, with postcard paper assumed until the film is confirmed (§13, §14; M17). |
 | Control | Face x position from the webcam. Mouse/keyboard fallback for testing (F2). |
 | Operation | **Mouse only.** Every screen is usable with a mouse; keys are shortcuts for staff. |
 | Style | **Pixel / voxel**: voxel models, a gently pixelated render, Neo둥근모 Pro pixel font, keycap-style 3D UI |
 | Language | **Korean first** (in-game tone: 해요체), English as a fallback |
 | Session | A **60 s timed round**. A lives counter is coded in but switched off. |
-| Accessibility | Per-player calibration of head movement, so even a small comfortable range covers the whole basket travel; forgiving rules; large, high-contrast UI; an **auditory assist mode** for blind and low-vision players (binaural parking-sensor beeps and a Korean narrator, M18) |
+| Accessibility | **The core of the design (§2):** head-only control with per-player calibration (§9), so even a small comfortable range covers the whole basket travel; three difficulty modes, Normal, Easy and **Sound mode** for blind and low-vision players (§6, §11); a forgiving assist (§10); mouse-only menus; large, high-contrast Korean-first UI |
 | Output | A four-cut photo on a **100 × 148 mm postcard** (1800 × 1200 at 300 dpi, M17), printed on the SELPHY or downloaded over local Wi-Fi via QR code. Until M17: a 1080 × 1440 image. |
 
 ---
 
-## 2. Player journey
+## 2. Accessibility by design
+
+The booth is meant to be played by **anyone who walks up**: people with limited neck, arm or upper-body movement, wheelchair users, blind and low-vision visitors, children and older adults, and people who don't read Korean. Every feature below exists for that; the rest of this document describes how each works.
+
+### Who it's for, and how
+| Need | What the booth does | Where |
+|---|---|---|
+| **Limited or one-sided movement** | Control is by head (face) position only, and **calibration** maps each player's own comfortable range, measured separately for each side, to the full basket travel. Tiny ranges are accepted. Hold time and steadiness tolerance are settings for players with tremor. | §8, §9 |
+| **Seated players and wheelchair users** | The camera frames the head and shoulders; nothing needs standing, reaching or a controller. Distance prompts ("closer", "farther back") help position the chair. | §8, §9 |
+| **Blind and low-vision players** | **Sound mode:** a binaural parking-sensor beep places the fruit by ear, a Korean narrator talks the player through calibration, the round, the score and the photo, and the round itself is gentler. | §11 |
+| **Players who need it gentler** | **Easy** (staff key E): the original gentle round, no bombs, one fruit at a time. | §6 |
+| **Everyone, by default** | An **assist** pulls fruit toward a basket that's reaching for them; fruit never punish (a miss costs only time, no lives); the game **pauses itself** when the face is lost and resumes when it's back. | §5, §10 |
+| **Reading and language** | **Korean first** in friendly 해요체, English on F3; one large pixel font; big high-contrast text and keycap buttons; numbers shown as 3D block digits. | §15 |
+| **Staff and companions** | Every screen works with a **mouse alone**, so a companion can drive the menus; keys are shortcuts for staff. | §15 |
+| **Privacy** | Everything runs on the booth computer: no uploads, phone links only on the local network, and they expire. | §14 |
+
+### Principles
+- **Harder through pace, never through more movement.** Difficulty comes from speed, timing and variety (§5); the basket size and the movement it needs never change, so calibration keeps every player's full range.
+- **One action, clear feedback.** The only thing to do is move the head; every catch, bounce and miss has its own sound and visual.
+- **Forgiving by default, stricter by choice.** The normal round is a real challenge for practised players; Easy and Sound mode are one keypress away, and they reset for the next visitor.
+- **The photo is for everyone.** Sound mode guides the pose by voice, and the beauty filter and four-cut print are the same in every mode.
+
+### Staff controls
+| Key | What it does |
+|---|---|
+| **E** (title) | Easy for the next round |
+| **A** (title) or the **소리로 하기** keycap | Sound mode for this visit |
+| **C** | Recalibrate |
+| **F1** | Face-tracking debug overlay |
+| **F2** | Mouse/keyboard control instead of the face (testing) |
+| **F3** | Korean ⇄ English |
+| **F5** | Blank the screen (Sound mode test) |
+
+### Testing with players
+Playtests with players with limited movement, wheelchair users and blind or low-vision players are part of M6, alongside the general playtest; their notes feed the final tuning.
+
+---
+
+## 3. Player journey
 
 ![Game states](images/05-game-flow.svg)
 
 | Step | What happens |
 |---|---|
-| **Title** | The title screen shows the 3D voxel title **지스트의 과일 사진가게** (its blocks drop in and stack like fruit), the icon, and big **Play** and **Calibrate** buttons. The live camera runs behind it so people walking by see themselves. |
-| **Calibrate** | Three held poses (straight, left, right) measure this player's comfortable head range, then a short **Try it** where the basket follows the new mapping (§6). Runs automatically the first time; afterwards it's optional from the title screen. |
+| **Title** | The title screen shows the 3D voxel title **지스트의 과일 사진가게** (its blocks drop in and stack like fruit), the icon, and big **Play** and **Calibrate** buttons, and the **소리로 하기** keycap for Sound mode (§11). The live camera runs behind it so people walking by see themselves. |
+| **Calibrate** | Three held poses (straight, left, right) measure this player's comfortable head range, then a short **Try it** where the basket follows the new mapping (§9). Runs automatically the first time; afterwards it's optional from the title screen. |
 | **Countdown** | 3 · 2 · 1 with a tick sound. |
-| **Playing** | Exactly one fruit falls at a time; the next appears 0.6 s after the current one is caught or missed (§4–§5). Each catch drops a copy onto the pile behind the player (§8). |
+| **Playing** | Exactly one fruit falls at a time; the next appears 0.6 s after the current one is caught or missed (§5–§7). Each catch drops a copy onto the pile behind the player (§12). |
 | **Paused** | From the **II** button, or automatically after 1 s without a face ("Can't see you!"); resumes 1 s after the face returns. The pause menu has **Resume** and **Main menu**. |
 | **Game over** | When the 60 s run out, the fruit still in the air is allowed to land, then: "Time's up!", the score, the best score, a score-over-time graph, the per-fruit tally, and **Play again**, **Photo** and **Main menu**. |
-| **Photo booth** | Pose in front of this round's pile with the beauty filter on → 3·2·1 → flash → framed preview → **Print**, **Get it on your phone** (QR), **Save**, **Retake** or **Done** (§10). |
+| **Photo booth** | Pose in front of this round's pile with the beauty filter on → 3·2·1 → flash → framed preview → **Print**, **Get it on your phone** (QR), **Save**, **Retake** or **Done** (§14). |
 | **Back to title** | **Done** or **Main menu** returns to the title screen and clears the pile for the next visitor. |
 
 ---
 
-## 3. Look & scene
+## 4. Look & scene
 
 ### Scene layers (front to back)
 
@@ -60,27 +98,27 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 
 | Layer | What | Z (world) | Notes |
 |---|---|---|---|
-| **L0** | HUD: score, timer, pause button | UI | Voxel score and timer digits on a 3D UI camera; flat UI on a Screen Space – Overlay canvas inside a "Frame" rect fitted to the game viewport (§11). In landscape the HUD moves into the side areas. |
+| **L0** | HUD: score, timer, pause button | UI | Voxel score and timer digits on a 3D UI camera; flat UI on a Screen Space – Overlay canvas inside a "Frame" rect fitted to the game viewport (§15). In landscape the HUD moves into the side areas. |
 | **L1** | Foreground | −1.1 … −0.45 | Four small voxel trees (two pines, a cypress, a small oak) toward the bottom corners, with voxel bushes, grass and flowers along the bottom edge. **Varied, not one green:** each plant gets its own leaf tint (base, deep, yellow-green, blue-green or olive), and each flower its own petal colour (pink, white, orange, red, lilac or yellow). Extra small flowers and grass tufts at the front fill the gaps; big bushes are never added there, so nothing climbs higher over the basket. Same 6.3 cm blocks as the rest of the play layer. |
 | **L2** | Falling fruit + basket | 0 | The gameplay plane. All gameplay maths happen here in 2D (x, y). |
-| **L3** | The player | 2 | The webcam image with the background removed (§9), kept **sharp** and given a 3 px dark pixel outline (#1E2233) so it sits in the pixel world. |
-| **L4** | Background fruit pile | ≈ 3.0 … 4.2 | Caught fruit stacks up with physics behind the player (§8). |
+| **L3** | The player | 2 | The webcam image with the background removed (§13), kept **sharp** and given a 3 px dark pixel outline (#1E2233) so it sits in the pixel world. |
+| **L4** | Background fruit pile | ≈ 3.0 … 4.2 | Caught fruit stacks up with physics behind the player (§12). |
 | **L4b** | Distant orchard | 4.9 … 6.7 | Two grassy **hills** (`FarHills`), one each side, rising from the ground beside the open middle to a broad top running off the screen edge: a light grass top over grass that darkens gradually with depth, with faint bands barely darker than the grass around them, a few flowers and stones. The orchard stands on them: the two big oak canopies framing the top corners and two pines, plus six smaller trees at varied sizes and depths on the hill slopes, each with its own leaf tint so the layer isn't one flat green. A few fruit blocks (red, orange or yellow per tree) sit on the camera-facing side of each canopy, and three block clouds drift near the top. Coarser blocks than the play layers and dithered toward the sky, so it all reads as far away. The **centre stays open** so the live room behind the player shows through. No shadows. |
-| **L5** | Backdrop | 6 | The live camera frame of the room behind the player, sharp by default (an optional bokeh blur exists). Alternative: a pixel-art orchard illustration (§9). Drawn through the back pixel layer, like L4 and L4b. |
+| **L5** | Backdrop | 6 | The live camera frame of the room behind the player, sharp by default (an optional bokeh blur exists). Alternative: a pixel-art orchard illustration (§13). Drawn through the back pixel layer, like L4 and L4b. |
 
 **Camera:** position (0, 0, −12), looking +Z. `ScreenLayout` letterboxes it to the current layout's aspect in any window (black bars from a second camera), stretches the HUD frame to match, and fits its field of view around the play column (below): about 43.6° in portrait and 30° in landscape. One world unit is one metre. Quads that show the whole camera frame (the player cut-out and the backdrop) are sized to the view by `ViewFill`.
 
 **Two orientations.** The game uses **portrait 9:16** or **landscape 16:9**, picked from the window's shape (`GameConfig.orientation`: Auto, Portrait or Landscape; a window in between letterboxes to the nearer one, and the layout switches live: everything sized to the screen listens to `ScreenLayout.Changed`). The **play column** keeps one size in both: the fruit walls at ±2.25 m with their crate stacks (`playColumnWidth` 5.4 m in all) and its height (`playHeight` 6.43 m). Speeds, the basket, calibration, the assist and the pile therefore behave identically, and only what's around the column changes.
 - **Portrait 9:16:** the camera fits the column's width, so the view grows taller (about 5.4 × 9.6 m at z = 0). A **canopy band** of leaf clumps hangs across the top, in front of the play plane, so fruit drop out of the leaves (they spawn behind it); a **ground bank** of grass over soil fills the bottom just below the basket, so missed fruit disappear behind it. The score, timer and pause button sit in a row just under the canopy, over the play area.
-- **Landscape 16:9:** the camera fits the column's height (6.43 m, so about 11.4 m wide at z = 0). The play column stays in the middle, bounded by **visible walls** that fruit bounce off: stacks of voxel **crates and barrels** (`CrateWalls`, from the low-poly crate pack's Box and barrel models, §12): on each wall line a column of crates with a barrel every fourth piece, flush with the bounce plane, rising from the ground bank into the canopy; outside it, shorter crate stacks step down toward the screen edge, each topped with a barrel with fruit heaped on its lid, and a barrel stands at the foot. Every piece gets its own size (82–112 %), turn and a slightly different wood tint, so the stacks look natural. Each bounce gives a knock, a small wobble of the piece that was hit and a few wood chips. The walls show in portrait too, at the screen edges. The column is deliberately not stretched to the full width: the player's head range would map to a very long basket travel, and fruit would take too long to cross. Outside the walls the orchard, foreground plants and the live room carry on, and the side areas hold the HUD (`SidePanels`): the score above a cream panel headed **점수표** (Scoreboard) with the live score graph and the catch tally on the left; the timer above a **film strip** of the round's three action shots on the right, 3:4 portrait like the printed cuts, each slot filling in as its shot is taken. Small trees, bushes and flowers continue beside the crates, and two far **hills** (below) give the side trees somewhere to stand.
-- Spawn height, the miss line and the pile stay tied to the column. The extra scenery covers the largest view in each direction, so nothing switches on or off: the canopy band and ground bank (`SceneryBands`, built from block grids at start) sit beyond the landscape view's top and bottom edges, and the side plants (added by **Build Orchard And Plant Variety**, §12) sit beyond the portrait view's sides.
+- **Landscape 16:9:** the camera fits the column's height (6.43 m, so about 11.4 m wide at z = 0). The play column stays in the middle, bounded by **visible walls** that fruit bounce off: stacks of voxel **crates and barrels** (`CrateWalls`, from the low-poly crate pack's Box and barrel models, §16): on each wall line a column of crates with a barrel every fourth piece, flush with the bounce plane, rising from the ground bank into the canopy; outside it, shorter crate stacks step down toward the screen edge, each topped with a barrel with fruit heaped on its lid, and a barrel stands at the foot. Every piece gets its own size (82–112 %), turn and a slightly different wood tint, so the stacks look natural. Each bounce gives a knock, a small wobble of the piece that was hit and a few wood chips. The walls show in portrait too, at the screen edges. The column is deliberately not stretched to the full width: the player's head range would map to a very long basket travel, and fruit would take too long to cross. Outside the walls the orchard, foreground plants and the live room carry on, and the side areas hold the HUD (`SidePanels`): the score above a cream panel headed **점수표** (Scoreboard) with the live score graph and the catch tally on the left; the timer above a **film strip** of the round's three action shots on the right, 3:4 portrait like the printed cuts, each slot filling in as its shot is taken. Small trees, bushes and flowers continue beside the crates, and two far **hills** (below) give the side trees somewhere to stand.
+- Spawn height, the miss line and the pile stay tied to the column. The extra scenery covers the largest view in each direction, so nothing switches on or off: the canopy band and ground bank (`SceneryBands`, built from block grids at start) sit beyond the landscape view's top and bottom edges, and the side plants (added by **Build Orchard And Plant Variety**, §16) sit beyond the portrait view's sides.
 - The pixel render keeps `renderScale` ½ of the layout's reference size (540 × 960 or 960 × 540), so every game pixel is still 2 × 2 screen pixels on a 1080 screen. In landscape a game pixel covers a little more of the world than in portrait.
 
 ### Rendering style
 
 | Element | Spec |
 |---|---|
-| **Models** | Every model is **voxel**: fruit, basket, trees, bushes and ground are generated from the source low-poly models by an editor voxeliser (§12), so shapes and colours carry over. Block sizes per group: **fruit 4.4 cm** (about 20 blocks across a fruit, so shapes stay readable), **play-layer world 6.3 cm** (basket, foreground trees, bushes, ground), **far layer 9 cm**. Fruit get clean flat colours (5 per fruit, from a shared palette) and every mesh is seamless (§12). |
+| **Models** | Every model is **voxel**: fruit, basket, trees, bushes and ground are generated from the source low-poly models by an editor voxeliser (§16), so shapes and colours carry over. Block sizes per group: **fruit 4.4 cm** (about 20 blocks across a fruit, so shapes stay readable), **play-layer world 6.3 cm** (basket, foreground trees, bushes, ground), **far layer 9 cm**. Fruit get clean flat colours (5 per fruit, from a shared palette) and every mesh is seamless (§16). |
 | **Pixel render** | `PixelRenderer` on the main camera. Two helper cameras draw the game layers at `renderScale` (½: **540 × 720**) into point-filtered textures: **back** (layers Back and Pile: backdrop, far orchard, pile) and **front** (everything else: basket, falling fruit, foreground plants, on a transparent background). The main camera then draws, at full resolution, the back layer on a far quad, the sharp player (layer Person) and the front layer on a near quad (layer PixelComposite), so every game pixel is a crisp 2 × 2 block and the layering needs no depth tricks. `PixelSnap` moves the falling fruit and basket visuals in whole game pixels. No palette limit and no model outlines. |
 | **The player** | L3 renders at full resolution, so the beauty filter and the photo stay crisp. Its outline (3 px, #1E2233) is drawn around the matte and skipped wherever something in the play layers is in front of the player, so it never traces the basket or bushes (the front layer simply draws over it). The ring is found by sampling the matte on two circles around each pixel, and the soft matte edge blends into the outline colour rather than the scene, so there's no light fringe. The player is always sharp in the photo too (no "pixel me" option). |
 | **Depth** | Distance is shown with **ordered dithering** (Bayer 4 × 4, on the game-pixel grid, in 4 steps) toward the sky colour (#A9C6DD) instead of faded colours: strength **0.5 on the pile** and **0.55 on the far orchard** (clouds about a third of that). Textures on dithered layers are sampled at full size only, since their colour atlases are small swatches that blend into rainbow noise at lower mip levels. Falling fruit stay full colour and full contrast, so they never blend into the pile. |
@@ -89,7 +127,7 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 
 ---
 
-## 4. Rules & scoring
+## 5. Rules & scoring
 
 - **Caught** = points for that fruit type (all 1; golden 3; ×2 in a combo). The fruit pops into the basket, then a copy drops onto the background pile.
 - **Missed** = no penalty in timed mode; it only costs time. The miss is counted. The fruit falls off-screen behind the bottom bushes.
@@ -102,7 +140,7 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
   - **Golden fruit** (1 in 12): gold all over with a sparkle trail, 25 % faster, worth **3**; it joins the pile in gold.
   - **Combo:** from the **5th catch in a row**, every catch scores **×2**, with a "N연속! 점수 ×2" pop under the score. A missed fruit or a caught bomb resets the streak.
   - **Bomb** (1 in 8, from 15 s in): a dark voxel bomb whose fuse burns at the tip, throwing sparks; the assist never pulls it, and letting it fall past costs nothing. Catching it blows it up (a burst of fire and smoke blocks, a low thud) and costs **5 points** (never below 0), with a red "−5" pop. Bombs never join the pile; game over lists them ("폭탄 n개").
-  - **Easy** keeps the earlier gentle round (fall speed to 3.8 m/s, drift to 1.2, each fruit waits for the last to land plus 0.6 s, the original gentle assist (1.8 m, strength 4, always on), no bombs; golden fruit and combos stay). Staff press **E** on the title screen ("쉬움 모드" shows under Calibrate); it switches back off when the round ends.
+  - **Easy** and **Sound mode** are gentler rounds for players who need them (§6).
   - **Target:** about 40–50 % of fruit caught for a first-timer and 70–80 % for a practised player, read from the round stats; final values are tuned in M6. *Measured with nobody moving the basket: 29 % of fruit caught and a score of about 5 (it was 68 % before the assist followed the basket's movement). Still to check with real players: the catch rate when moving, and the eased basket's feel.*
 - **Best score** is saved in PlayerPrefs.
 
@@ -116,7 +154,28 @@ Every fruit is its own type, even though all are worth the same for now, so vari
 
 ---
 
-## 5. Falling fruit
+## 6. Difficulty modes
+
+Three modes share the same game; only the pace, the assist and what falls change. **Normal** is the default; staff (or a companion, for Sound mode) switch the others on from the title screen, and they reset for the next visitor (Easy after its round, Sound mode when the visit ends).
+
+| | **Normal** | **Easy** | **Sound mode** |
+|---|---|---|---|
+| Who it's for | Most players | Players who need it gentler | Blind and low-vision players (§11) |
+| Turned on by | (default) | **E** on the title screen; "쉬움 모드" tag | **A** or the **소리로 하기** keycap; "소리 모드" tag and a spoken confirmation |
+| Fall speed | 2.7 → 4.05 m/s over the round | 2.7 → 3.8 m/s | steady 2.3 m/s |
+| Pace | drop rate 3.7 → 9 per 10 s, overlapping late on | one at a time, 0.6 s after the last lands | one at a time, 1 s after the last lands |
+| Where fruit drop | at least 0.5 → 1.3 m from the basket | anywhere | anywhere |
+| Assist (§10) | 2.6 m, strength 7, follows a moving basket | 1.8 m, strength 4, always on | 2.2 m, strength 5.5, always on |
+| Golden fruit, combo | yes | yes | yes (golden fruit have their own beep) |
+| Bombs | yes, from 15 s | no | no |
+| Feedback | visual + sounds | visual + sounds | binaural beep, chimes and the narrator |
+| Ends | — | when the round ends | back on the title screen |
+
+The values live in `GameConfig` (§17): `easy*` and `auditory*` fields for the gentler modes.
+
+---
+
+## 7. Falling fruit
 
 ![Fruit motion](images/03-fruit-motion.svg)
 
@@ -125,14 +184,14 @@ Every fruit is its own type, even though all are worth the same for now, so vari
 | Spawn position | Random x in ±2.1 m, at least `spawnAwayFromBasket` (0.5 → 1.3 m over the round) from the basket, at y = +3.6, just above the top edge, so fruit appears to drop out of the canopy |
 | Vertical speed | **Constant** per fruit: 2.7 m/s at the start, ramping to at most 3.8 m/s |
 | Sideways speed | Random but capped: \|vx\| ≤ 0.7 m/s at the start, up to 1.2 m/s, wide enough that wall bounces are common and visible |
-| Walls | Walls at x = ±2.25 reflect vx, so fruit never leaves the play column sideways. They're shown as voxel crate stacks with bounce feedback (§3), which matters in landscape, where the screen is much wider than the column. |
+| Walls | Walls at x = ±2.25 reflect vx, so fruit never leaves the play column sideways. They're shown as voxel crate stacks with bounce feedback (§4), which matters in landscape, where the screen is much wider than the column. |
 | Spin | 120–240 °/s around a random axis, fast enough to read the fruit's shape. Cosmetic during the scripted fall. |
 | Size | Every fruit is normalised to about **0.70 m** across (`fruitSize` × the type's `sizeScale`), whatever its model scale |
 
 ### Two-phase movement with real basket collisions
 Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 
-1. **Scripted fall:** every physics step its velocity is held at `(vx, −vy)`, so the constant downward speed stays exact. The assist (§7) nudges vx and the walls reflect it.
+1. **Scripted fall:** every physics step its velocity is held at `(vx, −vy)`, so the constant downward speed stays exact. The assist (§10) nudges vx and the walls reflect it.
 2. **Knocked:** the moment it touches the basket (rim, side wall or floor edge), the scripted fall stops and physics takes over. The fruit bounces (bounciness 0.45, less for hard hits: from 2 m/s of impact the bounce scales down to 35 % at 7 m/s) and falls under `knockedGravity` (9 m/s²). Knocked speeds are capped (2.2 m/s sideways, 2.5 m/s upward), so the basket never flings fruit across the screen. A knocked fruit that comes back down into the tub is caught as usual, and one that comes to rest on the rim or in the mouth for 0.35 s counts as caught too, so nothing sits there unresolved and blocks the next fruit; one still unresolved after 4 s is caught if it's on the basket and otherwise missed and dropped through. The assist no longer applies, so a basket that arrives late *bangs the fruit away* instead of swallowing it. The basket is a kinematic Rigidbody moved with `MovePosition`, eased (below), so it nudges fruit rather than slamming them.
 
 ### Catch / miss detection
@@ -143,14 +202,14 @@ Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 
 ---
 
-## 6. Basket & face control
+## 8. Basket & head control
 
 | Property | Spec |
 |---|---|
 | Axis | Follows face tracking on x only; y is fixed with the rim at −2.0 (roughly chest height) |
-| Size | Mouth **1.3 m** wide, 0.65 m tall, tapering to 0.75 × at the bottom. The model is the crate pack's wooden **basin**, voxelised (§12) with its rim on the catch line, tilted 5° toward the camera so the mouth reads. |
+| Size | Mouth **1.3 m** wide, 0.65 m tall, tapering to 0.75 × at the bottom. The model is the crate pack's wooden **basin**, voxelised (§16) with its rim on the catch line, tilted 5° toward the camera so the mouth reads. |
 | Travel | x clamped to ±1.55 m, so the basket reaches the crate walls but never passes them |
-| Movement | The player's **own comfortable range** maps to the **full** basket travel |
+| Movement | The player's **own comfortable range**, measured by calibration (§9), maps to the **full** basket travel |
 
 ![Face to basket mapping](images/04-face-to-basket.svg)
 
@@ -164,22 +223,6 @@ Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 
 > The basket deliberately moves further than the face does on screen, so it won't sit exactly under the player's chin. Crossing the whole camera shot with your head is unviable, especially for players with limited neck or upper-body movement.
 
-### Calibration
-Calibration measures how far **this** player can comfortably move their head, so they get the finest possible control.
-
-1. **"Look straight at the camera"**: a 1 s steady hold records `u_centre`.
-2. **"Move your head left as far as is comfortable"**: records `u_left`, the furthest *held* position (not a momentary peak).
-3. **"Move your head right as far as is comfortable"**: records `u_right`.
-4. **Try it**: the basket follows the new mapping; **Looks good** saves, **Redo** repeats, **Back** cancels and keeps the old calibration.
-
-Accessibility details:
-- "Steady" means the face stays within ±0.015 (u) for 1 s, shown as a ring filling around the face. Tolerance and hold time are settings, for players with tremor.
-- Left and right ranges are stored **separately**; there's no symmetric `min()`.
-- A very small range is accepted; there's only a floor of 0.03 per side to keep the maths stable. The dead zone and filter scale with the range, so it stays steady.
-- If the face box is under 12 % or over 45 % of the play area's width, a prompt says "move closer" or "move back".
-- Prompts use large text plus arrows; optional voice/sound cues are a polish item.
-- Saved in PlayerPrefs. Defaults if skipped: 0.5 / 0.35 / 0.65. **C** recalibrates.
-
 ### Face tracking robustness
 - With several faces, track the largest box, but stick with the previous target while it still overlaps it (IoU ≥ 0.3).
 - Face lost: the basket holds its position. After 1 s the game pauses with "Can't see you!", and resumes 1 s after the face returns (a manual pause still waits for Resume).
@@ -187,7 +230,27 @@ Accessibility details:
 
 ---
 
-## 7. Assist attractor
+## 9. Calibration
+
+Calibration is what makes the game playable with **any range of head movement**: it measures how far **this** player can comfortably move their head and maps exactly that range to the whole basket travel (§8). A player who can only move a few centimetres gets the same full-width basket as one who can lean across the frame.
+
+### The steps
+1. **"Look straight at the camera"**: a 1 s steady hold records `u_centre`.
+2. **"Move your head left as far as is comfortable"**: records `u_left`, the furthest *held* position (not a momentary peak).
+3. **"Move your head right as far as is comfortable"**: records `u_right`.
+4. **Try it**: the basket follows the new mapping; **Looks good** saves, **Redo** repeats, **Back** cancels and keeps the old calibration.
+
+### Accessibility details
+- "Steady" means the face stays within ±0.015 (u) for 1 s, shown as a ring filling around the face. Tolerance and hold time are settings, for players with tremor.
+- Left and right ranges are stored **separately**; there's no symmetric `min()`.
+- A very small range is accepted; there's only a floor of 0.03 per side to keep the maths stable. The dead zone and filter scale with the range, so it stays steady.
+- If the face box is under 12 % or over 45 % of the play area's width, a prompt says "move closer" or "move back".
+- Prompts use large text plus arrows, and in Sound mode the narrator speaks every step (§11): an introduction, each pose, "hold still" once steady (the progress ring can't be seen), "좋아요!" after each pose, "a little further left/right", closer or farther back, "looking for your face", how to accept or redo, and a closing line.
+- Saved in PlayerPrefs. Defaults if skipped: 0.5 / 0.35 / 0.65. **C** recalibrates.
+
+---
+
+## 10. Assist
 
 A slight attractor with a capped radius, to make the game forgiving:
 
@@ -195,10 +258,34 @@ A slight attractor with a capped radius, to make the game forgiving:
 - Adds a **horizontal** acceleration toward the basket's x: `a = strength · (1 − d/R)` with strength 7 m/s² (× the movement factor above), capped so vx never exceeds the drift cap + 1.6 m/s.
 - Never touches vertical speed, so the constant fall speed holds.
 - It noticeably pulls near-misses in, but a basket that's too late still gets hit and knocks the fruit away. Strength 0 turns it off ("Assist: Off / Low / Normal" in settings, M6).
+- **Per mode** (§6): Normal uses the values above and follows the basket's movement; **Easy** uses the original gentle assist (1.8 m, strength 4) and **Sound mode** 2.2 m at strength 5.5, both always on, since those players may not be able to see or reach toward a fruit first.
 
 ---
 
-## 8. Background fruit pile
+## 11. Sound mode (auditory assist, M18)
+
+A mode for blind and low-vision players: the round is played by ear, and a Korean narrator talks the player through it. It's built on the Game Accessibility Guidelines' advice (use every property of a sound, keep spatial cues consistent, don't overload the player, test with blind players).
+
+### Turning it on
+- **Turning it on:** a **"소리로 하기"** keycap on the title screen (for a companion or staff to press) or the staff key **A**; the narrator confirms ("소리 모드를 켰어요") and a "소리 모드" tag shows. It stays on for the whole visit (calibration, round, photo) and switches off back on the title screen.
+### The round
+- **An even gentler round than Easy** (compared in §6): fruit fall steadily (2.3 m/s, no ramp; about 2.4 s from the canopy to the basket), one at a time with a 1 s pause between them, dropping anywhere; the assist reaches 2.2 m at strength 5.5 (about 80 % of the normal assist) and is always on (it doesn't depend on the basket moving); no bombs. Golden fruit stay, with their own sparkly beep.
+### The beep
+- **Parking-sensor beep, for headphones:** the falling fruit sounds like a **parking sensor** heard from the basket:
+  - **Direction is binaural:** the beep is placed left or right by how far the fruit is to the side of the basket, with an interaural time difference (up to about 0.65 ms, Woodworth's formula), a level difference and a softened far ear, so it sits at a precise angle rather than just in one ear. Straight above the basket it's centred.
+  - **Beeps speed up** as the basket lines up under the fruit (about 1.5 per second when far, 15 per second when close) and become a **steady tone** when the basket is right under it.
+  - **Pitch rises** as the fruit falls closer to the basket, so the player hears it about to land.
+  - A bright rising **chime** on a catch (sparklier for a golden fruit) and a soft falling **note** on a miss. The beep ducks while the narrator speaks.
+### The narrator
+- **The narrator** (Korean, fast and lively, pre-rendered with Google Cloud Text-to-Speech, ko-KR-Neural2-B at 1.5× speed and +5 semitones): explains the objective before the countdown, counts down, announces the time left and the score at 45, 30 and 15 seconds ("30초 남았어요, 지금 12점!"), says the final score (not the fruit-by-fruit tally), asks whether to take a photo (a companion presses **사진 찍기**), then guides the pose from face tracking ("조금 왼쪽으로", "조금 가까이", "좋아요, 그대로!") and counts the shot. It also talks the player through calibration: an introduction, each pose (straight ahead, left, right), "hold still" once they're steady (the progress ring can't be seen), "좋아요!" after each pose, "a little further left/right", closer or farther back, "looking for your face", how to accept or redo (a companion presses the button), and a closing line. Every line is a clip rendered once by `Tools/render_narration.py` from `Assets/FruitGame/Audio/Narration/lines.tsv` (scores 0–99 are their own clips), so it works offline and on Windows.
+- **Rendering the voice:** `python3 Tools/render_narration.py --engine google --force` with `GOOGLE_TTS_API_KEY` set (or signed in with `gcloud`); `--voice`, `--rate` and `--pitch` pick the voice (default ko-KR-Neural2-B at 1.5× speed, +5 semitones, the user's pick); it renders 6 lines at a time with a progress bar. `--engine say` makes quick macOS previews for testing.
+### Testing
+- **Blind test (staff):** **F5** blanks the screen to black (the HUD too) while still playing, so a sighted tester can check the round can be played by ear alone.
+- **Still to do:** a playtest with blind and low-vision players; until then the beep mapping and narration are based on the Game Accessibility Guidelines and our own blindfolded tests.
+
+---
+
+## 12. Background fruit pile
 
 When a fruit is caught, the falling fruit is consumed by the basket. A **pile copy** of the same type then drops from above, behind the player, into a **very narrow invisible container** about one fruit deep, so it stacks like a 2D heap but still looks 3D. Over the round a colourful heap builds up behind the player, partly hidden by the foreground. Nothing stacks inside the basket.
 
@@ -210,8 +297,8 @@ When a fruit is caught, the falling fruit is consumed by the basket. A **pile co
 - Drop point: a random free x across the container, from y = +3.6.
 
 ### Background look
-- Pile fruit must never be mistaken for a falling fruit: they're dithered toward the sky colour (§3) and neither cast nor receive shadows. The pile uses `Fruit_Pile_Dither` (the shared fruit palette through `FruitGame/Dither Fade`), with its strength set from `GameConfig.pileDither` at start.
-- In the **photo**, the pile switches to full colour so the catch shows off (§10).
+- Pile fruit must never be mistaken for a falling fruit: they're dithered toward the sky colour (§4) and neither cast nor receive shadows. The pile uses `Fruit_Pile_Dither` (the shared fruit palette through `FruitGame/Dither Fade`), with its strength set from `GameConfig.pileDither` at start.
+- In the **photo**, the pile switches to full colour so the catch shows off (§14).
 
 ### Anti-glitch measures
 | Measure | Why |
@@ -231,18 +318,18 @@ When a fruit is caught, the falling fruit is consumed by the basket. A **pile co
 
 ---
 
-## 9. Webcam pipeline
+## 13. Webcam pipeline
 
 ![Webcam pipeline](images/06-webcam-pipeline.svg)
 
 | Stage | Spec |
 |---|---|
 | **Capture** | `WebcamSource` opens a `WebCamTexture` (1280 × 720 at 30 fps requested). Camera choice: `GameConfig.preferredCameraName` if a device name contains it, else the first non-built-in camera (e.g. an iPhone via Continuity Camera, a capture card or a USB webcam), else any. All device names are logged. **Booth camera (M17):** a DSLR or mirrorless camera with **clean HDMI** out into an **Elgato Game Capture 4K X**, a driverless UVC device on macOS and Windows, so it's picked like any webcam. Requested at **1920 × 1080, 60 fps** (`cameraResolution` / `cameraFps`; 60 fps keeps latency down, and 4K is a setting for sharper photos if the computer keeps up). `cameraRotation` (0 / 90 / 270°) supports a camera mounted on its side for portrait, which keeps the full 1080 px across the player instead of a 608 px crop from a landscape frame. |
-| **Prep** | A blit mirrors the **whole** camera frame (vertical flip handled) into a RenderTexture at the camera's own shape, long side 960 (960 × 540 for a 16:9 webcam, 720 × 960 for a 3:4 portrait camera); nothing is cropped, so matting and the debug view see the whole frame. `CameraFrame` describes where it goes: on screen it's fitted to the view's height and centred, so a frame wider than the view is cropped at the sides, and a narrower one (a 3:4 camera in landscape) fills just the middle, its left and right edges fading into the sky over 10 % of its width (the player cut-out fades with it). Face positions are reported in this whole-frame uv and converted to the 3:4 play area for control (§6). `cameraRotation` for a camera on its side comes in M17. |
+| **Prep** | A blit mirrors the **whole** camera frame (vertical flip handled) into a RenderTexture at the camera's own shape, long side 960 (960 × 540 for a 16:9 webcam, 720 × 960 for a 3:4 portrait camera); nothing is cropped, so matting and the debug view see the whole frame. `CameraFrame` describes where it goes: on screen it's fitted to the view's height and centred, so a frame wider than the view is cropped at the sides, and a narrower one (a 3:4 camera in landscape) fills just the middle, its left and right edges fading into the sky over 10 % of its width (the player cut-out fades with it). Face positions are reported in this whole-frame uv and converted to the 3:4 play area for control (§8). `cameraRotation` for a camera on its side comes in M17. |
 | **Face detection** | `FaceTracker` runs **BlazeFace short-range** (128×128, six keypoints; Apache-2.0) on the GPU with score filtering and NMS baked into the graph, and async readback so rendering never stalls. Outputs the face box, centre, score, keypoints and last-seen time. ~50–130 detections/s. |
 | **Person matting** | `PersonSegmenter` runs **Robust Video Matting** (ResNet-50 fp32; **GPL-3.0**) at 576×768 with downsample 0.5 baked in, carrying its four recurrent states between frames for temporally stable, strand-level hair edges. It's **time-sliced** with `ScheduleIterable`: a slice of layers per frame, adapted to hold the target frame rate (60), so the game runs at full speed while the matte updates ~20×/s. MediaPipe Selfie Segmentation (256×256, Apache-2.0) is the fallback model. The input follows the prep aspect (576 × 960 or 960 × 576 after rounding); the time slicing absorbs the larger input, but the matte rate is to be re-checked with a live camera on the booth computer. |
 | **Matte cleanup** | `Mask Smooth` blurs each new matte slightly and blends it 85 % with the previous one; the cut-out uses smoothstep(0.05, 0.75), so edges are soft and don't flicker. |
-| **Player (L3)** | `PersonCutout` draws camera colour × matte through `FruitGame/Person Cutout` at queue Geometry+500, writing depth only where the person is. The same shader applies the beauty filter in the photo booth (§10) and, from M11, the pixel outline. |
+| **Player (L3)** | `PersonCutout` draws camera colour × matte through `FruitGame/Person Cutout` at queue Geometry+500, writing depth only where the person is. The same shader applies the beauty filter in the photo booth (§14) and, from M11, the pixel outline. |
 | **Face mesh** | `FaceMesh` runs **MediaPipe Face Mesh v2** (478 points; Apache-2.0) on a crop around the BlazeFace box, **only while the photo booth is open**, to place makeup and the eye reshape precisely. |
 | **Backdrop (L5)** | `BokehBackdrop` shows the camera frame sharp and ungraded by default. Its **Bokeh** switch brings back the blurred version: the player masked out, Kawase-blurred at ¼ resolution, slightly desaturated, brightened and tinted, so the room becomes soft bokeh. **Use Illustration** shows a pixel-art orchard illustration instead (`Art/Backdrops/OrchardIllustration.png`, from Photo Booth 2), centre-cropped to 3:4; off by default. |
 | **Fallbacks** | No matting model: the person layer shows the full frame. No camera at all: a plain backdrop colour, the person layer hidden, and the mouse/keyboard drives the basket. |
@@ -262,7 +349,7 @@ When a fruit is caught, the falling fruit is consumed by the basket. A **pile co
 
 ---
 
-## 10. Photo booth
+## 14. Photo booth
 
 A souvenir photo at the end of a round: the player in front of the fruit pile they just caught, softened with a Korean-style beauty filter, in a branded frame with the title, the lab's and school's logos, and their scores.
 
@@ -286,7 +373,7 @@ The print is a **four-cut** (네컷): three **action shots** taken automatically
 | Canvas | Portrait **1080 × 1440**, composed off-screen by `PhotoFrame` at full resolution regardless of window size, on a cream #FFF8EC card. **From M17:** the **postcard, landscape 148 × 100 mm, at 300 dpi: 1800 × 1200**, borderless, with about 3 mm kept clear at every edge for the borderless crop. Other SELPHY papers (L 89 × 119 mm, card 54 × 86 mm, square) are **paper profiles** with their own layouts, chosen in Settings once the film is confirmed. Every layout is landscape on the paper, so the printer setting never changes. |
 | Title | The flat pixel title (`Art/Title/Export/Title.png`) across the top. Without it, `GameConfig.photoCaption` ("GIST Fruit Photo Shop") is shown as text instead. |
 | Cuts | A **2 × 2 grid** (478 × 452 per cell) inside an **orange pixel frame** (the orange keycap sprite, 9-sliced): the action shots in reading order, and the **final shot bottom-right with a darker orange #B85C10 outline**. Each 3:4 shot is cropped to its cell, trimming a little more from the top (sky) than the bottom (`cropFromBottom` 0.35). Missing action shots leave their cells empty. **From M17:** the four 3:4 cuts print **side by side** across the landscape postcard (about 33 × 44 mm each), with the title and the bottom band underneath; the same layout for portrait and landscape rounds, since every shot is 3:4. |
-| Bottom band | **Lab logo** (left; pixel panel placeholder, TBD: there may not be one) · this round's **score** (sticker) and **"Best n"** (centre) · **GIST school logo** (right; `Art/Logos/GIST_Wordmark.png` in a 330 × 190 slot). Logos keep their aspect ratio. |
+| Bottom band | **Event logo** (left; *숨겨진 감각축제 · Festival NADA & nest NADA*, `Art/Logos/Festival_NADA.png`) · this round's **score** (sticker) and **"Best n"** (centre) · **GIST school logo** (right; `Art/Logos/GIST_Wordmark.png` in a 330 × 190 slot). Logos keep their aspect ratio. |
 
 ### Korean-style beauty filter ("뽀샤시" look)
 A port of **GPUPixel**'s beauty filter (Apache-2.0), built into `FruitGame/Person Cutout`, so it touches only the player and shows live on the pose screen as well as in the photo. Overall strength is `GameConfig.beautyStrength` (1; 0 = off), active only while the booth is open.
@@ -314,7 +401,7 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 
 ---
 
-## 11. UI, text & feedback
+## 15. UI, text & feedback
 
 ### Typography
 - **One font for everything: Neo둥근모 Pro** (SIL OFL 1.1), covering all 11,172 Hangul syllables (16 × 16 grid) and Latin (8 × 16).
@@ -331,7 +418,7 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 - **Flat exports** (FruitGame > Title > Export PNGs, `TitleExporter`): `Art/Title/Export/Title.png` (1272 × 600, transparent), `Icon.png` (transparent) and `AppIcon.png` (1024 × 1024 on the sky colour), rendered at 4 px per block and scaled up with hard pixels; the title and icon are also copied to `Docs/images/` for the README.
 
 ### Buttons, panels & HUD
-- **Booth scale:** the booth uses a full-size monitor seen from about 1.5–2 m, so the whole UI is drawn at three-quarters of the 3:4 build's size. UI art and text keep their sizes in canvas units (4 units per art pixel, sizes on the 16 px grid), and the canvas is larger instead: `uiPixelScale` 3 makes its short side 1440 units, so on a 1080-pixel screen an art pixel is 3 screen pixels, still whole. Each screen has a **portrait and a landscape pose** per element (`AspectLayout`: anchors, pivot, position and size, or a 3D object's position and scale, switched live). In landscape the title sits on the left with the hint, **Play** and **Calibrate** on the right, the game-over panel is wide (score, best and graph left; tally right; buttons along the bottom), and the HUD moves into the side areas (§3).
+- **Booth scale:** the booth uses a full-size monitor seen from about 1.5–2 m, so the whole UI is drawn at three-quarters of the 3:4 build's size. UI art and text keep their sizes in canvas units (4 units per art pixel, sizes on the 16 px grid), and the canvas is larger instead: `uiPixelScale` 3 makes its short side 1440 units, so on a 1080-pixel screen an art pixel is 3 screen pixels, still whole. Each screen has a **portrait and a landscape pose** per element (`AspectLayout`: anchors, pivot, position and size, or a 3D object's position and scale, switched live). In landscape the title sits on the left with the hint, **Play** and **Calibrate** on the right, the game-over panel is wide (score, best and graph left; tally right; buttons along the bottom), and the HUD moves into the side areas (§4).
 - **Pixel UI art** (`Art/UI/`, 1 pixel = 4 canvas units; sliced Images use Pixels Per Unit Multiplier 0.25): keycap face and lip sprites in pink #C2185B, slate #5A6B7D and orange #F28C26 (dark #1E2233 outline, light top-left edge), and a cream panel with a thick darker bottom edge.
 - **Buttons are keycaps** (`KeycapButton`): the button's image is the dark lip and a Face child carries the label, leaving 3 pixels of lip below. Hover lifts the face 1 pixel; pressing sinks it so the lip disappears. Positions snap in whole pixels. Large hit areas (≥ 110 canvas units tall) keep the mouse-only booth easy.
 - **Panels** (game over, the phone card) use the cream panel sprite.
@@ -342,12 +429,12 @@ Known nits: bright glasses glare picks up a slight cool tint, and eye enlargemen
 
 | Screen | Contents | Shortcut |
 |---|---|---|
-| **Title** | Voxel title with icon and English line, the hint, **Play**, **Calibrate** | Space / Enter = play; E = Easy for the next round |
+| **Title** | Voxel title with icon and English line, the hint, **Play**, **Calibrate**, **소리로 하기** | Space / Enter = play; E = Easy, A = Sound mode (§6) |
 | **Calibration** | Pose prompts with arrows, the steady ring around the face, **Try it** with **Looks good** / **Redo**, **Back** | Esc = back |
 | **Playing** | Score, timer, **II** pause button at the top centre | P / Esc = pause |
 | **Pause** | Dimmed game, **Resume**, **Main menu** (abandons the round) | P / Esc / Space = resume |
 | **Game over** | "Time's up!", score, best, score-over-time graph, two-column fruit tally, missed count, **Play again**, **Photo**, **Main menu** | Space = play again |
-| **Photo booth** | Pose / countdown / preview, as in §10 | — |
+| **Photo booth** | Pose / countdown / preview, as in §14 | — |
 
 A staff **Settings** panel (M6), opened with **F4** or by holding the top-left corner for 3 s, holds sensitivity, recalibrate, steady-hold tolerance and time, assist, the camera device, rotation and mirror, the orientation, the paper profile and copies, the print counter, and the language. The **F1** debug overlay shows the face box (mapped onto the screen), the face's position in the play area, the whole camera frame's matte at its own shape, and the camera and model rates; it's drawn above every other HUD element, and off by default at the booth (M6).
 
@@ -355,31 +442,17 @@ A staff **Settings** panel (M6), opened with **F4** or by holding the top-left c
 - A catch squashes the basket for 0.12 s and bursts a few block particles; a miss plays a soft thud; a rustle from the canopy telegraphs each spawn.
 - Sounds: pop (catch), tink (rim), thud (miss), rustle (spawn), pile land, countdown tick, round over, and the camera shutter (action shots and the final shot). All short, one mixer, nothing loud. A gentle ambience loop is a polish item.
 
-### Auditory assist mode (M18)
-A mode for blind and low-vision players: the round is played by ear, and a Korean narrator talks the player through it. It's built on the Game Accessibility Guidelines' advice (use every property of a sound, keep spatial cues consistent, don't overload the player, test with blind players).
-
-- **Turning it on:** a **"소리로 하기"** keycap on the title screen (for a companion or staff to press) or the staff key **A**; the narrator confirms ("소리 모드를 켰어요") and a "소리 모드" tag shows. Like Easy, it switches off when the round ends.
-- **An even gentler round than Easy:** fruit fall steadily (2.3 m/s, no ramp; about 2.4 s from the canopy to the basket), one at a time with a 1 s pause between them, dropping anywhere; the assist reaches 2.2 m at strength 5.5 (about 80 % of the normal assist) and is always on (it doesn't depend on the basket moving); no bombs. Golden fruit stay, with their own sparkly beep.
-- **The beep (headphones):** the falling fruit sounds like a **parking sensor** heard from the basket:
-  - **Direction is binaural:** the beep is placed left or right by how far the fruit is to the side of the basket, with an interaural time difference (up to about 0.65 ms, Woodworth's formula), a level difference and a softened far ear, so it sits at a precise angle rather than just in one ear. Straight above the basket it's centred.
-  - **Beeps speed up** as the basket lines up under the fruit (about 1.5 per second when far, 15 per second when close) and become a **steady tone** when the basket is right under it.
-  - **Pitch rises** as the fruit falls closer to the basket, so the player hears it about to land.
-  - A bright rising **chime** on a catch (sparklier for a golden fruit) and a soft falling **note** on a miss. The beep ducks while the narrator speaks.
-- **The narrator** (Korean, fast and lively, pre-rendered with Google Cloud Text-to-Speech, ko-KR-Neural2-B at 1.5× speed and +5 semitones): explains the objective before the countdown, counts down, announces the time left and the score at 45, 30 and 15 seconds ("30초 남았어요, 지금 12점!"), says the final score (not the fruit-by-fruit tally), asks whether to take a photo (a companion presses **사진 찍기**), then guides the pose from face tracking ("조금 왼쪽으로", "조금 가까이", "좋아요, 그대로!") and counts the shot. It also talks the player through calibration: an introduction, each pose (straight ahead, left, right), "hold still" once they're steady (the progress ring can't be seen), "좋아요!" after each pose, "a little further left/right", closer or farther back, "looking for your face", how to accept or redo (a companion presses the button), and a closing line. Every line is a clip rendered once by `Tools/render_narration.py` from `Assets/FruitGame/Audio/Narration/lines.tsv` (scores 0–99 are their own clips), so it works offline and on Windows.
-- **Rendering the voice:** `python3 Tools/render_narration.py --engine google --force` with `GOOGLE_TTS_API_KEY` set (or signed in with `gcloud`); `--voice`, `--rate` and `--pitch` pick the voice (default ko-KR-Neural2-B at 1.5× speed, +5 semitones, the user's pick); it renders 6 lines at a time with a progress bar. `--engine say` makes quick macOS previews for testing.
-- **Blind test (staff):** **F5** blanks the screen to black (the HUD too) while still playing, so a sighted tester can check the round can be played by ear alone.
-
 ### Booth operation & finish (M6)
 - **Attract mode:** after 30 s on the title screen with nobody in front of the camera, a short loop plays: the title drops in again, a ghost basket catches a few fruit, and sample four-cuts slide past. A face in front of the camera brings back the title.
 - **Walk-away reset:** with no face for 20 s on the game-over or booth screens, the game returns to the title, so the next visitor starts clean. During play the face-lost pause applies; a pause longer than 60 s ends the round.
 - **Transitions and feedback:** pixel block-dissolve wipes between screens instead of hard cuts, the score and tally counting up on game over, and click sounds on every button.
 - **Audio:** an ambience loop (birds, leaves) and a mixer with one staff volume.
 - **Kiosk build:** full screen without window chrome, starts on login, keeps the display awake and restarts after a crash; the cursor stays available for mouse operation but hides after 3 s without movement.
-- **Finish pass:** a boot screen while models load, consistent spacing on every screen in both orientations and languages, the lab logo decision, and a playtest with real visitors on the booth hardware.
+- **Finish pass:** a boot screen while models load, consistent spacing on every screen in both orientations and languages, and a playtest with real visitors on the booth hardware.
 
 ---
 
-## 12. Art & assets
+## 16. Art & assets
 
 ### Art direction
 - **Palette:** leaf greens #3D7F3A / #5AA64F / #82C068, basket terracottas #D2603E / #8E3B23, accent pink #C2185B, sky #A9C6DD / #9CC3D9. Fruit keep their own colours.
@@ -396,24 +469,24 @@ A mode for blind and low-vision players: the round is played by ear, and a Korea
 | Crate walls | **Box** and **barrel** from the same crate pack | Voxelised by Bake Props (crate 0.7 m with carved plank grooves, barrel 0.6 m with its recessed lid filled) |
 | Orchard illustration | Pixel-art orchard from Photo Booth 2 | Title screen background; optional game backdrop |
 | Pixel buttons | Photo Booth 2's pixel buttons | Reference for the keycap button style |
-| Logos | GIST wordmark (`Art/Logos/`); lab logo to come | Photo frame |
+| Logos | GIST wordmark and the Festival NADA event logo (`Art/Logos/`; the event logo cut from a small JPEG with white turned to alpha) | Photo frame |
 | Font | **Neo둥근모 Pro** v1.020 (`Art/Fonts/`, with `NeoDunggeunmo-OFL.txt`), OFL | All text |
 | Audio | Kenney audio packs (CC0); camera shutter "Camera" by themightyglider (OpenGameArt, CC0) | All sounds |
 
 New downloads go into `~/Documents/3D Assets/` first and are shown for a yes/no before being imported.
 
 ### Voxel pipeline (M10)
-Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Editor/Voxels/`), all re-runnable; block sizes come from `GameConfig` (§13):
+Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Editor/Voxels/`), all re-runnable; block sizes come from `GameConfig` (§17):
 - **`VoxelMesher`** turns triangles into blocks: every grid cell a triangle passes through becomes a block, the enclosed inside is filled, and only faces touching outside air are emitted. Vertices are welded on the integer grid (per corner, face direction and colour), so faces meet exactly: no T-junctions, no seams. Flat-coloured models keep the material of the nearest triangle per block (so the basket's alternating wicker and every plant's colours carry over).
 - **Bake Fruit**: each `FruitType`'s source models (kept in `sourceModels`) become voxel prefabs in `Art/Voxels/Fruit/`, about 20 blocks across (17–26 by fruit size). Colours are cleaned up: each block averages the texture under it, then the blocks are reduced to `fruitColors` (5) colours per fruit with k-means. All fruit share one 16 × 16 point-filtered `FruitPalette.png` (plus `FruitPalette_Far.png`, hazed 65 % for the pile), set as each type's `atlas`/`atlasFar`, so the live, pile and photo materials work unchanged. 26 models bake in about 2 s, 500–2,500 faces each.
 - **Mark Scene Meshes / Bake Scene**: every mesh under L1, L2 and L4b gets a `VoxelSource` that remembers its smooth original; baking rebuilds it at the object's own scale (world 6.3 cm, far 9 cm) into `Art/Voxels/World/`. 41 scene meshes → 39 block meshes, about 82k faces. Built-in cubes (fruit blocks, clouds) are skipped.
 - **Bake Props**: the crate pack's crate, barrel and basin become voxel prefabs in `Art/Voxels/Props/` at set sizes (4.4 cm blocks; the basin 6.3 cm), coloured through a shared `PropPalette.png`. A per-model block edit carves one-block plank grooves into the crate (its inside filled with dark wood so they show depth), closes the barrel's recessed lid, and turns the basin's near-black rope handles rope-coloured, since dark blocks read as holes.
-- **Build Orchard And Plant Variety** (`OrchardBuilder`) builds the L1/L4b variety from §3 into `Generated` containers with palette-material tints (`<material>__<variant>`), replacing them on every run. Run it before marking and baking.
+- **Build Orchard And Plant Variety** (`OrchardBuilder`) builds the L1/L4b variety from §4 into `Generated` containers with palette-material tints (`<material>__<variant>`), replacing them on every run. Run it before marking and baking.
 - OBJ colours need care: Unity reads OBJ `Kd` as linear, so `ArtLibrary` rebuilds OBJ materials as palette materials with the intended sRGB colours.
 
 ---
 
-## 13. Tunables (`GameConfig` ScriptableObject)
+## 17. Tunables (`GameConfig` ScriptableObject)
 
 | Key | Default | Notes |
 |---|---|---|
@@ -452,7 +525,7 @@ Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Ed
 | `steadyTolerance` / `steadyHoldTime` | 0.015 / 1.0 s | raise for tremor |
 | `faceLostPauseDelay` / `faceReturnGrace` | 1.0 s / 1.0 s | |
 | `photoCaption` | "GIST Fruit Photo Shop" | `{date}` is available if a date is wanted later |
-| `beautyStrength` / `bigEye` / `faceSlim` | 1 / 0.2 / 0 | per-step beauty values live on the `Person_Cutout` material (§10) |
+| `beautyStrength` / `bigEye` / `faceSlim` | 1 / 0.2 / 0 | per-step beauty values live on the `Person_Cutout` material (§14) |
 | `fruitBlockSize` / `worldBlockSize` / `farBlockSize` | 0.044 / 0.063 / 0.09 m | re-bake after changing (FruitGame > Voxels) |
 | `fruitColors` | 5 | colours per fruit after clean-up |
 | `language` | Korean | starting language; F3 flips to English |
@@ -470,7 +543,7 @@ Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Ed
 
 ---
 
-## 14. Project layout & scripts
+## 18. Project layout & scripts
 
 ```
 Assets/FruitGame/
@@ -507,7 +580,7 @@ Scene hierarchy: `Main Camera`, `Directional Light`, `L1_Foreground` (also the s
 
 ---
 
-## 15. Milestones & roadmap
+## 19. Milestones & roadmap
 
 Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel look, the title and Korean localisation are done (M1–M15). What's left is fitting the booth to the event hardware and finishing it: **M16** adapts the game to portrait 9:16 and landscape 16:9 at booth scale, **M16.1** makes the round harder, **M17** connects the DSLR capture and the SELPHY printer, and **M6** comes last so it polishes the final layouts.
 
@@ -534,19 +607,20 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | **M16.1** | Harder round | ✅ An even ramp (linear fall speed, drift and assist; a drop rate that climbs in a straight line, overlapping late on: `GameConfig.DropIntervalAt`), golden fruit (`FruitType.Golden`, `GoldenSparkle`), the ×2 combo from 5 in a row (`ScoreRules`), bombs from the user's low-poly bomb (voxelised by Bake Props, darkened, with `BombFuse` sparks at the fuse tip and a `BlockFx` explosion), score popups, the bombs line on game over, and Easy on E (`Difficulty`). *Checked in play with the camera off: bombs and golden fruit fall and score as designed, the combo pop, the game-over line; the drop rate 3.7 → 9 per 10 s in even steps (about 38 drops a round); an idle basket catches 35–40 %.* |
 | **M18** | Auditory assist mode | ✅ The mode in §11: the toggle (keycap + A), the gentler auditory round, the binaural parking-sensor beep synthesised in code (ITD, ILD, head shadow, rate, steady tone, pitch, golden timbre, catch chime and miss note), the narrator (script, Google TTS render script, clip playback with ducking, announcements at 45/30/15 s, final score, photo prompt and pose guidance, calibration prompts) and the F5 blind test. *Done when:* a sighted tester with the screen blanked can catch most fruit by ear, and the narration runs through a whole visit; then a playtest with a blind player. *Checked in play with the camera off: the keycap and A toggle with the spoken confirmation, the intro holding the countdown, the 45/30/15 s announcements with scores, the final score and photo prompt, pose guidance and the shutter line, the mode turning off after the visit, the F5 cover; the binaural render measured (left/right level 0.22/0.08 and 0.73 ms delay at 90°, centred at 0°). Narration rendered with Google Cloud TTS (ko-KR-Neural2-B). A playtest with a blind player is still to come.* |
 | **M17** | Booth hardware | **Camera:** the DSLR → Elgato 4K X input (device match, resolution, frame rate, rotation), latency measured against a webcam (with the separate tracking webcam as the fallback), the camera checklist. **Printer:** the print at paper size (postcard 1800 × 1200 with the four 3:4 cuts in a row; other paper profiles once the film is known), the SELPHY over USB-C borderless at exact size, the print queue with status, the paper/ink counter and copies. *Done when:* a real round on the DSLR prints correctly on the CP1500 and the phone download still works. |
-| **M6** | Polish & builds | **Final gameplay tuning** from playtests on the booth hardware (difficulty values, assist, scoring, timing); a finished UI pass and the staff Settings panel; attract mode and walk-away reset; transitions, ambience and UI sounds; assist tuning and juice; debug overlay off by default; photo auto-delete; the lab logo decision; kiosk macOS and Windows builds with camera permission prompts; a playtest with real visitors on the booth hardware. |
+| **M6** | Polish & builds | **Final gameplay tuning** from playtests on the booth hardware (difficulty values, assist, scoring, timing); a finished UI pass and the staff Settings panel; attract mode and walk-away reset; transitions, ambience and UI sounds; assist tuning and juice; debug overlay off by default; photo auto-delete; kiosk macOS and Windows builds with camera permission prompts; a playtest with real visitors on the booth hardware. |
 
 **Dependencies:** M8 gated M10 and M11; M12–M15 needed M9. **M18** comes next, before M17 (asked, 2026-11-05). **M16** comes before the printer half of **M17** (the print layouts follow the shot aspect) and before **M6** (which polishes the final layouts). **M16.1** follows M16 directly, so difficulty is tuned in the final layouts; its values get their last adjustment in M6. The camera half of M17 can start any time.
 
 ### Open questions
-1. **Lab logo:** TBD; there may not be one. The frame keeps a placeholder until then (or the slot can be dropped).
-2. **Public repository:** handled by `.gitignore` (decision 39). Before publishing, also decide whether to keep the GIST logos in a public repo (school marks) and the two old README PDFs (`README.pdf`, `Docs/FruitGame-README-M3.pdf`), which describe the pre-revision design.
-3. **Printer paper:** postcard (KP-108IN) is assumed; the actual SELPHY film decides the paper profile (§10).
+1. **Event logo quality:** the Festival NADA logo came from a small JPEG (553 × 280 after cropping), which is enough at its printed size; swap in a vector or larger PNG if the festival supplies one.
+2. **Public repository:** handled by `.gitignore` (decision 39). Before publishing, also decide whether to keep the GIST logos and the Festival NADA logo in a public repo and the two old README PDFs (`README.pdf`, `Docs/FruitGame-README-M3.pdf`), which describe the pre-revision design.
+3. **Printer paper:** postcard (KP-108IN) is assumed; the actual SELPHY film decides the paper profile (§14).
 4. **Display:** the monitor's size, whether it stands portrait or landscape (or each at different events), and the viewing distance, which sets the final UI scale.
 5. **Camera:** the DSLR model (it needs clean HDMI out and mains power) and lens, and the booth computer (USB 10 Gbps for 4K capture).
+
 ---
 
-## 16. Decisions log
+## 20. Decisions log
 
 | # | Question | Decision |
 |---|---|---|
@@ -586,7 +660,7 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | 34 | Logo in the title (2026-10-29) | 지스트 in the title is the school's own 지스트 logo, pixelated to 20 blocks and kept in its red and green, instead of being set in the pixel font. The tiny "GIST" letters inside the logo are dropped at that size. |
 | 35 | English title line (2026-10-29) | The English line under the title stays **"GIST Fruit Photo Shop"**. |
 | 36 | Photo caption (2026-10-29) | The photo caption is **"GIST Fruit Photo Shop"**, the English title line, with no date. |
-| 37 | Lab logo (2026-10-29) | TBD: there may be no lab logo. The placeholder stays for now. |
+| 37 | Lab logo (2026-10-29) | TBD: there may be no lab logo. The placeholder stays for now. *(Superseded by 59: the slot holds the event logo.)* |
 | 38 | No "pixel me" photo (2026-10-29) | The player is always sharp in the photo. |
 | 39 | Public repository (2026-10-29) | The game won't be sold or shipped, but the project will be a public GitHub repo for a while, and publishing a file in a public repo counts as distributing it, monetised or not. Before going public: keep the RVM model (GPL-3.0) out of the repo with a download step, or include it with the GPL-3.0 licence text and a source link; and keep **Low Poly Trees** (its licence says "do not redistribute or resell, even if modified"), **Low Poly Food** and **PolyOne Free Fruits** (terms to check) out of it, including the voxel meshes baked from them. |
 | 40 | Git setup (2026-10-29) | The project is a git repository (`main`). `.gitignore` covers Unity's generated folders and crash-recovery scenes, and excludes the RVM model, the Low Poly Trees / Low Poly Food / PolyOne files, the voxel meshes baked from them and the orchard illustration, while keeping their `.meta` files so references survive. The README's 준비 section lists where to get each file; put them in place before first opening the project. About 870 files / 23 MB are tracked. |
@@ -595,7 +669,7 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | 43 | Four-cut photo (2026-10-29) | The print became a four-cut: three action shots spaced evenly through the round (each with a small 3·2·1 counter and light flashes, then a shutter) plus the final posed shot, in a 2 × 2 grid with the final shot outlined in a darker orange (the frame is orange; first built pink with a grey highlight, changed on request). Action shots skip the beauty filter (they're mid-play). The pixel title replaces the caption text at the top, since it already reads "GIST Fruit Photo Shop". |
 | 44 | Shutter sound (2026-10-29) | "Camera" by themightyglider (OpenGameArt, CC0), downloaded to `~/Documents/3D Assets/Downloads/` and imported as `Audio/camera_shutter.ogg`. The score bump is now 0.3 s. |
 | 45 | Localisation (M15, 2026-10-29) | A small in-project string table (one TSV in Resources) instead of Unity's Localization package: about 70 strings, two languages, no Addressables, and easy for anyone to edit. Korean is the default; F3 flips to English for staff or visitors. |
-| 46 | Static pixel font (2026-11-03) | The font asset was dynamic: TMP added glyphs as text was drawn and Unity cleared them again, so the asset kept changing in git. It is now baked once with a fixed character set (§11). The common-syllable set covers names (the F1 overlay shows the camera's name) and most new wording without a re-bake. |
+| 46 | Static pixel font (2026-11-03) | The font asset was dynamic: TMP added glyphs as text was drawn and Unity cleared them again, so the asset kept changing in git. It is now baked once with a fixed character set (§15). The common-syllable set covers names (the F1 overlay shows the camera's name) and most new wording without a re-bake. |
 | 47 | Two orientations (2026-11-03) | Portrait 9:16 and landscape 16:9 replace 3:4. The play column keeps one size in both, so the game plays the same. Landscape doesn't stretch the play area across the screen (the head range would map to a very long travel, and fruit would take too long to cross); visible crate walls bound the column, and the sides carry the HUD and the four-cut film strip. |
 | 48 | Booth hardware (2026-11-03) | A DSLR via clean HDMI into an Elgato Game Capture 4K X (UVC, so the game still sees an ordinary webcam) and a Canon SELPHY CP1500 on USB-C. Postcard paper is assumed until the film is confirmed. Every print layout is landscape on the paper (four 9:16 cuts in a row, or a 2 × 2 grid of 16:9 cuts), so the printer setting never changes between orientations. |
 | 49 | Booth-scale UI (2026-11-03) | A full-size monitor makes the UI oversized: the UI pixel scale drops from 4 to 3 canvas units and text by a step or two. It's part of M16, since every layout is redone there anyway; M6 does the final finish. |
@@ -608,3 +682,4 @@ Gameplay, face control, the webcam pipeline, the photo booth, the pixel/voxel lo
 | 56 | Basket feel and assist (2026-11-05) | The basket eases toward the head (SmoothDamp, 10 m/s cap) instead of snapping at 18 m/s, and tracking is finer (smaller dead zone). Knocked fruit have capped speeds and hard hits bounce less; fruit resting on the rim count as caught, so none get stuck. Fruit fall only 1.5× faster by the end while the drop rate climbs the same, so more share the screen. Fruit drop away from the basket, and the assist is wider and stronger and never fades, but follows the basket's movement, so a still basket catches about 29 % (68 % without that). |
 | 57 | Smaller basket and fruit (2026-11-05) | With the assist following the basket, the round felt too easy, so the basket shrank to a 1.3 m mouth (0.65 m deep; the voxel basin scaled to match) and fruit to 0.70 m across, keeping the assist as it was. Basket travel widened to ±1.55 m so it still reaches the walls. |
 | 58 | Auditory assist mode (2026-11-05) | For blind and low-vision players: parking-sensor beeps (faster then steady when lined up, pitch rising as the fruit nears) placed binaurally by the fruit's offset from the basket, for headphones; a Korean narrator from Google Cloud TTS (chosen over the macOS voice for liveliness); a keycap plus staff key A; fruit and golden fruit only; an F5 blank-screen test. |
+| 59 | Event logo (2026-11-05) | The left logo slot holds the event's logo (숨겨진 감각축제, Festival NADA & nest NADA) instead of a lab logo, which closes decision 37. Only a small JPEG was available, so its white background was turned into alpha (colour to alpha, so the soft edges keep no white fringe); at the printed size the resolution is enough. |

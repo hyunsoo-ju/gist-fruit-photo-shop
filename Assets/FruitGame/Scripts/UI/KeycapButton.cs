@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// A pixel-art "keycap" button (Docs/DESIGN.md §11): the button's own image is the dark lip, and the face (holding the
+    /// A pixel-art "keycap" button (Docs/DESIGN.md §15): the button's own image is the dark lip, and the face (holding the
     /// label) sits on top of it, leaving lipPixels of lip showing below. Hover lifts the face one pixel; pressing sinks
     /// it all the way down so the lip disappears, like a key going down. Positions snap in whole UI pixels.
     /// </summary>

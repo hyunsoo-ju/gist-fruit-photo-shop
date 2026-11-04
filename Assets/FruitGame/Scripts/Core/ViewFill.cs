@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Scales a quad to the game camera's view height at its depth (Docs/DESIGN.md §3, §9): in the current layout's
+    /// Scales a quad to the game camera's view height at its depth (Docs/DESIGN.md §4, §13): in the current layout's
     /// aspect, or with Camera Frame on, in the camera frame's aspect, centred (CameraFrame). Used for the player
     /// cut-out and the backdrop, which show the whole camera frame.
     /// </summary>

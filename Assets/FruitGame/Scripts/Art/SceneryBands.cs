@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 namespace FruitGame
 {
     /// <summary>
-    /// The two scenery bands that frame the play column (Docs/DESIGN.md §3), built at start from block grids so they
+    /// The two scenery bands that frame the play column (Docs/DESIGN.md §4), built at start from block grids so they
     /// cover the tallest and widest views:
     /// - <b>Canopy</b>: a leafy band of round clumps across the top, in front of the play plane, with a scalloped lower
     ///   edge and a few fruit blocks. Fruit spawn behind it, so in portrait (where the view reaches above the spawn height) they drop out of

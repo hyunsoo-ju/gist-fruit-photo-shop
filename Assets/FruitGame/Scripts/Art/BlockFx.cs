@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace FruitGame
 {
     /// <summary>
-    /// Little flying blocks for effects (Docs/DESIGN.md §11): the bomb's fuse sparks and explosion, and the golden
+    /// Little flying blocks for effects (Docs/DESIGN.md §15): the bomb's fuse sparks and explosion, and the golden
     /// fruit's sparkle trail. Each block flies, falls (or floats) and shrinks away. One instance in the scene holds the
     /// lit vertex-colour material; the static calls are no-ops without it.
     /// </summary>

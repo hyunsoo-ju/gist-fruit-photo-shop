@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Turns the tracked face position into a basket x (Docs/DESIGN.md §6, "Mapping, per frame"):
+    /// Turns the tracked face position into a basket x (Docs/DESIGN.md §8, "Mapping, per frame"):
     /// per-side calibrated range × sensitivity → dead zone → soft clamp → One-Euro filter.
     /// The basket's own max speed (BasketController) is the final step.
     /// </summary>

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FruitGame
 {
-    /// <summary>The golden fruit's trail of gold and white sparkles drifting up behind it (Docs/DESIGN.md §4).</summary>
+    /// <summary>The golden fruit's trail of gold and white sparkles drifting up behind it (Docs/DESIGN.md §5).</summary>
     public class GoldenSparkle : MonoBehaviour
     {
         static readonly Color32[] Colors =

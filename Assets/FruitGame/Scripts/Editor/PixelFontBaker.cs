@@ -10,7 +10,7 @@ using UnityEngine.TextCore.LowLevel;
 namespace FruitGame.EditorTools
 {
     /// <summary>
-    /// Bakes the pixel font (Docs/DESIGN.md §11) as a static TMP font asset, so its atlas only changes when the game's
+    /// Bakes the pixel font (Docs/DESIGN.md §15) as a static TMP font asset, so its atlas only changes when the game's
     /// text does. A dynamic asset adds glyphs whenever text is drawn and Unity clears them again, which kept the asset
     /// changing in git. The baked set is PixelFontCharacters.txt (ASCII, symbols, the 2,350 common Hangul syllables)
     /// plus every character in Resources/Strings.txt, the Game scene's texts and the photo caption. Re-bakes on its

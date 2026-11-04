@@ -5,7 +5,7 @@ namespace FruitGame
 {
     /// <summary>
     /// Loads the string table and sets the starting language from GameConfig (Korean by default). F3 flips between
-    /// Korean and English, for staff (Docs/DESIGN.md §11).
+    /// Korean and English, for staff (Docs/DESIGN.md §15).
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class LanguageSwitch : MonoBehaviour

@@ -9,7 +9,7 @@ namespace FruitGame
     }
 
     /// <summary>
-    /// Marks a scene mesh as voxelised (Docs/DESIGN.md §12): remembers the original smooth mesh so the voxel baker
+    /// Marks a scene mesh as voxelised (Docs/DESIGN.md §16): remembers the original smooth mesh so the voxel baker
     /// (FruitGame > Voxels) can rebuild the block version at this object's scale whenever block sizes change.
     /// </summary>
     [RequireComponent(typeof(MeshFilter))]

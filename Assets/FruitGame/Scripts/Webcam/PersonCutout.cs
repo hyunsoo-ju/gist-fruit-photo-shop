@@ -3,7 +3,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Shows the player cut out of the webcam image on the L3 quad (Docs/DESIGN.md §9): webcam colour × a smoothed mask.
+    /// Shows the player cut out of the webcam image on the L3 quad (Docs/DESIGN.md §13): webcam colour × a smoothed mask.
     /// Smoothing = a small blur plus a temporal blend with the previous mask, so edges are soft and don't flicker.
     /// The quad is hidden until both the camera and the mask are live.
     /// </summary>
@@ -128,7 +128,7 @@ namespace FruitGame
             quadMaterial.SetTexture(MaskTexId, current);
             quadMaterial.SetFloat(EdgeLowId, edge.x);
             quadMaterial.SetFloat(EdgeHighId, edge.y);
-            // Pixel-style outline around the player (Docs/DESIGN.md §3); the front layers draw over it where they overlap.
+            // Pixel-style outline around the player (Docs/DESIGN.md §4); the front layers draw over it where they overlap.
             quadMaterial.SetFloat(OutlineWidthId, config != null ? config.playerOutline : 0f);
             // The quad spans the view's height: one screen pixel is 1 / reference height of it.
             float h = ScreenLayout.Reference.y;

@@ -4,7 +4,7 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// One pose per screen layout (Docs/DESIGN.md §11): a UI element's anchors, pivot, position and size, or a 3D
+    /// One pose per screen layout (Docs/DESIGN.md §15): a UI element's anchors, pivot, position and size, or a 3D
     /// object's position and scale, for portrait and for landscape. Applied whenever the layout switches. Use the
     /// context menu to store the current pose as the portrait or landscape one while arranging a screen.
     /// </summary>

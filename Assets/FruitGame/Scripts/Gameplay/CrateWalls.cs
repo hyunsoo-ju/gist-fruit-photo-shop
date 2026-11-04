@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 namespace FruitGame
 {
     /// <summary>
-    /// The visible side walls (Docs/DESIGN.md §3, §5), stacked from the voxelised crate pack (FruitGame > Voxels >
+    /// The visible side walls (Docs/DESIGN.md §4, §7), stacked from the voxelised crate pack (FruitGame > Voxels >
     /// Bake Props): crates (Box.fbx) and barrels (barrel.fbx) only. On each wall line (inner faces on the bounce planes at
     /// ±wallX) a column of crates with a barrel every few pieces rises from the ground bank into the canopy, turned at
     /// random so they don't look copied. Outside it (seen in landscape) shorter crate stacks step down toward the screen

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Takes the three action shots of the four-cut photo during the round (Docs/DESIGN.md §10). They're spaced evenly
+    /// Takes the three action shots of the four-cut photo during the round (Docs/DESIGN.md §14). They're spaced evenly
     /// (a 60 s round: at 15, 30 and 45 s). Before each one a small 3·2·1 counter appears out of the way and the screen
     /// flashes lightly on every number; then the shutter sounds and the scene is captured as it is, mid-play. Everything
     /// follows the round timer, so it pauses with the game. The final cut is the photo booth's own shot after the round.
