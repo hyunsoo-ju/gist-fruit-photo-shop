@@ -257,6 +257,7 @@ namespace FruitGame
             hud.ShowStartMenu(next == GameState.Boot);
             hud.ShowPauseMenu(next == GameState.Paused);
             hud.ShowPauseButton(next == GameState.Playing || next == GameState.Countdown || next == GameState.RoundEnding);
+            hud.ShowRoundHud(next == GameState.Countdown || next == GameState.Playing || next == GameState.RoundEnding || next == GameState.Paused);
             if (next != GameState.GameOver) hud.HideGameOver();
         }
 

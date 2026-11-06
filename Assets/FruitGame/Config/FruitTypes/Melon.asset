@@ -19,7 +19,7 @@ MonoBehaviour:
   - {fileID: 6695689116743511036, guid: 089351bf19b204227a1d8c847e6cbef1, type: 3}
   points: 1
   spawnWeight: 0.4
-  sizeScale: 1.25
+  sizeScale: 1.35
   colliderShape: 0
   greyboxColor: {r: 0.49019608, g: 0.72156864, b: 0.2901961, a: 1}
   icon: {fileID: 0}

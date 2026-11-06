@@ -106,13 +106,15 @@ namespace FruitGame
         [Tooltip("Fruit drop at least this far (m) from the basket: the first value at the start, the second by the end " +
                  "(not in Easy), so a basket left in one place catches little.")]
         public Vector2 spawnAwayFromBasket = new Vector2(0.5f, 1.3f);
-        [Tooltip("Chance that a fruit is golden: faster, worth goldenPoints.")]
-        [Range(0f, 1f)] public float goldenChance = 1f / 12f;
+        [Tooltip("Golden fruit per round (faster, worth goldenPoints), at random times spread over the round.")]
+        [Min(0)] public int goldenPerRound = 3;
         public float goldenSpeedFactor = 1.25f;
         public int goldenPoints = 3;
-        [Tooltip("Chance that a spawn is a bomb, once bombAfterSeconds of the round have passed.")]
-        [Range(0f, 1f)] public float bombChance = 0.125f;
+        [Tooltip("Bombs per round, at random times spread between bombAfterSeconds and the end (none in Easy or Sound mode).")]
+        [Min(0)] public int bombsPerRound = 4;
         public float bombAfterSeconds = 15f;
+        [Tooltip("No golden fruit or bomb is scheduled in the round's last this many seconds.")]
+        public float specialsEndBefore = 5f;
         [Tooltip("Points lost for catching a bomb (the score never drops below 0).")]
         public int bombPenalty = 5;
         [Tooltip("From this many catches in a row, every catch scores comboMultiplier times.")]

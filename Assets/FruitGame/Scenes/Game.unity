@@ -13809,7 +13809,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 8fe979172ed7f4fe68efb5ba388ba950, type: 3}
+  m_Texture: {fileID: 2800000, guid: fbda4964eb1d43ffb36e79f8d106474c, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -15900,7 +15900,7 @@ MonoBehaviour:
   score: {fileID: 1092437599}
   points: {fileID: 970484860}
   pointsGap: 10
-  eventLogo: {fileID: 2800000, guid: 8fe979172ed7f4fe68efb5ba388ba950, type: 3}
+  eventLogo: {fileID: 2800000, guid: fbda4964eb1d43ffb36e79f8d106474c, type: 3}
   schoolLogo: {fileID: 2800000, guid: 810ccc5afa930476cb7aea6820945562, type: 3}
   eventLogoImage: {fileID: 859402402}
   schoolLogoImage: {fileID: 1825537400}
@@ -20526,8 +20526,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.49012345, y: 0}
-  m_AnchorMax: {x: 0.50987655, y: 1}
+  m_AnchorMin: {x: 0, y: 0.21875}
+  m_AnchorMax: {x: 1, y: 0.78125}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -33548,10 +33548,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.49012345
-    y: 0
-    width: 0.019753087
-    height: 1
+    x: 0
+    y: 0.21875
+    width: 1
+    height: 0.5625
   near clip plane: 0.3
   far clip plane: 50
   field of view: 29.996521

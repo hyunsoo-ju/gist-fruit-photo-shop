@@ -60,28 +60,33 @@ Material:
     - _Beauty: 0
     - _BigEye: 0
     - _BlurAlpha: 0.45
-    - _BlushStrength: 0.07
+    - _BlushStrength: 0
     - _Brighten: 1.12
     - _CheekRadius: 0.05
     - _DepthCutoff: 0.5
+    - _EdgeFade: 0
     - _EdgeHigh: 0.65
     - _EdgeLow: 0.35
+    - _FrameAspect: 0.75
     - _LipStrength: 0.225
     - _LutFlip: 1
     - _MouthRadius: 0.03
+    - _OutlineWidth: 0
     - _Sharpen: 0.15
     - _Slim: 0
     - _SlimRadius: 0.05
     - _SmoothRadius: 2
     - _Whiten: 0.3
     m_Colors:
-    - _BlushColor: {r: 1, g: 0.62, b: 0.68, a: 1}
+    - _BlushColor: {r: 1, g: 0.64, b: 0.76, a: 1}
     - _CheekL: {r: 0.4, g: 0.5, b: 0, a: 0}
     - _CheekR: {r: 0.6, g: 0.5, b: 0, a: 0}
     - _EyeA: {r: 0, g: 0, b: 0, a: 0}
     - _EyeB: {r: 0, g: 0, b: 0, a: 0}
-    - _LipColor: {r: 0.93, g: 0.24999997, b: 0.41999996, a: 1}
+    - _LipColor: {r: 0.94, g: 0.45, b: 0.74, a: 1}
     - _Mouth: {r: 0.5, g: 0.4, b: 0, a: 0}
+    - _OutlineColor: {r: 0.11799998, g: 0.13299996, b: 0.19999996, a: 1}
+    - _OutlineTexel: {r: 0.000926, g: 0.000694, b: 0, a: 0}
     - _Slim0: {r: 0, g: 0, b: 0, a: 0}
     - _Slim1: {r: 0, g: 0, b: 0, a: 0}
     - _Slim2: {r: 0, g: 0, b: 0, a: 0}

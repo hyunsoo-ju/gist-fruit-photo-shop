@@ -15,15 +15,15 @@ MonoBehaviour:
   id: dragonfruit
   displayName: Dragon Fruit
   visualPrefabs:
-  - {fileID: 2947685418755639885, guid: 3830f662c96394560aab95895bc6c386, type: 3}
+  - {fileID: 5207702621609994977, guid: 167238b728efd4b449ce3edab6fcac99, type: 3}
   points: 1
   spawnWeight: 0.7
-  sizeScale: 1.05
+  sizeScale: 1.15
   colliderShape: 1
   greyboxColor: {r: 0.8784314, g: 0.2509804, b: 0.48235294, a: 1}
   icon: {fileID: 0}
   sourceModels:
-  - {fileID: 919132149155446097, guid: bebf857ddacad40cebc16ac6291b5cfd, type: 3}
+  - {fileID: 5450010281622516795, guid: 17866928b4f444818ac10ab180af9a66, type: 3}
   sourceAtlas: {fileID: 2800000, guid: f3cdd5d431be84c35827b3fcff5683be, type: 3}
   atlas: {fileID: 2800000, guid: 6308a6cc4ed33482c89493b994dff711, type: 3}
   atlasFar: {fileID: 0}

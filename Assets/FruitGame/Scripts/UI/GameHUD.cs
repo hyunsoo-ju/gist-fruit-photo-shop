@@ -52,6 +52,8 @@ namespace FruitGame
         float messageHideAt = -1f;
         float timeLeft;
         bool timerVisible;
+        bool livesVisible;
+        bool roundHud = true;
 
         public void SetScore(int score, int delta) => scoreText.text = score.ToString();
 
@@ -61,12 +63,26 @@ namespace FruitGame
         {
             timeLeft = secondsLeft;
             timerVisible = visible;
-            timerText.gameObject.SetActive(visible);
+            timerText.gameObject.SetActive(visible && roundHud);
             int s = Mathf.CeilToInt(secondsLeft);
             timerText.text = $"{s / 60}:{s % 60:00}";
         }
 
-        public void ShowLives(bool visible) => livesText.gameObject.SetActive(visible);
+        public void ShowLives(bool visible)
+        {
+            livesVisible = visible;
+            livesText.gameObject.SetActive(visible && roundHud);
+        }
+
+        /// <summary>The score, timer and lives show only while a round is on (countdown to game over), not on the
+        /// title, calibration, game-over or photo booth screens.</summary>
+        public void ShowRoundHud(bool visible)
+        {
+            roundHud = visible;
+            scoreText.gameObject.SetActive(visible);
+            timerText.gameObject.SetActive(visible && timerVisible);
+            livesText.gameObject.SetActive(visible && livesVisible);
+        }
 
         public void SetLives(int remaining) => livesText.text = Strings.Get("hud.lives", remaining);
 

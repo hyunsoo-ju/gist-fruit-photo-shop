@@ -30,7 +30,7 @@ Shader "FruitGame/Person Cutout"
         _Whiten("Whitening", Range(0, 1)) = 0.6
         _BlushColor("Blush Color", Color) = (1, 0.62, 0.68, 1)
         _BlushStrength("Blush Strength", Range(0, 1)) = 0.14
-        _LipColor("Lip Color", Color) = (0.93, 0.25, 0.42, 1)
+        _LipColor("Lip Color", Color) = (0.94, 0.45, 0.74, 1)
         _LipStrength("Lip Strength", Range(0, 1)) = 0.45
         _CheekL("Left Cheek (uv)", Vector) = (0.4, 0.5, 0, 0)
         _CheekR("Right Cheek (uv)", Vector) = (0.6, 0.5, 0, 0)

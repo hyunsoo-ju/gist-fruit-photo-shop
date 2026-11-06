@@ -8,8 +8,9 @@ namespace FruitGame
     /// Spawns the fruit (Docs/DESIGN.md §5–§7). Normally one at a time: the next appears after the current one is caught
     /// or missed, plus a gap that shrinks over the round. Except in Easy, fruit also drop on a beat
     /// (GameConfig.DropIntervalAt) that starts at that same pace and quickens evenly, so later in the round the next fruit
-    /// drops before the last one lands (never more than two in the air). Each spawn may be golden or (after bombAfterSeconds)
-    /// a bomb. The assist fades over the round. Easy (Difficulty.Easy) keeps one at a time, steady gaps, full assist and
+    /// drops before the last one lands (never more than two in the air). Every round has the same number of golden fruit
+    /// and bombs (goldenPerRound, bombsPerRound), each at a random time in its own even share of the round, so they're
+    /// spread out but not predictable; bombs only after bombAfterSeconds. The assist fades over the round. Easy (Difficulty.Easy) keeps one at a time, steady gaps, full assist and
     /// no bombs.
     /// </summary>
     public class FruitSpawner : MonoBehaviour
@@ -56,6 +57,22 @@ namespace FruitGame
             Spawning = true;
             nextSpawnTime = Time.time;
             lastSpawnTime = -1f;
+            float end = config.roundDuration - config.specialsEndBefore;
+            Schedule(goldenAt, config.goldenPerRound, 0f, end);
+            Schedule(bombAt, Difficulty.Gentle || bombPrefab == null ? 0 : config.bombsPerRound, config.bombAfterSeconds, end);
+        }
+
+        readonly List<float> goldenAt = new List<float>();
+        readonly List<float> bombAt = new List<float>();
+
+        /// <summary>`count` times between `from` and `to`: one in the middle part of each equal slot, in order.</summary>
+        static void Schedule(List<float> times, int count, float from, float to)
+        {
+            times.Clear();
+            if (count <= 0 || to <= from) return;
+            float slot = (to - from) / count;
+            for (int i = 0; i < count; i++)
+                times.Add(from + slot * (i + UnityEngine.Random.Range(0.2f, 0.8f)));
         }
 
         /// <summary>Stops new spawns. A fruit already in the air is allowed to finish.</summary>
@@ -110,10 +127,11 @@ namespace FruitGame
 
         FallingFruit.Kind PickKind()
         {
-            if (!Difficulty.Gentle && Elapsed() >= config.bombAfterSeconds && bombPrefab != null
-                && UnityEngine.Random.value < config.bombChance)
-                return FallingFruit.Kind.Bomb;
-            return UnityEngine.Random.value < config.goldenChance ? FallingFruit.Kind.Golden : FallingFruit.Kind.Fruit;
+            // The next spawn after a scheduled time takes it (a bomb first if both are due; the golden fruit follows).
+            float t = Elapsed();
+            if (bombAt.Count > 0 && t >= bombAt[0]) { bombAt.RemoveAt(0); return FallingFruit.Kind.Bomb; }
+            if (goldenAt.Count > 0 && t >= goldenAt[0]) { goldenAt.RemoveAt(0); return FallingFruit.Kind.Golden; }
+            return FallingFruit.Kind.Fruit;
         }
 
         void Spawn()
