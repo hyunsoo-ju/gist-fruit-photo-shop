@@ -25,9 +25,29 @@ over.bombs	폭탄 {0}개	Bombs {0}
 over.none	받은 과일이 없어요	No fruit caught
 over.playAgain	다시 하기	Play again
 over.photo	사진 찍기	Photo
+walk.steer.title	어떻게 움직일까요?	How will you move?
+walk.diff.title	난이도를 골라요	Pick a difficulty
+walk.dots1	● ○ ○	● ○ ○
+walk.dots2	● ● ○	● ● ○
+walk.recommended	추천해요	Recommended
+walk.slide	머리를 옆으로	Slide your head
+walk.slide.desc	몸을 살짝 기울여서\n머리를 좌우로 옮겨요	Lean a little to move\nyour head side to side
+walk.turn	고개를 돌려서	Turn your head
+walk.turn.desc	몸을 움직이기\n어려운 분께 좋아요	For players who find\nmoving their body hard
+walk.easy	쉬움	Easy
+walk.easy.desc	천천히 하나씩,\n폭탄 없이	Slow, one at a time,\nno bombs
+walk.normal	보통	Normal
+walk.normal.desc	점점 빨라지고\n폭탄도 나와요	Gets faster,\nwith bombs
+walk.sound	소리로 하기	Play by sound
+walk.sound.desc	헤드폰으로\n소리를 듣고 받아요	Listen with headphones\nto catch the fruit
+walk.back	뒤로	Back
+walk.none		
 calib.centre	카메라를 똑바로 봐 주세요	Look straight at the camera
 calib.left	◀ 머리를 왼쪽으로\n<size=64>편한 만큼만 움직여요</size>	◀ Move your head left\n<size=64>as far as is comfortable</size>
 calib.right	머리를 오른쪽으로 ▶\n<size=64>편한 만큼만 움직여요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
+calib.leftTurn	◀ 고개를 왼쪽으로 돌려요\n<size=64>편한 만큼만 돌려요</size>	◀ Turn your head left\n<size=64>as far as is comfortable</size>
+calib.rightTurn	고개를 오른쪽으로 돌려요 ▶\n<size=64>편한 만큼만 돌려요</size>	Turn your head right ▶\n<size=64>as far as is comfortable</size>
+calib.ready	{0}초 뒤에 시작해요	Starting in {0} s
 calib.try	해 봐요!\n<size=64>머리를 움직여서 바구니를 옮겨 봐요</size>	Try it!\n<size=64>Move your head to steer the basket</size>
 calib.looking	얼굴을 찾고 있어요…	Looking for your face…
 calib.closer	조금 더 가까이 와 주세요	Move a little closer

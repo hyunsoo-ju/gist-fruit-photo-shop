@@ -11,20 +11,25 @@ namespace FruitGame
     {
         [SerializeField] GameConfig config;
         [SerializeField] FaceTracker tracker;
+        [Tooltip("For steering by head turn (GameConfig.steerBy).")]
+        [SerializeField] FaceMesh mesh;
 
         public CalibrationData Calibration { get; set; }
         /// <summary>The normalised position before clamping (−1 … +1 inside the calibrated range); for debugging.</summary>
         public float T { get; private set; }
 
-        public override bool HasTarget => tracker != null && tracker.HasFace;
+        public override bool HasTarget => HeadSignal.Has(config, tracker, mesh);
         public override float TargetX => targetX;
 
         OneEuroFilter filter;
+        SteerBy loadedFor;
         float targetX;
 
         void Awake()
         {
-            Calibration = CalibrationData.Load();
+            Steering.ResetTo(config.steerBy);
+            Calibration = CalibrationData.Load(Steering.Mode);
+            loadedFor = Steering.Mode;
             filter = new OneEuroFilter(config.oneEuroMinCutoff, config.oneEuroBeta);
         }
 
@@ -32,9 +37,17 @@ namespace FruitGame
 
         void Update()
         {
+            FaceMesh.NeededForSteering = Steering.Mode == SteerBy.Turn;
+            // Staff switched how to steer: use that way's own saved range.
+            if (Steering.Mode != loadedFor)
+            {
+                loadedFor = Steering.Mode;
+                Calibration = CalibrationData.Load(loadedFor);
+                filter.Reset();
+            }
             if (!HasTarget) return;
 
-            float x = config.basketXLimit * SoftClamp(Normalise(tracker.PlayFaceCenter.x));
+            float x = config.basketXLimit * SoftClamp(Normalise(HeadSignal.Value(config, tracker, mesh)));
             targetX = filter.Filter(x, Time.unscaledDeltaTime);
         }
 

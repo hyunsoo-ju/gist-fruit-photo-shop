@@ -20,6 +20,8 @@ namespace FruitGame
         [SerializeField] GameConfig config;
         [SerializeField] FaceTracker tracker;
         [SerializeField] FaceToBasketMapper mapper;
+        [Tooltip("For calibrating head turn (GameConfig.steerBy).")]
+        [SerializeField] FaceMesh mesh;
 
         [Header("UI")]
         [SerializeField] GameObject panel;
@@ -48,17 +50,18 @@ namespace FruitGame
             previous = mapper.Calibration;
             working = CalibrationData.Default;
             panel.SetActive(true);
-            if (ByEar) narrator.SayNow("calib_intro");
+            if (ByEar) { narrator.Quiet = !Difficulty.Auditory; narrator.SayNow("calib_intro"); }
             Enter(Step.Centre);
         }
 
-        bool ByEar => Difficulty.Auditory && narrator != null;
+        /// <summary>Spoken prompts: in Sound mode, and for everyone while narrateSetup is on (quieter then).</summary>
+        bool ByEar => narrator != null && (Difficulty.Auditory || config.narrateSetup);
 
         /// <summary>"Looks good": save and finish.</summary>
         public void Accept()
         {
             if (step != Step.Try) return;
-            working.Save();
+            working.Save(Steering.Mode);
             mapper.Calibration = working;
             if (ByEar) narrator.SayNow("calib_done");
             Finish(true);
@@ -97,17 +100,19 @@ namespace FruitGame
             tryButtons.SetActive(next == Step.Try);
             ring.gameObject.SetActive(false);
             holdSpoken = false;
+            leadInStart = -1f;
             // By ear: "좋아요!" for the pose just held, then the next prompt (queued after anything already speaking).
             if (ByEar)
             {
                 if (next != Step.Centre) narrator.Say("calib_ok");
-                narrator.Say(next == Step.Centre ? "calib_centre" : next == Step.Left ? "calib_left" : next == Step.Right ? "calib_right" : "calib_try");
+                string side = Turning ? "_turn" : "";
+                narrator.Say(next == Step.Centre ? "calib_centre" : next == Step.Left ? "calib_left" + side : next == Step.Right ? "calib_right" + side : "calib_try");
             }
             switch (next)
             {
                 case Step.Centre: title.text = Strings.Get("calib.centre"); break;
-                case Step.Left: title.text = Strings.Get("calib.left"); break;
-                case Step.Right: title.text = Strings.Get("calib.right"); break;
+                case Step.Left: title.text = Strings.Get(Turning ? "calib.leftTurn" : "calib.left"); break;
+                case Step.Right: title.text = Strings.Get(Turning ? "calib.rightTurn" : "calib.right"); break;
                 case Step.Try:
                     title.text = Strings.Get("calib.try");
                     hint.text = "";
@@ -121,7 +126,22 @@ namespace FruitGame
         {
             if (step == Step.Idle || step == Step.Try) return;
 
-            if (tracker == null || !tracker.HasFace)
+            // A lead-in to read the prompt before the pose starts counting: 5 s for the centre, 3 s after that.
+            // By ear it starts once the narrator has finished the prompt.
+            if (ByEar && narrator.IsSpeaking) leadInStart = -1f;
+            else if (leadInStart < 0f) leadInStart = Time.unscaledTime;
+            float leadIn = step == Step.Centre ? config.calibLeadInCentre : config.calibLeadIn;
+            float left = leadInStart < 0f ? leadIn : leadIn - (Time.unscaledTime - leadInStart);
+            if (left > 0f)
+            {
+                hint.text = Strings.Get("calib.ready", Mathf.CeilToInt(left));
+                ring.gameObject.SetActive(false);
+                history.Clear();
+                steadySince = -1f;
+                return;
+            }
+
+            if (!HeadSignal.Has(config, tracker, mesh))
             {
                 hint.text = Strings.Get("calib.looking");
                 Prompt("calib_looking");
@@ -139,7 +159,7 @@ namespace FruitGame
             if (face.width < 0.12f) { Prompt("calib_closer"); Hold(false, Strings.Get("calib.closer")); return; }
             if (face.width > 0.45f) { Prompt("calib_farther"); Hold(false, Strings.Get("calib.farther")); return; }
 
-            float u = face.center.x;
+            float u = HeadSignal.Value(config, tracker, mesh);
             float now = Time.unscaledTime;
             history.Add((now, u));
             history.RemoveAll(h => now - h.time > config.steadyHoldTime);
@@ -155,15 +175,18 @@ namespace FruitGame
                     if (Hold(steady, Strings.Get("calib.holdStill"))) { working.centre = u; Enter(Step.Left); }
                     break;
                 case Step.Left:
-                    if (u > working.centre - minRange) { Prompt("calib_more_left"); Hold(false, "A little further left"); break; }
+                    if (u > working.centre - minRange) { Prompt(Turning ? "calib_more_left_turn" : "calib_more_left"); Hold(false, "A little further left"); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.left = u; Enter(Step.Right); }
                     break;
                 case Step.Right:
-                    if (u < working.centre + minRange) { Prompt("calib_more_right"); Hold(false, "A little further right"); break; }
+                    if (u < working.centre + minRange) { Prompt(Turning ? "calib_more_right_turn" : "calib_more_right"); Hold(false, "A little further right"); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.right = u; Enter(Step.Try); }
                     break;
             }
         }
+
+        float leadInStart = -1f;
+        bool Turning => Steering.Mode == SteerBy.Turn;
 
         float lastPrompt = -10f;
         bool holdSpoken;
@@ -171,7 +194,7 @@ namespace FruitGame
         /// <summary>By ear: a distance prompt, at most every few seconds.</summary>
         void Prompt(string key)
         {
-            if (!Difficulty.Auditory || narrator == null || narrator.IsSpeaking || Time.unscaledTime - lastPrompt < 4f) return;
+            if (!ByEar || narrator.IsSpeaking || Time.unscaledTime - lastPrompt < 4f) return;
             lastPrompt = Time.unscaledTime;
             narrator.Say(key);
         }

@@ -123,6 +123,7 @@ namespace FruitGame
             F("defaultMode", () => (int)config.defaultMode, v => config.defaultMode = (DefaultMode)(int)v);
             F("assistScale", () => config.assistScale, v => config.assistScale = v);
             F("sensitivity", () => config.sensitivity, v => config.sensitivity = v);
+            F("steerBy", () => (int)config.steerBy, v => config.steerBy = (SteerBy)(int)v);
             F("steadyTolerance", () => config.steadyTolerance, v => config.steadyTolerance = v);
             F("steadyHoldTime", () => config.steadyHoldTime, v => config.steadyHoldTime = v);
             F("roundDuration", () => config.roundDuration, v => config.roundDuration = v);
@@ -166,7 +167,11 @@ namespace FruitGame
         {
             Strings.SetLanguage(config.language);
             if (segmenter != null && segmenter.Current != PersonSegmenter.Preferred) segmenter.Use(PersonSegmenter.Preferred);
-            if (game != null && game.State == GameState.Boot) Difficulty.ResetTo(config.defaultMode);
+            if (game != null && game.State == GameState.Boot)
+            {
+                Difficulty.ResetTo(config.defaultMode);
+                Steering.ResetTo(config.steerBy);
+            }
         }
 
         static int Step<T>(T[] options, T current, int dir)
@@ -212,6 +217,8 @@ namespace FruitGame
                 Setting("Mode each visit starts in", () => config.defaultMode.ToString(),
                     d => config.defaultMode = (DefaultMode)Mathf.Clamp((int)config.defaultMode + d, 0, 2)),
                 Setting("Assist", () => Pick(assist, assistNames, config.assistScale), d => config.assistScale = Nearest(assist, config.assistScale, d)),
+                Setting("Steering picked at the start", () => config.steerBy == SteerBy.Turn ? "Turning" : "Sliding",
+                    d => config.steerBy = d < 0 ? SteerBy.Slide : SteerBy.Turn),
                 Setting("Head sensitivity", () => config.sensitivity.ToString("0.0"),
                     d => config.sensitivity = Mathf.Clamp(Mathf.Round((config.sensitivity + d * 0.1f) * 10f) / 10f, 0.6f, 1.6f)),
                 Setting("Calibration: how still", () => $"± {config.steadyTolerance:0.000}", d => config.steadyTolerance = Nearest(tolerances, config.steadyTolerance, d)),

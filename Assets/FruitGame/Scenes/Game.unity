@@ -1296,6 +1296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.Narrator
   volume: 1
+  quietVolume: 0.6
   gap: 0.08
 --- !u!82 &81134076
 AudioSource:
@@ -5339,7 +5340,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &344100499
 RectTransform:
   m_ObjectHideFlags: 0
@@ -13117,6 +13118,7 @@ GameObject:
   - component: {fileID: 805519300}
   - component: {fileID: 805519305}
   - component: {fileID: 805519306}
+  - component: {fileID: 805519307}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -13286,6 +13288,25 @@ MonoBehaviour:
   printer: {fileID: 460629601}
   style: {fileID: 1622732323}
   cornerHoldSeconds: 3
+--- !u!114 &805519307
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 805519299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3821c54ec20d404685f71c495de536b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.SetupFlow
+  config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
+  narrator: {fileID: 81134075}
+  frame: {fileID: 1303592882}
+  panelStyle: {fileID: 599405730}
+  titleStyle: {fileID: 1589569550}
+  bodyStyle: {fileID: 1400001046}
+  backStyle: {fileID: 1180720711}
 --- !u!1 &808654194
 GameObject:
   m_ObjectHideFlags: 0
@@ -22981,7 +23002,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1454078304
 RectTransform:
   m_ObjectHideFlags: 0
@@ -30830,6 +30851,7 @@ MonoBehaviour:
   router: {fileID: 1957496578}
   calibration: {fileID: 1957496580}
   photoBooth: {fileID: 1957496582}
+  setup: {fileID: 805519307}
   narrator: {fileID: 81134075}
   bumpSoundCooldown: 0.12
 --- !u!4 &1957496574
@@ -30931,6 +30953,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.FaceToBasketMapper
   config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   tracker: {fileID: 1957496577}
+  mesh: {fileID: 1957496583}
 --- !u!114 &1957496580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30946,6 +30969,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   tracker: {fileID: 1957496577}
   mapper: {fileID: 1957496579}
+  mesh: {fileID: 1957496583}
   panel: {fileID: 1830997381}
   title: {fileID: 1589569550}
   hint: {fileID: 1714264428}

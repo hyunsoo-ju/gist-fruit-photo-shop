@@ -9,6 +9,13 @@ namespace FruitGame
     {
         [SerializeField] string key;
 
+        /// <summary>The string-table key; setting it shows the new text at once (for labels built at runtime).</summary>
+        public string Key
+        {
+            get => key;
+            set { key = value; if (isActiveAndEnabled) Refresh(); }
+        }
+
         void OnEnable()
         {
             Strings.Changed += Refresh;

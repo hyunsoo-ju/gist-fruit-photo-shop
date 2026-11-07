@@ -41,3 +41,13 @@ calib_redo	처음부터 다시 맞춰 볼게요.
 calib_done	맞추기 끝! 이제 게임을 할 수 있어요.
 paused	얼굴이 안 보여서 잠깐 멈췄어요. 카메라 앞으로 돌아와 주세요.
 resumed	다시 시작해요!
+walk_steer	어떻게 움직여서 바구니를 옮길지 골라요. 왼쪽은 머리를 옆으로 옮기는 방법으로, 이 방법을 추천해요. 오른쪽은 고개를 좌우로 돌리는 방법으로, 몸을 움직이기 어려운 분께 좋아요.
+walk_slide_chosen	머리를 옆으로 옮기는 방법을 골랐어요.
+walk_turn_chosen	고개를 돌리는 방법을 골랐어요.
+walk_difficulty	이제 난이도를 골라요. 쉬움, 보통, 그리고 소리로 하기가 있어요. 소리로 하기는 화면이 잘 보이지 않는 분을 위한 모드로, 헤드폰으로 소리를 듣고 과일을 받아요.
+walk_easy_chosen	쉬움을 골랐어요.
+walk_normal_chosen	보통을 골랐어요.
+calib_left_turn	이제 고개를 왼쪽으로 편한 만큼 돌리고 멈춰 주세요.
+calib_right_turn	이번엔 고개를 오른쪽으로 편한 만큼 돌리고 멈춰 주세요.
+calib_more_left_turn	조금만 더 왼쪽으로 돌려 주세요.
+calib_more_right_turn	조금만 더 오른쪽으로 돌려 주세요.

@@ -12,6 +12,11 @@ namespace FruitGame
     public class Narrator : MonoBehaviour
     {
         [SerializeField, Range(0f, 1f)] float volume = 1f;
+        [Tooltip("Volume while Quiet (the walkthrough and calibration read aloud for everyone, outside Sound mode).")]
+        [SerializeField, Range(0f, 1f)] float quietVolume = 0.6f;
+
+        /// <summary>Speak at quietVolume (setup narration for everyone) instead of full volume (Sound mode).</summary>
+        public bool Quiet { get; set; }
         [Tooltip("Pause between queued lines (s).")]
         [SerializeField] float gap = 0.08f;
 
@@ -67,7 +72,7 @@ namespace FruitGame
         {
             if (source.isPlaying || queue.Count == 0) return;
             if (Time.unscaledTime < nextAt) return;
-            source.PlayOneShot(queue.Dequeue(), volume);
+            source.PlayOneShot(queue.Dequeue(), Quiet ? quietVolume : volume);
             // isPlaying covers PlayOneShot; keep a small gap between lines.
             nextAt = Time.unscaledTime + gap;
         }

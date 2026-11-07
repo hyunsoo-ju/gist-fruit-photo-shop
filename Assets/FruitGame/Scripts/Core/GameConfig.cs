@@ -12,6 +12,9 @@ namespace FruitGame
     /// <summary>The mode each visit starts in (staff Settings, Docs/DESIGN.md §6).</summary>
     public enum DefaultMode { Normal, Easy, Sound }
 
+    /// <summary>What moves the basket (M6 2.3): sliding the head sideways, or turning it.</summary>
+    public enum SteerBy { Slide, Turn }
+
     /// <summary>One screen (guest view, staff views on keys) or two (guest display + staff display).</summary>
     public enum ScreenMode
     {
@@ -159,6 +162,10 @@ namespace FruitGame
 
         [Header("Face control (Docs/DESIGN.md §8)")]
         [Range(0.6f, 1.6f)] public float sensitivity = 1f;
+        [Tooltip("Slide: the face's sideways position. Turn: the head's yaw from the face mesh (staff setting while comparing).")]
+        public SteerBy steerBy = SteerBy.Slide;
+        [Tooltip("Turn: degrees of head turn that count like the whole width of the camera (signal = 0.5 + yaw / this).")]
+        public float turnDegreesPerWidth = 100f;
         [Tooltip("Dead zone in normalised t (fraction of the calibrated range), so it scales with each player's range.")]
         public float deadZone = 0.02f;
         [Tooltip("Where the face → basket mapping stops being linear and eases into the travel limit.")]
@@ -172,6 +179,14 @@ namespace FruitGame
         public float steadyTolerance = 0.015f;
         [Tooltip("Calibration: how long a pose must be held.")]
         public float steadyHoldTime = 1f;
+        [Tooltip("Calibration: seconds to read the prompt before the centre pose starts counting (after the narration, by ear).")]
+        public float calibLeadInCentre = 5f;
+        [Tooltip("Calibration: the same for the left and right poses.")]
+        public float calibLeadIn = 3f;
+        [Tooltip("The narrator reads the walkthrough and calibration aloud for everyone, not only in Sound mode.")]
+        public bool narrateSetup = true;
+        [Tooltip("Narrator volume outside Sound mode (the walkthrough and calibration).")]
+        [Range(0f, 1f)] public float setupNarrationVolume = 0.6f;
         public float faceLostPauseDelay = 1f;
         public float faceReturnGrace = 1f;
 

@@ -27,6 +27,8 @@ namespace FruitGame
 
         /// <summary>Set by whoever needs the mesh (the photo booth); off during gameplay.</summary>
         public bool Active { get; set; }
+        /// <summary>Set while the basket is steered by head turn (FaceToBasketMapper), which needs the mesh too.</summary>
+        public static bool NeededForSteering { get; set; }
         public bool HasMesh { get; private set; }
         /// <summary>Landmarks in webcam-output UV (0..1, origin bottom-left).</summary>
         public Vector2[] Points { get; } = new Vector2[Count];
@@ -59,7 +61,7 @@ namespace FruitGame
 
         void Update()
         {
-            if (!Active) { HasMesh = false; primed = false; return; }
+            if (!Active && !NeededForSteering) { HasMesh = false; primed = false; return; }
             if (worker == null || busy || !source.HasFrames || !tracker.HasFace) return;
             RunAsync();
         }
@@ -84,7 +86,7 @@ namespace FruitGame
                 var presenceTask = (worker.PeekOutput(1) as Tensor<float>).ReadbackAndCloneAsync();
                 using var landmarks = await landmarksTask;
                 using var presence = await presenceTask;
-                if (disposed || !Active) return;
+                if (disposed || (!Active && !NeededForSteering)) return;
 
                 float score = 1f / (1f + Mathf.Exp(-presence[0]));
                 if (score < 0.5f) { HasMesh = false; return; }

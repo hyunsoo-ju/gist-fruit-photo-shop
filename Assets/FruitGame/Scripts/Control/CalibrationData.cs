@@ -15,24 +15,27 @@ namespace FruitGame
 
         const string Key = "FruitGame.Calibration";
 
+        /// <summary>Each way of steering keeps its own range (sliding and turning use different amounts of the signal).</summary>
+        static string KeyFor(SteerBy mode) => mode == SteerBy.Turn ? Key + ".Turn" : Key;
+
         public static CalibrationData Default => new CalibrationData { centre = 0.5f, left = 0.35f, right = 0.65f };
 
-        public static bool HasSaved => PlayerPrefs.HasKey(Key);
+        public static bool HasSaved(SteerBy mode) => PlayerPrefs.HasKey(KeyFor(mode));
 
-        public static CalibrationData Load()
+        public static CalibrationData Load(SteerBy mode)
         {
-            if (!HasSaved) return Default;
-            var data = JsonUtility.FromJson<CalibrationData>(PlayerPrefs.GetString(Key));
+            if (!HasSaved(mode)) return Default;
+            var data = JsonUtility.FromJson<CalibrationData>(PlayerPrefs.GetString(KeyFor(mode)));
             return data.IsValid ? data : Default;
         }
 
-        public void Save()
+        public void Save(SteerBy mode)
         {
-            PlayerPrefs.SetString(Key, JsonUtility.ToJson(this));
+            PlayerPrefs.SetString(KeyFor(mode), JsonUtility.ToJson(this));
             PlayerPrefs.Save();
         }
 
-        public static void Clear() => PlayerPrefs.DeleteKey(Key);
+        public static void Clear(SteerBy mode) => PlayerPrefs.DeleteKey(KeyFor(mode));
 
         public bool IsValid => left < centre && centre < right && left >= 0f && right <= 1f;
     }

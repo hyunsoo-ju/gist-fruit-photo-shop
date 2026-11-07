@@ -88,6 +88,8 @@ MonoBehaviour:
   easyAssistExtraSpeedCap: 1
   easyDriftCapMax: 1.2
   sensitivity: 1
+  steerBy: 0
+  turnDegreesPerWidth: 100
   deadZone: 0.02
   softClampKnee: 0.8
   calibMinRangePerSide: 0.03
@@ -95,6 +97,8 @@ MonoBehaviour:
   oneEuroBeta: 0.5
   steadyTolerance: 0.015
   steadyHoldTime: 1
+  calibLeadInCentre: 5
+  calibLeadIn: 3
   faceLostPauseDelay: 1
   faceReturnGrace: 1
   photoCaption: GIST Fruit Photo Shop

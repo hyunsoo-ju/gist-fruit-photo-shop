@@ -6,6 +6,8 @@ namespace FruitGame
     public enum GameState
     {
         Boot,
+        /// <summary>The walkthrough after Start: how to move, then difficulty (SetupFlow).</summary>
+        Setup,
         Calibrate,
         Countdown,
         Playing,
@@ -16,7 +18,8 @@ namespace FruitGame
     }
 
     /// <summary>
-    /// Runs the round: start menu → countdown → playing → (last fruit lands) → game over.
+    /// Runs the round: start menu → setup (how to move, difficulty) → calibration → countdown → playing →
+    /// (last fruit lands) → game over.
     /// Docs/DESIGN.md §3. Every transition is a public method so on-screen buttons (and later face gestures)
     /// can drive it; the keyboard shortcuts call the same methods. Calibrate is reserved for M3.
     /// </summary>
@@ -32,6 +35,8 @@ namespace FruitGame
         [SerializeField] BasketInputRouter router;
         [SerializeField] CalibrationController calibration;
         [SerializeField] PhotoBooth photoBooth;
+        [Tooltip("The walkthrough after Start: how to move and difficulty, before calibration.")]
+        [SerializeField] SetupFlow setup;
         [Tooltip("The auditory assist mode's narrator (Docs/DESIGN.md §11, M18).")]
         [SerializeField] Narrator narrator;
         [Tooltip("Minimum time between basket-bump sounds, so a rattling fruit doesn't machine-gun them.")]
@@ -79,6 +84,7 @@ namespace FruitGame
             spawner.Elapsed = () => Timer.Elapsed;
             Stats.Config = config;
             if (calibration != null) calibration.Finished += HandleCalibrationFinished;
+            if (setup != null) setup.Finished += HandleSetupFinished;
             if (photoBooth != null) photoBooth.Closed += ReturnToMenu;
             Stats.ScoreChanged += hud.SetScore;
             Lives.Changed += hud.SetLives;
@@ -90,6 +96,7 @@ namespace FruitGame
             spawner.FruitSpawned -= HandleFruitSpawned;
             spawner.FruitHitBasket -= HandleFruitHitBasket;
             if (calibration != null) calibration.Finished -= HandleCalibrationFinished;
+            if (setup != null) setup.Finished -= HandleSetupFinished;
             if (photoBooth != null) photoBooth.Closed -= ReturnToMenu;
             Stats.ScoreChanged -= hud.SetScore;
             Lives.Changed -= hud.SetLives;
@@ -115,14 +122,29 @@ namespace FruitGame
                 case GameState.Paused:
                     Resume();
                     break;
+                case GameState.Setup:
+                    setup.ChooseHighlighted();
+                    break;
             }
         }
 
-        /// <summary>Play button / Play again button. The first round with a live camera calibrates first.</summary>
+        /// <summary>
+        /// Start on the title: the walkthrough (how to move, difficulty), then calibration, then the round; every
+        /// visitor plays once, so everyone goes through it. Play again on the game-over screen goes straight to the
+        /// countdown with the same choices (calibrating first if this way of steering has never been calibrated).
+        /// </summary>
         public void StartRound()
         {
             if (State == GameState.Paused) Time.timeScale = 1f;
-            if (calibration != null && router != null && router.UsingFace && !CalibrationData.HasSaved)
+            if (State == GameState.Boot && setup != null)
+            {
+                ResetRound();
+                SetState(GameState.Setup);
+                hud.HideMessage();
+                setup.Begin();
+                return;
+            }
+            if (calibration != null && router != null && router.UsingFace && !CalibrationData.HasSaved(Steering.Mode))
             {
                 BeginCalibration(true);
                 return;
@@ -153,8 +175,23 @@ namespace FruitGame
             calibration.Begin(thenPlay);
         }
 
+        /// <summary>The walkthrough's choices are made (calibrate, then play) or it was backed out of (title).</summary>
+        void HandleSetupFinished(bool go)
+        {
+            if (!go) { EnterBoot(); return; }
+            if (calibration != null && router != null && router.UsingFace) BeginCalibration(true);
+            else EnterCountdown();
+        }
+
         void HandleCalibrationFinished(bool accepted, bool thenPlay)
         {
+            // Back out of calibration during the walkthrough: back to the difficulty step.
+            if (!accepted && thenPlay && setup != null)
+            {
+                SetState(GameState.Setup);
+                setup.ReturnTo(1);
+                return;
+            }
             if (accepted && thenPlay) EnterCountdown();
             else EnterBoot();
         }
@@ -200,6 +237,7 @@ namespace FruitGame
             // The visit is over: the next player starts in the staff's default mode.
             if (Difficulty.Auditory && narrator != null) narrator.Stop();
             Difficulty.ResetTo(config.defaultMode);
+            Steering.ResetTo(config.steerBy);
             ResetRound();
             EnterBoot();
         }
