@@ -171,7 +171,7 @@ namespace FruitGame
         {
             var scale = Vector2.one;
             var offset = Vector2.zero;
-            if (mirror) { scale.x = -1f; offset.x = 1f; }
+            if (config != null ? config.mirrorCamera : mirror) { scale.x = -1f; offset.x = 1f; }
             if (cam.videoVerticallyMirrored) { scale.y = -1f; offset.y = 1f; }
             Graphics.Blit(cam, Output, scale, offset);
         }

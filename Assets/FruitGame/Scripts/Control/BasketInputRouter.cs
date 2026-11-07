@@ -23,14 +23,13 @@ namespace FruitGame
         public override bool HasTarget => UsingFace ? face.HasTarget : fallback.HasTarget;
         public override float TargetX => UsingFace ? face.TargetX : fallback.TargetX;
 
-        void Update()
+        /// <summary>True while the basket follows the mouse/keyboard instead of the face (staff panel, M).</summary>
+        public bool MouseControl => forceFallback;
+
+        public void ToggleMouseControl()
         {
-            var kb = Keyboard.current;
-            if (kb != null && kb.f2Key.wasPressedThisFrame)
-            {
-                forceFallback = !forceFallback;
-                Debug.Log($"[FruitGame] Basket control: {(forceFallback ? "mouse/keyboard (F2)" : "face when available")}");
-            }
+            forceFallback = !forceFallback;
+            Debug.Log($"[FruitGame] Basket control: {(forceFallback ? "mouse/keyboard" : "face when available")}");
         }
     }
 }

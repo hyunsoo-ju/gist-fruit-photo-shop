@@ -13115,6 +13115,8 @@ GameObject:
   - component: {fileID: 805519302}
   - component: {fileID: 805519301}
   - component: {fileID: 805519300}
+  - component: {fileID: 805519305}
+  - component: {fileID: 805519306}
   m_Layer: 5
   m_Name: UI
   m_TagString: Untagged
@@ -13237,6 +13239,53 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &805519305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 805519299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2848c221f6b504e18bc1e7a07e613b67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.StaffScreen
+  config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
+  guestFrame: {fileID: 1303592882}
+  debug: {fileID: 1716717533}
+  faceBox: {fileID: 2112521010}
+  status: {fileID: 1622732323}
+  maskPreview: {fileID: 606041265}
+  printer: {fileID: 460629601}
+  printerPanel: {fileID: 1942624534}
+  printerBox: {fileID: 1377384743}
+  printerWarning: {fileID: 720682902}
+  source: {fileID: 1957496576}
+  panel: {fileID: 805519306}
+  style: {fileID: 1622732323}
+--- !u!114 &805519306
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 805519299}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c726c920680f4bdc987c15a2a5fb661, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.StaffPanel
+  config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
+  game: {fileID: 1957496573}
+  source: {fileID: 1957496576}
+  segmenter: {fileID: 1957496581}
+  router: {fileID: 1957496578}
+  debug: {fileID: 1716717533}
+  blindTest: {fileID: 1957496588}
+  printer: {fileID: 460629601}
+  style: {fileID: 1622732323}
+  cornerHoldSeconds: 3
 --- !u!1 &808654194
 GameObject:
   m_ObjectHideFlags: 0
@@ -20526,8 +20575,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.21875}
-  m_AnchorMax: {x: 1, y: 0.78125}
+  m_AnchorMin: {x: 0.49012345, y: 0}
+  m_AnchorMax: {x: 0.50987655, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -26715,6 +26764,7 @@ MonoBehaviour:
   box: {fileID: 2112521010}
   status: {fileID: 1622732323}
   segmenter: {fileID: 1957496581}
+  mesh: {fileID: 1957496583}
   maskPreview: {fileID: 606041265}
   visible: 1
 --- !u!1 &1721108895
@@ -30918,7 +30968,10 @@ MonoBehaviour:
   source: {fileID: 1957496576}
   rvmModel: {fileID: 5022602860645237092, guid: b5fe2f151748940f7a17d79ecfad5ec5, type: 3}
   rvmDownsample: 0.5
+  rvmLightModel: {fileID: 5022602860645237092, guid: ba324e0831ada4ad498fe5be62db454a, type: 3}
+  rvmLightDownsample: 0.25
   model: {fileID: 5022602860645237092, guid: 7a30288ad6b644f5dad76405ba3391df, type: 3}
+  startWith: 1
   backend: 256
   targetFrameRate: 60
 --- !u!114 &1957496582
@@ -33548,10 +33601,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.21875
-    width: 1
-    height: 0.5625
+    x: 0.49012345
+    y: 0
+    width: 0.019753087
+    height: 1
   near clip plane: 0.3
   far clip plane: 50
   field of view: 29.996521

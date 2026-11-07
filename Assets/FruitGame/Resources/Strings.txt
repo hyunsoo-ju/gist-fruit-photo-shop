@@ -47,6 +47,7 @@ photo.close	닫기	Close
 photo.saved	저장했어요!	Saved!
 photo.printing	인쇄하고 있어요… 약 {0}초 뒤에 나와요	Printing… ready in about {0} s
 photo.printQueued	앞에 {0}장이 인쇄 중이에요. 약 {1}초 뒤에 나와요	{0} ahead in the queue. Ready in about {1} s
+photo.printerDown	프린터가 잠시 쉬고 있어요. 휴대폰으로 받아 가세요!	The printer is taking a break. Get your photo on your phone!
 photo.printFail	인쇄하지 못했어요 (프린터가 연결되어 있나요?)	Couldn't print (is a printer set up?)
 photo.shareFail	사진을 보내지 못했어요	Couldn't share the photo
 photo.noNetwork	네트워크 연결을 찾지 못했어요	No network connection found.

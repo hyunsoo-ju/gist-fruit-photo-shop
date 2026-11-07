@@ -41,5 +41,12 @@ namespace FruitGame
         public static bool Gentle => easy || auditory;
 
         public static event Action Changed;
+
+        /// <summary>Back to the mode staff chose in Settings (GameConfig.defaultMode).</summary>
+        public static void ResetTo(DefaultMode mode)
+        {
+            Easy = mode == DefaultMode.Easy;
+            Auditory = mode == DefaultMode.Sound;
+        }
     }
 }

@@ -129,6 +129,8 @@ namespace FruitGame
         {
             if (step != Step.Preview || LastPhoto == null || printer == null) return;
             if (printed) return;
+            // A stopped or offline printer would only queue it: tell the player now, so they take the phone route.
+            if (printer.HasProblem) { savedText.text = Strings.Get("photo.printerDown"); return; }
             string path = EnsureSaved();
             if (printer.Print(path, out int ahead))
             {
@@ -279,7 +281,7 @@ namespace FruitGame
             if (ByEar) narrator.Say("photo_done");
 
             previewImage.texture = LastPhoto;
-            savedText.text = "";
+            savedText.text = printer != null && printer.HasProblem ? Strings.Get("photo.printerDown") : "";
             previewGroup.SetActive(true);
             step = Step.Preview;
         }

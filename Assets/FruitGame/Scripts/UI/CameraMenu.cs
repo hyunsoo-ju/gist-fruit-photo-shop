@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Staff camera menu (Docs/DESIGN.md §13, F4): lists every camera the computer sees, plus "Auto" (the preferred name
+    /// Staff camera menu (Docs/DESIGN.md §13; the staff panel's Change camera, C): lists every camera the computer sees, plus "Auto" (the preferred name
     /// in GameConfig, else the first external camera), with a live preview of the camera in use. Click a row or press its
     /// number to switch; the choice is remembered across restarts. English, like the other debug views. Built at
     /// runtime on the UI canvas, in the debug text's font.
@@ -22,6 +22,15 @@ namespace FruitGame
         /// <summary>True while the menu is open (other staff boxes leave the number keys to it).</summary>
         public static bool IsOpen { get; private set; }
 
+        static CameraMenu instance;
+        bool toggleRequested;
+
+        /// <summary>Opens or closes the menu (the staff panel's "Change camera", C).</summary>
+        public static void Toggle()
+        {
+            if (instance != null) instance.toggleRequested = true;
+        }
+
         static readonly Color Panel = new Color(0.08f, 0.09f, 0.14f, 1f); // fully opaque: the game view composites alpha
         static readonly Color Row = new Color(1f, 1f, 1f, 0.06f);
         static readonly Color RowActive = new Color(0.2f, 1f, 0.45f, 0.22f);
@@ -33,7 +42,11 @@ namespace FruitGame
         readonly List<(string device, Image back, TMP_Text label)> rows = new List<(string, Image, TMP_Text)>();
         int deviceCount = -1;
 
-        void Awake() => Build();
+        void Awake()
+        {
+            instance = this;
+            Build();
+        }
 
         GameObject menuCanvas;
 
@@ -156,9 +169,13 @@ namespace FruitGame
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb != null && kb.f4Key.wasPressedThisFrame)
+            if (toggleRequested || (IsOpen && kb != null && kb.escapeKey.wasPressedThisFrame))
             {
+                if (!toggleRequested) StaffPanel.Consume(); // Esc closed the menu: the game shouldn't also pause
+                toggleRequested = false;
                 IsOpen = !IsOpen;
+                // On the staff screen when there is one (StaffScreen), else over the game.
+                menuCanvas.GetComponent<Canvas>().targetDisplay = StaffScreen.StaffDisplay;
                 root.SetActive(IsOpen);
                 if (IsOpen) BuildRows();
             }
@@ -174,7 +191,7 @@ namespace FruitGame
 
             Refresh();
             string auto = "Auto = GameConfig's preferred camera, else the first external camera.";
-            header.text = $"Camera  (F4 to close)\n{(source != null ? source.Status : "no camera source")}\n" +
+            header.text = $"Camera  (Esc or C to close)\n{(source != null ? source.Status : "no camera source")}\n" +
                           "Click a camera or press its number. " + auto;
 
             // Live preview of the camera in use, at its own shape inside the square.

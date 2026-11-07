@@ -5,7 +5,7 @@ namespace FruitGame
 {
     /// <summary>
     /// Loads the string table and sets the starting language from GameConfig (Korean by default). F3 flips between
-    /// Korean and English, for staff (Docs/DESIGN.md §15).
+    /// Korean and English, for staff (the staff panel's L) (Docs/DESIGN.md §15).
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class LanguageSwitch : MonoBehaviour
@@ -18,11 +18,6 @@ namespace FruitGame
             Strings.SetLanguage(config != null ? config.language : Language.Korean);
         }
 
-        void Update()
-        {
-            var kb = Keyboard.current;
-            if (kb != null && kb.f3Key.wasPressedThisFrame)
-                Strings.SetLanguage(Strings.Current == Language.Korean ? Language.English : Language.Korean);
-        }
+
     }
 }

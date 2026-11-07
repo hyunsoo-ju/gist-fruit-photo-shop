@@ -33,7 +33,7 @@ namespace FruitGame
         {
             if (level <= 0f || fruitPos.y <= config.rimY) return 0f;
             float radius = config.AssistRadius;
-            float strength = config.AssistStrength;
+            float strength = config.AssistStrength * config.assistScale;
 
             var mouth = new Vector2(basket.X, config.rimY);
             float d = Vector2.Distance(fruitPos, mouth);

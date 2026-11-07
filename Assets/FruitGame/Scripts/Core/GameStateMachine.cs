@@ -197,9 +197,9 @@ namespace FruitGame
         public void ReturnToMenu()
         {
             Time.timeScale = 1f;
-            // The visit is over: the next player starts in the normal mode.
+            // The visit is over: the next player starts in the staff's default mode.
             if (Difficulty.Auditory && narrator != null) narrator.Stop();
-            Difficulty.Auditory = false;
+            Difficulty.ResetTo(config.defaultMode);
             ResetRound();
             EnterBoot();
         }
@@ -209,12 +209,13 @@ namespace FruitGame
             var kb = Keyboard.current;
             if (kb != null)
             {
-                if (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame) Confirm();
+                // While the staff panel's keys are on (F1), keys are the panel's, except P to pause.
+                bool staff = StaffPanel.KeysActive || StaffPanel.HandledFrame == Time.frameCount;
+                if (staff) { if (kb.pKey.wasPressedThisFrame) TogglePause(); }
+                else if (kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame) Confirm();
                 else if (kb.escapeKey.wasPressedThisFrame && State == GameState.Calibrate) calibration.Cancel();
                 else if (kb.pKey.wasPressedThisFrame || kb.escapeKey.wasPressedThisFrame) TogglePause();
                 else if (kb.cKey.wasPressedThisFrame) StartCalibration();
-                // Staff: E on the title screen toggles Easy (the gentle round) for the next player.
-                else if (kb.eKey.wasPressedThisFrame && State == GameState.Boot) Difficulty.Easy = !Difficulty.Easy;
                 else if (kb.aKey.wasPressedThisFrame && State == GameState.Boot) ToggleAuditory();
             }
 
@@ -315,8 +316,8 @@ namespace FruitGame
             hud.HideMessage();
             hud.ShowGameOver(Stats, SaveData.BestScore, newBest, config.roundDuration);
             audioFeedback.PlayRoundOver();
-            // Easy is for one player: the next round is normal unless staff switch it on again.
-            Difficulty.Easy = false;
+            // Easy is for one player: the next round goes back to the staff default unless staff switch it on again.
+            if (Difficulty.Easy && config.defaultMode != DefaultMode.Easy) Difficulty.Easy = false;
             // By ear: the final score (not the tally), then the photo.
             Say("time_up", Number("score_final_", Stats.Score));
             if (newBest) Say("best_new");

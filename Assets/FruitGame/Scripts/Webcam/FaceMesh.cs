@@ -8,7 +8,8 @@ namespace FruitGame
     /// MediaPipe Face Mesh (478 landmarks incl. irises; ONNX from astaileyyoung/FaceMeshONNX, MIT) for the photo
     /// booth's face reshaping and makeup (Docs/DESIGN.md §14). Crops a square around the BlazeFace box, runs the mesh on
     /// the GPU, and maps the points back into webcam-output UV (the same space as FaceTracker / the cut-out).
-    /// Only runs while Active, so gameplay doesn't pay for it.
+    /// Only runs while Active (today: whenever the beauty filter is on, which is always). Also gives the head's
+    /// rotation from the 3D points (M6 2.3), for trying rotation steering.
     /// </summary>
     public class FaceMesh : MonoBehaviour
     {
@@ -29,6 +30,16 @@ namespace FruitGame
         public bool HasMesh { get; private set; }
         /// <summary>Landmarks in webcam-output UV (0..1, origin bottom-left).</summary>
         public Vector2[] Points { get; } = new Vector2[Count];
+        /// <summary>Head rotation in degrees as seen on screen: yaw + = turned toward screen right, pitch + = tilted up,
+        /// roll + = tilted clockwise. From the face's own axes (eye corners across, forehead to chin down).</summary>
+        public float Yaw { get; private set; }
+        public float Pitch { get; private set; }
+        public float Roll { get; private set; }
+        /// <summary>Meshes per second actually achieved (debug overlay).</summary>
+        public float Rate { get; private set; }
+
+        int frames;
+        float rateWindowStart;
 
         Worker worker;
         Tensor<float> input;
@@ -79,6 +90,8 @@ namespace FruitGame
                 if (score < 0.5f) { HasMesh = false; return; }
 
                 float keep = primed ? smoothing : 0f;
+                UpdatePose(landmarks, keep);
+                CountRate();
                 for (int i = 0; i < Count; i++)
                 {
                     float x = landmarks[i * 3] / Size, y = landmarks[i * 3 + 1] / Size;
@@ -95,6 +108,41 @@ namespace FruitGame
             finally
             {
                 busy = false;
+            }
+        }
+
+        /// <summary>
+        /// Head rotation from three landmark pairs in the crop's own pixel space (x right, y down, z away from the
+        /// camera; the crop is square, so all three axes share a scale): across = outer eye corners 33 → 263,
+        /// down = forehead 10 → chin 152, forward = across × down.
+        /// </summary>
+        void UpdatePose(Tensor<float> l, float keep)
+        {
+            Vector3 P(int i) => new Vector3(l[i * 3], l[i * 3 + 1], l[i * 3 + 2]);
+            // Screen space: the frame is mirrored, so take the eye axis pointing screen-right whichever eye that is.
+            var across = (P(263) - P(33)).normalized;
+            if (across.x < 0f) across = -across;
+            var down = P(152) - P(10);
+            down = (down - Vector3.Dot(down, across) * across).normalized;
+            // Points into the head, away from the camera; turning to face screen-right swings it screen-left.
+            var forward = Vector3.Cross(across, down);
+            float yaw = -Mathf.Atan2(forward.x, forward.z) * Mathf.Rad2Deg;
+            float pitch = Mathf.Asin(Mathf.Clamp(forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+            float roll = Mathf.Atan2(across.y, across.x) * Mathf.Rad2Deg;
+            Yaw = Mathf.Lerp(yaw, Yaw, keep);
+            Pitch = Mathf.Lerp(pitch, Pitch, keep);
+            Roll = Mathf.Lerp(roll, Roll, keep);
+        }
+
+        void CountRate()
+        {
+            frames++;
+            float elapsed = Time.unscaledTime - rateWindowStart;
+            if (elapsed >= 1f)
+            {
+                Rate = frames / elapsed;
+                frames = 0;
+                rateWindowStart = Time.unscaledTime;
             }
         }
 

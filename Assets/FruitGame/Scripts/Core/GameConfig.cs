@@ -9,6 +9,19 @@ namespace FruitGame
         TimerOrLives
     }
 
+    /// <summary>The mode each visit starts in (staff Settings, Docs/DESIGN.md §6).</summary>
+    public enum DefaultMode { Normal, Easy, Sound }
+
+    /// <summary>One screen (guest view, staff views on keys) or two (guest display + staff display).</summary>
+    public enum ScreenMode
+    {
+        /// <summary>Two when a second display is connected (builds); one in the Editor.</summary>
+        Auto,
+        One,
+        /// <summary>Two even in the Editor, where the staff screen shows in a Game view set to Display 2.</summary>
+        Two
+    }
+
     /// <summary>
     /// Every gameplay tunable in one asset. See Docs/DESIGN.md §17 for what each value means.
     /// </summary>
@@ -87,6 +100,10 @@ namespace FruitGame
         [Header("Assist")]
         public float assistRadius = 2.6f;
         public float assistStrength = 7f;
+        [Tooltip("Staff assist level: 0 off, 0.5 low, 1 normal. Scales the assist in every mode.")]
+        [Range(0f, 1f)] public float assistScale = 1f;
+        [Tooltip("The mode each visit starts in; Easy and Sound go back to it after a round / a visit.")]
+        public DefaultMode defaultMode = DefaultMode.Normal;
         public float assistExtraSpeedCap = 1.6f;
         [Tooltip("Assist strength at the end of the round, as a fraction of its start (it fades over the round).")]
         [Range(0f, 1f)] public float assistEndLevel = 1f;
@@ -203,9 +220,18 @@ namespace FruitGame
         [Tooltip("Starting language; F3 flips between Korean and English at runtime.")]
         public Language language = Language.Korean;
 
+        [Header("Screens (Docs/DESIGN.md §15)")]
+        [Tooltip("Auto: the guest screen on the main display and the staff screen on a second one when it's connected. " +
+                 "Two: also in the Editor (open a second Game view set to Display 2).")]
+        public ScreenMode screens = ScreenMode.Auto;
+        [Tooltip("Staff screen mirror refreshes per second (a copy of the guest screen).")]
+        public float staffMirrorRate = 30f;
+
         [Header("Webcam")]
         [Tooltip("Part of the camera name to prefer (e.g. \"iPhone\"). Empty = first non-built-in camera, else any.")]
         public string preferredCameraName = "Symplectomorphism";
+        [Tooltip("Show the camera mirrored, like a mirror (the usual for a selfie booth).")]
+        public bool mirrorCamera = true;
 
         [Header("Printing (Docs/DESIGN.md §14, M17)")]
         [Tooltip("Printer name as the OS knows it (macOS: lpstat -p). Empty = the system default printer.")]

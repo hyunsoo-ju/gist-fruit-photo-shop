@@ -57,6 +57,8 @@ MonoBehaviour:
   pileFreezeTime: 1.5
   assistRadius: 2.6
   assistStrength: 7
+  assistScale: 1
+  defaultMode: 0
   assistExtraSpeedCap: 1.6
   assistEndLevel: 1
   assistFullAtSpeed: 1.2
@@ -113,7 +115,10 @@ MonoBehaviour:
   playerOutline: 0
   playerOutlineColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
   language: 0
+  screens: 0
+  staffMirrorRate: 30
   preferredCameraName: Symplectomorphism
+  mirrorCamera: 1
   printerName: 
   printMedia: Postcard.Fullbleed
   printCopies: 1

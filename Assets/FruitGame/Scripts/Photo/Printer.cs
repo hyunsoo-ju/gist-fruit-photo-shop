@@ -15,9 +15,9 @@ namespace FruitGame
     /// The booth printer (Docs/DESIGN.md §14, M17): sends the card to the Canon SELPHY CP1500 at its exact paper size
     /// (borderless postcard, no rescaling to a page), keeps track of the jobs still in its queue so the preview can say
     /// how long to wait, and counts the paper in the tray and the prints left in the ink cassette. Its staff text is English, like the other debug views.
-    /// Staff: F6 shows the printer box (state, queue, paper and ink, the printer's own alerts); while it's open, 1 means
-    /// "paper tray refilled" and 2 "new ink cassette". A warning line shows by itself when either is nearly out or the
-    /// printer reports a problem. macOS prints through CUPS (`lp`); Windows uses the shell "print" verb (no queue info).
+    /// Staff: the printer box (state, queue, paper and ink, the printer's own alerts) is on the staff panel's Printing
+    /// page, with "paper refilled" (R) and "new ink cassette" (I). With one screen, a warning line shows by itself while
+    /// the panel is closed when either is nearly out or the printer reports a problem. macOS prints through CUPS (`lp`); Windows uses the shell "print" verb (no queue info).
     /// </summary>
     public class Printer : MonoBehaviour
     {
@@ -55,6 +55,20 @@ namespace FruitGame
         public int Pending { get { lock (gate) return pending.Count; } }
         public bool LowPaper => PaperLeft <= config.printWarnAt;
         public bool LowInk => InkLeft <= config.printWarnAt;
+        /// <summary>A problem the player should hear about (shown on the guest screen too): no printer set up, the queue
+        /// stopped, or an alert from the printer itself (offline, no paper, no ink, jam).</summary>
+        public bool HasProblem
+        {
+            get
+            {
+                if (!IsMac) return false;
+                string st, al;
+                lock (gate) { st = state; al = alerts; }
+                return (!string.IsNullOrEmpty(al) && al != "none") || st.Contains("stopped") || st.StartsWith("No printer");
+            }
+        }
+        /// <summary>Two screens: the printer box sits in the staff column all the time (StaffScreen).</summary>
+        public bool AlwaysShowBox { get; set; }
 
         void Start()
         {
@@ -124,6 +138,30 @@ namespace FruitGame
         /// <summary>Seconds until a print sent now (with `ahead` queued in front) comes out, roughly.</summary>
         public int WaitSeconds(int ahead) => Mathf.RoundToInt(config.printSeconds * (ahead + 1) * Mathf.Max(1, config.printCopies));
 
+        /// <summary>One line for the staff panel's Status card: state, paper and ink.</summary>
+        public string Summary
+        {
+            get
+            {
+                string st, al;
+                lock (gate) { st = state; al = alerts; }
+                string problem = !string.IsNullOrEmpty(al) && al != "none" ? $" · alert: {al}" : "";
+                return $"{st} · paper {PaperLeft}/{config.trayCapacity} · ink {InkLeft}/{config.inkCapacity}{problem}";
+            }
+        }
+
+        /// <summary>The printers this computer knows (macOS: lpstat -e), for the staff Settings.</summary>
+        public static string[] ListPrinters()
+        {
+            if (!IsMac) return new string[0];
+            try
+            {
+                var (_, output, _) = Run("/usr/bin/lpstat", "-e", 5000);
+                return output.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
+            }
+            catch { return new string[0]; }
+        }
+
         public void PaperRefilled()
         {
             PlayerPrefs.SetInt(PaperKey, config.trayCapacity);
@@ -146,14 +184,8 @@ namespace FruitGame
 
         void Update()
         {
-            var kb = Keyboard.current;
-            if (kb != null)
-            {
-                if (kb.f6Key.wasPressedThisFrame) showBox = !showBox;
-                if (showBox && !CameraMenu.IsOpen && (kb.digit1Key.wasPressedThisFrame || kb.numpad1Key.wasPressedThisFrame)) PaperRefilled();
-                if (showBox && !CameraMenu.IsOpen && (kb.digit2Key.wasPressedThisFrame || kb.numpad2Key.wasPressedThisFrame)) InkReplaced();
-            }
-
+            // The box lives on the staff panel's Printing page (StaffPanel), which shows and hides it.
+            showBox = true;
             string st, al;
             int queued;
             lock (gate) { st = state; al = alerts; queued = pending.Count; }
@@ -163,12 +195,12 @@ namespace FruitGame
             {
                 if (BoxObject.activeSelf != showBox) BoxObject.SetActive(showBox);
                 if (showBox)
-                    staffBox.text = "Printer  (F6)\n" +
+                    staffBox.text =
                                     $"{st}\n" +
                                     (problem ? $"Printer alert: {al}\n" : "") +
                                     $"Queued: {queued}\n" +
-                                    $"Paper: {PaperLeft}/{config.trayCapacity} left  [1]\n" +
-                                    $"Ink: {InkLeft}/{config.inkCapacity} prints left  [2]\n" +
+                                    $"Paper: {PaperLeft}/{config.trayCapacity} left\n" +
+                                    $"Ink: {InkLeft}/{config.inkCapacity} prints left\n" +
                                     $"Printed so far: {PlayerPrefs.GetInt(TotalKey, 0)}" +
                                     (LastError != null ? $"\n{LastError}" : "");
             }
@@ -179,9 +211,11 @@ namespace FruitGame
                     : LowPaper ? $"Paper low: {PaperLeft} left"
                     : LowInk ? $"Ink low: {InkLeft} prints left"
                     : null;
-                bool show = w != null && !showBox;
+                // One screen: a staff line on the guest screen while the staff panel is closed (with two screens
+                // StaffScreen turns it off: the panel always shows the printer).
+                bool show = w != null && !StaffPanel.Open && !AlwaysShowBox;
                 if (warning.gameObject.activeSelf != show) warning.gameObject.SetActive(show);
-                if (show) warning.text = w + "  (F6)";
+                if (show) warning.text = w + "  (F1 staff panel)";
             }
         }
 

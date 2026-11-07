@@ -46,8 +46,9 @@ crashlytics-build.properties
 # references survive: copy the files back into place BEFORE opening the project (see README, 준비).
 # ---------------------------------------------------------------------------------------------------------------------
 
-# Robust Video Matting model (GPL-3.0, 107 MB): download it instead.
+# Robust Video Matting models (GPL-3.0; 107 MB and 15 MB): download them instead.
 Assets/FruitGame/ML/rvm_resnet50_fp32.onnx
+Assets/FruitGame/ML/rvm_mobilenetv3_fp32.onnx
 
 # Low Poly Trees Asset Pack (Lite): "do not redistribute or resell these assets, even if they are modified".
 Assets/FruitGame/Art/Models/Trees/*

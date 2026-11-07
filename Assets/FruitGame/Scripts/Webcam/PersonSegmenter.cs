@@ -9,7 +9,10 @@ namespace FruitGame
     /// Preferred: Robust Video Matting (RVM), a video matting model that carries four recurrent state tensors
     /// from frame to frame, so hair and clothing edges stay stable; runs on the full 540×720 frame and outputs a
     /// soft alpha matte at that resolution (rounded up to RVM-friendly sizes, e.g. 576×768). Fallback: MediaPipe Selfie Segmentation at 256×256.
+    /// Three options can be switched live for comparison (M6 2.2; F7 while the F1 debug view is open): RVM ResNet-50,
+    /// the lighter RVM MobileNetV3 and MediaPipe. Model costs on this computer: FruitGame > ML > Benchmark Models.
     /// </summary>
+    [DefaultExecutionOrder(-400)]
     public class PersonSegmenter : MonoBehaviour
     {
         [SerializeField] WebcamSource source;
@@ -17,13 +20,26 @@ namespace FruitGame
         [SerializeField] ModelAsset rvmModel;
         [Tooltip("RVM's internal downsample ratio: lower = faster, higher = finer detail. ~0.4–0.6 suits 540×720.")]
         [SerializeField, Range(0.1f, 1f)] float rvmDownsample = 0.5f;
+        [Tooltip("RVM MobileNetV3 ONNX (GPL-3.0): about five times cheaper than ResNet-50 at downsample 0.25.")]
+        [SerializeField] ModelAsset rvmLightModel;
+        [SerializeField, Range(0.1f, 1f)] float rvmLightDownsample = 0.25f;
         [Tooltip("MediaPipe Selfie Segmentation ONNX, used only if no RVM model is set.")]
         [SerializeField] ModelAsset model;
+        [Tooltip("Which model to start with (switchable live with F7 while the F1 debug view is open).")]
+        [SerializeField] Option startWith = Option.RvmMobileNet;
         [SerializeField] BackendType backend = BackendType.GPUCompute;
         [Tooltip("Frame rate the game should keep; RVM gets whatever time is left each frame.")]
         [SerializeField] float targetFrameRate = 60f;
 
         const int MediaPipeSize = 256;
+
+        public enum Option { RvmResNet50, RvmMobileNet, MediaPipe }
+        /// <summary>The model to use: startWith, unless the staff Settings saved another (StaffPanel).</summary>
+        public static Option Preferred { get; set; } = Option.RvmMobileNet;
+
+        void Awake() => Preferred = startWith;
+        public Option Current { get; private set; }
+        float downsample;
 
         public RenderTexture Mask { get; private set; }
         /// <summary>True once at least one mask has been produced.</summary>
@@ -45,31 +61,62 @@ namespace FruitGame
 
         void Start()
         {
-            if (source == null || (rvmModel == null && model == null))
+            if (source == null || (rvmModel == null && rvmLightModel == null && model == null))
             {
                 Status = "Missing model or webcam source";
                 enabled = false;
                 return;
             }
+            Use(Available(Preferred) ? Preferred : Next(Preferred));
+        }
 
-            UsingRvm = rvmModel != null;
-            worker = new Worker(UsingRvm ? BuildRvm() : ModelLoader.Load(model), backend);
+        bool Available(Option o) => o == Option.RvmResNet50 ? rvmModel != null : o == Option.RvmMobileNet ? rvmLightModel != null : model != null;
+
+        Option Next(Option o)
+        {
+            for (int i = 1; i <= 3; i++)
+            {
+                var n = (Option)(((int)o + i) % 3);
+                if (Available(n)) return n;
+            }
+            return o;
+        }
+
+        /// <summary>Switches to the next available model (staff comparison, F7).</summary>
+        public void Cycle() => Use(Next(Current));
+
+        public void Use(Option option)
+        {
+            if (!Available(option)) return;
+            worker?.Dispose();
+            run = null;
+            Current = option;
+            UsingRvm = option != Option.MediaPipe;
+            downsample = option == Option.RvmMobileNet ? rvmLightDownsample : rvmDownsample;
+            worker = new Worker(UsingRvm ? BuildRvm(option == Option.RvmMobileNet ? rvmLightModel : rvmModel) : ModelLoader.Load(model), backend);
+            input?.Dispose();
+            input = null;
+            outputChecked = false;
             outputTransform = new TextureTransform();
+            frames = 0;
             rateWindowStart = Time.unscaledTime;
+            layersPerFrame = 50f;
             Status = "Waiting for camera";
         }
 
+        string Label => Current == Option.RvmResNet50 ? "RVM ResNet-50" : Current == Option.RvmMobileNet ? "RVM MobileNetV3" : "MediaPipe";
+
         /// <summary>RVM with downsample_ratio baked in as a constant; outputs pha, r1o … r4o.</summary>
-        Model BuildRvm()
+        Model BuildRvm(ModelAsset asset)
         {
-            var rvm = ModelLoader.Load(rvmModel);
+            var rvm = ModelLoader.Load(asset);
             var graph = new FunctionalGraph();
             var src = graph.AddInput(rvm, 0);
             var r1 = graph.AddInput(rvm, 1);
             var r2 = graph.AddInput(rvm, 2);
             var r3 = graph.AddInput(rvm, 3);
             var r4 = graph.AddInput(rvm, 4);
-            var ratio = Functional.Constant(new TensorShape(1), new[] { rvmDownsample });
+            var ratio = Functional.Constant(new TensorShape(1), new[] { downsample });
             var outs = Functional.Forward(rvm, src, r1, r2, r3, r4, ratio);
             ResetStates();
             return graph.Compile(outs[1], outs[2], outs[3], outs[4], outs[5]);
@@ -164,13 +211,13 @@ namespace FruitGame
                 bool channelLast = s.rank == 4 && s[3] == 1 && s[1] != 1;
                 outputTransform = new TextureTransform().SetTensorLayout(channelLast ? TensorLayout.NHWC : TensorLayout.NCHW);
                 outputChecked = true;
-                Debug.Log($"[FruitGame] Segmentation: {(UsingRvm ? $"RVM (downsample {rvmDownsample}, time-sliced)" : "MediaPipe")}, " +
+                Debug.Log($"[FruitGame] Segmentation: {Label}{(UsingRvm ? $" (downsample {downsample}, time-sliced)" : "")}, " +
                           $"input {input.shape}, alpha {s}");
             }
 
             TextureConverter.RenderToTexture(alpha, Mask, outputTransform);
             HasMask = true;
-            Status = UsingRvm ? $"RVM matte live ({layersPerFrame:0} layers/frame)" : "Mask live";
+            Status = UsingRvm ? $"{Label} matte live ({layersPerFrame:0} layers/frame)" : $"{Label} mask live";
             CountRate();
         }
 
@@ -181,7 +228,7 @@ namespace FruitGame
         /// </summary>
         int RvmSize(int frameSide)
         {
-            int unit = Mathf.Max(1, Mathf.RoundToInt(32f / rvmDownsample));
+            int unit = Mathf.Max(1, Mathf.RoundToInt(32f / downsample));
             return Mathf.CeilToInt(frameSide / (float)unit) * unit;
         }
 

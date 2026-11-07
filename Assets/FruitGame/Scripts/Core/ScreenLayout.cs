@@ -51,17 +51,19 @@ namespace FruitGame
         void Apply()
         {
             if (cam == null || config == null) return;
+            // The guest screen's size (GuestDisplay: in the Editor, the Display 1 Game view even when another has focus).
+            var size = GuestDisplay.Size;
             bool landscape = config.orientation == OrientationSetting.Landscape
-                || (config.orientation == OrientationSetting.Auto && Screen.width >= Screen.height);
-            if (Screen.width == lastW && Screen.height == lastH && landscape == lastLandscape) return;
-            lastW = Screen.width;
-            lastH = Screen.height;
+                || (config.orientation == OrientationSetting.Auto && size.x >= size.y);
+            if (size.x == lastW && size.y == lastH && landscape == lastLandscape) return;
+            lastW = size.x;
+            lastH = size.y;
             bool switched = landscape != lastLandscape;
             lastLandscape = landscape;
             IsLandscape = landscape;
 
             float aspect = Aspect;
-            float window = (float)Screen.width / Mathf.Max(1, Screen.height);
+            float window = (float)size.x / Mathf.Max(1, size.y);
             Rect rect = window > aspect
                 ? new Rect((1f - aspect / window) * 0.5f, 0f, aspect / window, 1f)
                 : new Rect(0f, (1f - window / aspect) * 0.5f, 1f, window / aspect);

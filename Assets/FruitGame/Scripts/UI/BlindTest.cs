@@ -34,7 +34,11 @@ namespace FruitGame
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb != null && kb.f5Key.wasPressedThisFrame) cover.SetActive(!cover.activeSelf);
+            if (kb != null && kb.f5Key.wasPressedThisFrame) Toggle();
         }
+
+        /// <summary>Blanks or un-blanks the guest screen (F5, or B in the staff panel).</summary>
+        public void Toggle() => cover.SetActive(!cover.activeSelf);
+        public bool On => cover != null && cover.activeSelf;
     }
 }
