@@ -77,13 +77,14 @@ namespace FruitGame
 
             cardRow = new GameObject("Cards", typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
             cardRow.SetParent(root, false);
-            cardRow.anchorMin = new Vector2(0.04f, 0.17f); cardRow.anchorMax = new Vector2(0.96f, 0.78f);
+            cardRow.anchorMin = new Vector2(0.1f, 0.17f); cardRow.anchorMax = new Vector2(0.9f, 0.78f);
             cardRow.offsetMin = cardRow.offsetMax = Vector2.zero;
             var row = cardRow.GetComponent<HorizontalLayoutGroup>();
             row.spacing = 48f;
             row.childAlignment = TextAnchor.MiddleCenter;
             row.childControlWidth = row.childControlHeight = true;
             row.childForceExpandWidth = row.childForceExpandHeight = false;
+            row.spacing = 40f;
 
             var back = Instantiate(backStyle, root);
             back.name = "Back Button";
@@ -154,8 +155,9 @@ namespace FruitGame
             var holder = new GameObject(titleKey, typeof(RectTransform), typeof(LayoutElement)).GetComponent<RectTransform>();
             holder.SetParent(cardRow, false);
             var le = holder.GetComponent<LayoutElement>();
-            le.preferredWidth = 640f;
-            le.flexibleWidth = 1f;
+            // Narrow cards with the background showing around them; the picture cards a little wider than the words-only ones.
+            le.preferredWidth = diagram.HasValue ? 520f : 440f;
+            le.flexibleWidth = 0f;
             // Cards with a picture are tall; the difficulty cards (words only) are shorter, their text centred.
             le.preferredHeight = diagram.HasValue ? 760f : 440f;
 
@@ -178,7 +180,7 @@ namespace FruitGame
             var pc = panelStyle.color;
             img.color = new Color(pc.r, pc.g, pc.b, 1f); // fully opaque: the game view composites alpha
             var v = card.GetComponent<VerticalLayoutGroup>();
-            v.padding = new RectOffset(40, 40, 36, 40);
+            v.padding = new RectOffset(24, 24, 28, 28);
             v.spacing = 20f;
             v.childAlignment = diagram.HasValue ? TextAnchor.UpperCenter : TextAnchor.MiddleCenter;
             v.childControlWidth = v.childControlHeight = true;
@@ -219,6 +221,8 @@ namespace FruitGame
         {
             var t = Instantiate(bodyStyle, parent);
             Strip(t.gameObject);
+            // The font's plain pixel material: the cloned label's shadow material doubled some glyphs at this size.
+            if (t.font != null) t.fontSharedMaterial = t.font.material;
             t.gameObject.SetActive(true);
             t.name = key ?? "Badge";
             t.fontSize = size;

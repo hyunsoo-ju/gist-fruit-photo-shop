@@ -128,8 +128,9 @@ namespace FruitGame
 
             // A lead-in to read the prompt before the pose starts counting: 5 s for the centre, 3 s after that.
             // By ear it starts once the narrator has finished the prompt.
-            if (ByEar && narrator.IsSpeaking) leadInStart = -1f;
-            else if (leadInStart < 0f) leadInStart = Time.unscaledTime;
+            // It starts once per pose, after the step's prompt, and never restarts (later lines, such as "hold it
+            // there", must not set it back).
+            if (leadInStart < 0f && !(ByEar && narrator.IsSpeaking)) leadInStart = Time.unscaledTime;
             float leadIn = step == Step.Centre ? config.calibLeadInCentre : config.calibLeadIn;
             float left = leadInStart < 0f ? leadIn : leadIn - (Time.unscaledTime - leadInStart);
             if (left > 0f)
