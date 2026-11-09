@@ -6,10 +6,10 @@ namespace FruitGame
     /// <summary>
     /// Draws the voxel buttons (Docs/DESIGN.md §15, M6 1.3). Each button's blocks are rendered into its own small image
     /// that sits in the button's place in the UI, so panels, fades and transitions treat it like any other image (3D
-    /// meshes on the HUD camera would draw over or under panels). One offscreen camera, far from the game, renders a
-    /// button only when it changes (hover, press, its label, its size or place). Seen as if from the middle of the
-    /// screen: every button turns its face toward the middle of the screen, sideways and up or down, and is seen a
-    /// little from above.
+    /// meshes on the HUD camera would draw over or under panels). One offscreen perspective camera, far from the game,
+    /// renders a button only when it changes (hover, press, its label, its size or place). The screen reads like the
+    /// inside of a box seen from its middle: a button in the middle faces straight out, and the further out one is, the
+    /// more its outer edge swings toward the viewer and grows, its inner edge shrinking away.
     /// </summary>
     public class VoxelButtons : MonoBehaviour
     {
@@ -17,17 +17,21 @@ namespace FruitGame
         [SerializeField] Material material;
         [Tooltip("The HUD frame, whose middle the buttons are seen from.")]
         [SerializeField] RectTransform frame;
-        [Tooltip("Viewing distance as a multiple of the frame's height (like a ~30° lens): smaller = stronger turn.")]
-        [SerializeField] float viewDistance = 1.87f;
-        [Tooltip("Every button is also seen a little from above, so the cap's front edge (and so hover and press) always shows.")]
-        [SerializeField] float basePitch = 12f;
-        [Tooltip("Room around each button's image for the sides that show, as a fraction of its size.")]
-        [SerializeField] float padding = 0.12f;
+        [Tooltip("How far out a button must be to turn 45°, as a multiple of the frame's short side: smaller = stronger turn.")]
+        [SerializeField] float turnDistance = 0.5f;
+        [Tooltip("The most any button turns, sideways or up and down (degrees).")]
+        [SerializeField] float maxTurn = 16f;
+        [Tooltip("The camera's distance from each button, as a multiple of the button's longer side: smaller = stronger taper.")]
+        [SerializeField] float closeness = 5f;
+        [Tooltip("Room around each button's image for its growing outer edge, as a fraction of its size.")]
+        [SerializeField] float margin = 0.16f;
         [SerializeField] bool enableVoxelButtons = true;
 
         public static VoxelButtons Instance { get; private set; }
         public static bool On => Instance != null && Instance.enableVoxelButtons;
-        public float Padding => padding;
+        public float Padding => margin;
+        public float Closeness => closeness;
+        public RectTransform Frame => frame;
         public Material BlockMaterial => blockMaterial;
 
         static readonly Vector3 Stage = new Vector3(0f, -100000f, 0f);
@@ -48,7 +52,7 @@ namespace FruitGame
             cam.transform.SetParent(transform, false);
             cam.transform.position = Stage + new Vector3(0f, 0f, -1000f);
             cam.transform.rotation = Quaternion.identity;
-            cam.orthographic = true;
+            cam.orthographic = false;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0f, 0f, 0f, 0f);
             cam.cullingMask = 1 << layer;
@@ -69,6 +73,13 @@ namespace FruitGame
 
         public void MarkDirty(KeycapButton button) => dirty.Add(button);
 
+        /// <summary>Buttons only redraw when they change, so a value edited in the Inspector during play redraws them all.</summary>
+        void OnValidate()
+        {
+            if (!Application.isPlaying) return;
+            foreach (var b in FindObjectsByType<KeycapButton>(FindObjectsSortMode.None)) dirty.Add(b);
+        }
+
         void LateUpdate()
         {
             if (dirty.Count == 0) return;
@@ -80,10 +91,10 @@ namespace FruitGame
         /// <summary>The turn for a button centred at `screenCentre` (canvas units, relative to the frame's middle).</summary>
         public Quaternion ViewTurn(Vector2 fromMiddle)
         {
-            float d = Mathf.Max(1f, frame.rect.height * viewDistance);
-            // Turned to face the middle of the screen (a button on the right turns its face toward the left).
-            float yaw = Mathf.Atan2(fromMiddle.x, d) * Mathf.Rad2Deg;
-            float pitch = -Mathf.Atan2(fromMiddle.y, d) * Mathf.Rad2Deg - basePitch;
+            float d = Mathf.Max(1f, Mathf.Min(frame.rect.width, frame.rect.height) * turnDistance);
+            // The outer edge swings toward the viewer (a button on the right turns its face toward the left).
+            float yaw = Mathf.Clamp(Mathf.Atan2(fromMiddle.x, d) * Mathf.Rad2Deg, -maxTurn, maxTurn);
+            float pitch = Mathf.Clamp(-Mathf.Atan2(fromMiddle.y, d) * Mathf.Rad2Deg, -maxTurn, maxTurn);
             return Quaternion.Euler(pitch, yaw, 0f);
         }
 

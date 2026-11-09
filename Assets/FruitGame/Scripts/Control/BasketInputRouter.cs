@@ -26,6 +26,13 @@ namespace FruitGame
         /// <summary>True while the basket follows the mouse/keyboard instead of the face (staff panel, M).</summary>
         public bool MouseControl => forceFallback;
 
+        /// <summary>The optional numpad's 4 and 6 steer: the basket stops following the face until the visit ends.</summary>
+        public void UseKeysForThisVisit() { if (!forceFallback) { forceFallback = true; keysThisVisit = true; } }
+
+        public void EndVisit() { if (keysThisVisit) { forceFallback = false; keysThisVisit = false; } }
+
+        bool keysThisVisit;
+
         public void ToggleMouseControl()
         {
             forceFallback = !forceFallback;

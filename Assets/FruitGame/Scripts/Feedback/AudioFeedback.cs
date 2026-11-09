@@ -21,6 +21,9 @@ namespace FruitGame
 
         void Awake() => source = GetComponent<AudioSource>();
 
+        /// <summary>Silent while the attract screen plays its sample round.</summary>
+        public bool Muted { get; set; }
+
         public void PlayCatch(bool golden = false) => Play(catchPop, golden ? 1.35f : Random.Range(0.95f, 1.08f));
         public void PlayBomb() => Play(missThud, 0.55f, 1.2f);
         public void PlayRimGraze() => Play(rimTink);
@@ -35,8 +38,10 @@ namespace FruitGame
         void Play(AudioClip clip, float pitch = 1f, float gain = 1f)
         {
             if (clip == null || source == null) return;
+            if (Muted) return;
             source.pitch = pitch;
-            source.PlayOneShot(clip, volume * gain);
+            // Sound mode layers these with the beeps and chimes; together they clipped at full level.
+            source.PlayOneShot(clip, volume * gain * (Difficulty.Auditory ? 0.6f : 1f));
         }
     }
 }

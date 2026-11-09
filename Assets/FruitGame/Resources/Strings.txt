@@ -4,8 +4,8 @@ start.hint	머리를 움직여서 바구니를 옮겨요	Move your head to steer
 start.play	시작	Play
 start.calibrate	보정하기	Calibrate
 start.easy	쉬움 모드	Easy mode
-start.auditory	소리로 하기	Play by sound
-start.auditoryTag	소리 모드	Sound mode
+start.auditory	음성 안내	Voice assist
+start.auditoryTag	음성 안내 켜짐	Voice assist on
 hud.go	시작!	Go!
 hud.lives	목숨 {0}	Lives {0}
 hud.scoreboard	점수표	Scoreboard
@@ -18,8 +18,8 @@ common.back	뒤로	Back
 facelost.title	얼굴이 안 보여요!	Can't see you!
 facelost.sub	카메라 앞으로 돌아와 주세요	Step back in front of the camera
 over.heading	시간 끝!	Time's up!
-over.newBest	최고 기록!	New best!
-over.best	최고 {0}점	Best {0}
+over.newBest	오늘의 최고 기록!	Today's best!
+over.best	오늘 최고 {0}점	Today's best {0}
 over.missed	놓친 과일 {0}개	Missed {0}
 over.bombs	폭탄 {0}개	Bombs {0}
 over.none	받은 과일이 없어요	No fruit caught
@@ -97,3 +97,19 @@ fruit.orange	오렌지	Orange
 fruit.pear	배	Pear
 fruit.pineapple	파인애플	Pineapple
 fruit.watermelon	수박	Watermelon
+start.contrast	고대비	High contrast
+voice.repeat	다시	Again
+voice.stop	멈춤	Stop
+voice.louder	크게	Louder
+voice.quieter	작게	Softer
+voice.speed	속도	Speed
+voice.pressFive	5번을 눌러 주세요	Press 5
+walk.hard	어려움	Hard
+walk.hard.desc	아주 빠르고\n폭탄이 많아요	Very fast,\nmore bombs
+over.golden	황금 과일 {0}개	Golden {0}
+photo.printTime	인쇄는 약 {0}초 걸려요	A print takes about {0} s
+idle.warn	아직 계세요? 화면을 누르면 계속해요.\n{0}초 뒤에 처음으로 돌아가요	Still there? Touch the screen to stay.\nBack to the start in {0} s
+idle.pauseWarn	화면을 누르면 계속 기다려요.\n{0}초 뒤에 게임이 끝나요	Touch the screen to keep waiting.\nThe round ends in {0} s
+attract.1	카메라 앞에 서 보세요	Stand in front of the camera
+attract.2	머리만 움직여서 과일을 받아요	Catch fruit by moving your head
+attract.3	네컷 사진을 가져가세요	Take home your four-cut photo

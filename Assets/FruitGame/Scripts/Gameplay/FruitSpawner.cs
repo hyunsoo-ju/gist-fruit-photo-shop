@@ -37,6 +37,8 @@ namespace FruitGame
         public Func<float> Elapsed { get; set; } = () => 0f;
 
         public IReadOnlyList<FruitType> FruitTypes => fruitTypes;
+        /// <summary>The fruit in the air (the attract screen's pilot reads it).</summary>
+        public IReadOnlyList<FallingFruit> Active => active;
         public bool Spawning { get; private set; }
         public bool HasActiveFruit
         {
@@ -59,7 +61,7 @@ namespace FruitGame
             lastSpawnTime = -1f;
             float end = config.roundDuration - config.specialsEndBefore;
             Schedule(goldenAt, config.goldenPerRound, 0f, end);
-            Schedule(bombAt, Difficulty.Gentle || bombPrefab == null ? 0 : config.bombsPerRound, config.bombAfterSeconds, end);
+            Schedule(bombAt, bombPrefab == null ? 0 : config.BombsPerRound, config.bombAfterSeconds, end);
         }
 
         readonly List<float> goldenAt = new List<float>();
@@ -102,7 +104,7 @@ namespace FruitGame
             float beat = config.DropIntervalAt(progress);
             bool afterLanding = active.Count == 0 && nextSpawnTime >= 0f && Time.time >= nextSpawnTime;
             // On the beat (later in the round): the next drops on time, even while the last is still falling.
-            bool onBeat = beat > 0f && active.Count < config.maxFruitInAir && lastSpawnTime >= 0f && Time.time >= lastSpawnTime + beat;
+            bool onBeat = beat > 0f && active.Count < config.MaxFruitInAir && lastSpawnTime >= 0f && Time.time >= lastSpawnTime + beat;
             if (afterLanding || onBeat)
             {
                 nextSpawnTime = -1f;

@@ -117,7 +117,7 @@ namespace FruitGame
             frameMirror.SetParent(mirrorImage.transform, false);
             if (faceBox != null) faceBox.SetParent(frameMirror, false);
 #if UNITY_EDITOR
-            noGuestHint = Text("No Guest View", mirrorImage.transform, 28f);
+            noGuestHint = Text("No Guest View", mirrorImage.transform, 32f);
             noGuestHint.text = "No Game view is showing Display 1, so there's no guest screen to mirror.\n" +
                                "Open another Game view (Window > General > Game) and leave it on Display 1.";
             noGuestHint.alignment = TextAlignmentOptions.Center;
@@ -138,7 +138,7 @@ namespace FruitGame
             panel.Build(column, two);
 
             var statusCard = panel.StatusCard;
-            if (status != null) Fill(status.rectTransform, statusCard, new Vector2(0f, 160f), 20f, 52f);
+            if (status != null) Fill(status.rectTransform, statusCard, new Vector2(0f, 160f), 16f, 52f);
             if (maskPreview != null)
             {
                 maskPreview.transform.SetParent(statusCard, false);
@@ -153,7 +153,7 @@ namespace FruitGame
                 Stretch(printerPanel, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
                 var img = printerPanel.GetComponent<Image>();
                 if (img != null) img.enabled = false;
-                if (printerBox != null) Fill(printerBox.rectTransform, printerPanel, Vector2.zero, 20f, 0f);
+                if (printerBox != null) Fill(printerBox.rectTransform, printerPanel, Vector2.zero, 16f, 0f);
             }
             if (two && printerWarning != null) printerWarning.gameObject.SetActive(false);
         }

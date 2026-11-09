@@ -36,7 +36,7 @@ namespace FruitGame
         Mesh borderMesh, capMesh;
         Color32 colour;
         string builtLabel;
-        bool builtLive;
+        bool builtLive, builtContrast;
         Vector2Int builtBlocks;
         Vector2 lastPlace;
         Vector2Int lastPixels;
@@ -96,7 +96,7 @@ namespace FruitGame
         static Color32 ColourOf(string sprite)
         {
             if (sprite.Contains("Slate")) return new Color32(0x5A, 0x6B, 0x7D, 0xFF);
-            if (sprite.Contains("Orange")) return new Color32(0xF2, 0x8C, 0x26, 0xFF);
+            if (sprite.Contains("Orange")) return new Color32(0xB8, 0x50, 0x0A, 0xFF); // 4.8:1 with the cream label (M6 6.9)
             return new Color32(0xC2, 0x18, 0x5B, 0xFF);
         }
 
@@ -121,7 +121,7 @@ namespace FruitGame
 
         public void OnPointerEnter(PointerEventData e) { hover = true; Apply(); }
         public void OnPointerExit(PointerEventData e) { hover = false; pressed = false; Apply(); }
-        public void OnPointerDown(PointerEventData e) { pressed = true; Apply(); }
+        public void OnPointerDown(PointerEventData e) { pressed = true; Apply(); if (Live && Narrator.Instance != null) Narrator.Instance.Click(); }
         public void OnPointerUp(PointerEventData e) { pressed = false; Apply(); }
 
         bool Live => button == null || button.interactable;
@@ -159,7 +159,7 @@ namespace FruitGame
             var place = vb.FromMiddle((RectTransform)transform);
             var pixels = TargetPixels();
             string text = label != null ? label.text : "";
-            if (State != lastState || text != builtLabel || pixels != lastPixels || (place - lastPlace).sqrMagnitude > 4f)
+            if (State != lastState || text != builtLabel || HighContrast.On != builtContrast || pixels != lastPixels || (place - lastPlace).sqrMagnitude > 4f)
                 vb.MarkDirty(this);
         }
 
@@ -179,8 +179,9 @@ namespace FruitGame
             var blocks = new Vector2Int(Mathf.Max(12, Mathf.RoundToInt(rect.width / block)), Mathf.Max(10, Mathf.RoundToInt(rect.height / block)));
             string text = label != null ? label.text : "";
 
-            if (blocks != builtBlocks || text != builtLabel || Live != builtLive)
+            if (blocks != builtBlocks || text != builtLabel || Live != builtLive || HighContrast.On != builtContrast)
             {
+                builtContrast = HighContrast.On;
                 builtLive = Live;
                 builtBlocks = blocks;
                 builtLabel = text;
@@ -190,7 +191,7 @@ namespace FruitGame
                 int capTall = blocks.y - VoxelButtonKit.BorderWidth * 2 - VoxelButtonKit.RidgeInset * 2 - 2;
                 var bits = VoxelButtonKit.Label(label != null ? label.font : null, text, capInner, capTall >= 34 ? 2 : 1);
                 borderMesh = VoxelButtonKit.Border(blocks.x, blocks.y);
-                var capColour = Live ? colour : VoxelButtonKit.Shade(colour, 0.6f);
+                var capColour = HighContrast.On ? new Color32(0, 0, 0, 0xFF) : Live ? colour : VoxelButtonKit.Shade(colour, 0.6f);
                 capMesh = VoxelButtonKit.Cap(blocks.x, blocks.y, capColour, bits);
                 borderT.GetComponent<MeshFilter>().sharedMesh = borderMesh;
                 capT.GetComponent<MeshFilter>().sharedMesh = capMesh;
@@ -216,9 +217,12 @@ namespace FruitGame
                 view.texture = target;
             }
 
-            // Frame the padded button exactly: the image covers the button plus `padding` on every side.
+            // Frame the padded button exactly at its own plane: the image covers the button plus the margin on every side.
             float pad = vb.Padding;
-            cam.orthographicSize = rect.height / block * (1f + 2f * pad) * 0.5f;
+            float halfHeight = rect.height / block * (1f + 2f * pad) * 0.5f;
+            float distance = Mathf.Max(blocks.x, blocks.y) * vb.Closeness;
+            cam.transform.position = vb.StagePosition - new Vector3(0f, 0f, distance);
+            cam.fieldOfView = 2f * Mathf.Atan(halfHeight / distance) * Mathf.Rad2Deg;
             cam.aspect = (float)pixels.x / pixels.y;
             cam.targetTexture = target;
             pivot.gameObject.SetActive(true);

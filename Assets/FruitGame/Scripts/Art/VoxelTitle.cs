@@ -82,7 +82,7 @@ namespace FruitGame
 
         void Update()
         {
-            bool want = game == null || game.State == GameState.Boot;
+            bool want = game == null || (game.State == GameState.Boot && !game.DemoRunning);
             if (want != shown)
             {
                 SetVisible(want);

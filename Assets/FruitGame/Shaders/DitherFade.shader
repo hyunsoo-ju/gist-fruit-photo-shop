@@ -10,6 +10,8 @@ Shader "FruitGame/Dither Fade"
         _Fade("Fade", Range(0, 1)) = 0.6
         _Levels("Levels", Range(1, 8)) = 4
         _DitherPixel("Dither Pixel Size", Float) = 1
+        _Wind("Wind (metres of sway per metre of height, 0 = still)", Float) = 0
+        _WindSpeed("Wind Speed", Float) = 1.6
     }
 
     SubShader
@@ -39,6 +41,8 @@ Shader "FruitGame/Dither Fade"
                 half _Fade;
                 half _Levels;
                 float _DitherPixel;
+                float _Wind;
+                float _WindSpeed;
             CBUFFER_END
 
             struct Attributes
@@ -59,9 +63,16 @@ Shader "FruitGame/Dither Fade"
             Varyings vert(Attributes input)
             {
                 Varyings o;
-                VertexPositionInputs pos = GetVertexPositionInputs(input.positionOS.xyz);
-                o.positionCS = pos.positionCS;
-                o.positionWS = pos.positionWS;
+                float3 ws = TransformObjectToWorld(input.positionOS.xyz);
+                if (_Wind > 0)
+                {
+                    // Sways more the higher above the plant's foot, in a slow wave across the scene with a quicker flutter.
+                    float h = max(0, ws.y - GetObjectToWorldMatrix()._m13);
+                    float t = _Time.y * _WindSpeed;
+                    ws.x += _Wind * h * (sin(t + ws.x * 0.7 + ws.z * 1.1) + 0.5 * sin(t * 2.3 + ws.x * 2.3 + ws.y * 1.7));
+                }
+                o.positionCS = TransformWorldToHClip(ws);
+                o.positionWS = ws;
                 o.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 o.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return o;

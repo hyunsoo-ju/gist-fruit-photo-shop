@@ -121,7 +121,7 @@ namespace FruitGame
 
         /// <summary>
         /// The phone page in the game's pixel style (Docs/DESIGN.md §14): cream background, the pixel title, Neo둥근모,
-        /// the photo in a dark pixel border, and a pink keycap "Save photo" button that sinks when tapped.
+        /// the portrait card in a dark pixel border (short enough that the button stays on screen), and a pink keycap "Save photo" button that sinks when tapped.
         /// </summary>
         static string Page(string title, string id)
         {
@@ -134,7 +134,7 @@ namespace FruitGame
                    "body{font-family:Neo,monospace;background:#fff8ec;color:#1e2233;text-align:center;margin:0;padding:16px;-webkit-font-smoothing:none}" +
                    ".title{width:80%;max-width:420px;image-rendering:pixelated}" +
                    "h2{font-weight:normal;font-size:24px;margin:8px 0 16px}" +
-                   ".photo{max-width:100%;border:4px solid #1e2233;box-shadow:8px 8px 0 #e3d3bc}" +
+                   ".photo{max-width:100%;max-height:72vh;border:4px solid #1e2233;box-shadow:8px 8px 0 #e3d3bc}" +
                    ".btn{display:inline-block;margin:20px 0 8px;padding:12px 28px;background:#c2185b;color:#fff;border:4px solid #1e2233;" +
                    "box-shadow:inset 4px 4px 0 #e85a8c,0 8px 0 #7a0e3a;text-decoration:none;font-size:24px}" +
                    ".btn:active{transform:translateY(8px);box-shadow:inset 4px 4px 0 #e85a8c}" +

@@ -10,7 +10,7 @@ namespace FruitGame
     }
 
     /// <summary>The mode each visit starts in (staff Settings, Docs/DESIGN.md §6).</summary>
-    public enum DefaultMode { Normal, Easy, Sound }
+    public enum DefaultMode { Normal, Easy, Sound, Hard }
 
     /// <summary>What moves the basket (M6 2.3): sliding the head sideways, or turning it.</summary>
     public enum SteerBy { Slide, Turn }
@@ -141,6 +141,14 @@ namespace FruitGame
         public int comboFrom = 5;
         public int comboMultiplier = 2;
 
+        [Header("Hard (Docs/DESIGN.md §6, M6 2.6: faster and busier, never a smaller basket or a wider reach)")]
+        public float hardFallSpeedMax = 5.2f;
+        public float hardDriftCapMax = 2.1f;
+        public float hardNextFruitDelayEnd = 0.2f;
+        public float hardEndDropsPer10s = 13f;
+        [Min(1)] public int hardMaxFruitInAir = 4;
+        [Min(0)] public int hardBombsPerRound = 7;
+
         [Header("Auditory assist mode (Docs/DESIGN.md §11, M18)")]
         [Tooltip("Steady fall speed (m/s), no ramp.")]
         public float auditoryFallSpeed = 2.3f;
@@ -183,14 +191,22 @@ namespace FruitGame
         public float calibLeadInCentre = 5f;
         [Tooltip("Calibration: the same for the left and right poses.")]
         public float calibLeadIn = 3f;
-        [Tooltip("The narrator reads the walkthrough and calibration aloud for everyone, not only in Sound mode.")]
-        public bool narrateSetup = true;
-        [Tooltip("Narrator volume outside Sound mode (the walkthrough and calibration).")]
-        [Range(0f, 1f)] public float setupNarrationVolume = 0.6f;
         public float faceLostPauseDelay = 1f;
         public float faceReturnGrace = 1f;
 
+        [Header("Nobody there (Docs/DESIGN.md §3, M6 3.3)")]
+        [Tooltip("Seconds with nobody in front of the camera before the title shows its invitations.")]
+        public float attractAfter = 30f;
+        [Tooltip("Seconds with no face and no touch on a visit's screens before the warning starts.")]
+        public float walkAwayAfter = 20f;
+        [Tooltip("Every timeout warns this many seconds ahead; any touch or key extends it.")]
+        public float timeoutWarning = 20f;
+        [Tooltip("A pause this long (seconds) ends the round.")]
+        public float pauseLimit = 60f;
+
         [Header("Photo booth (Docs/DESIGN.md §14)")]
+        [Tooltip("Saved cards older than this many days are deleted when the game starts (0 = keep them).")]
+        [Min(0)] public int photoAutoDeleteDays = 14;
         [Tooltip("Caption along the top of the photo frame. {date} becomes today's date. Placeholder until the event name is known.")]
         public string photoCaption = "EVENT NAME · {date}";
         [Tooltip("Korean-style beauty filter on the player in the photo booth (0 = off, 1 = full).")]
@@ -269,16 +285,16 @@ namespace FruitGame
 
         public float FallSpeedAt(float progress01) =>
             Difficulty.Auditory ? auditoryFallSpeed
-                : Mathf.Lerp(fallSpeedStart, Difficulty.Easy ? easyFallSpeedMax : fallSpeedMax, Ease(progress01));
+                : Mathf.Lerp(fallSpeedStart, Difficulty.Easy ? easyFallSpeedMax : Difficulty.Hard ? hardFallSpeedMax : fallSpeedMax, Ease(progress01));
 
         public float DriftCapAt(float progress01) =>
             Difficulty.Auditory ? auditoryDriftCap
-                : Mathf.Lerp(driftCapStart, Difficulty.Easy ? easyDriftCapMax : driftCapMax, Ease(progress01));
+                : Mathf.Lerp(driftCapStart, Difficulty.Easy ? easyDriftCapMax : Difficulty.Hard ? hardDriftCapMax : driftCapMax, Ease(progress01));
 
         /// <summary>Gap before the next fruit: shrinks over the round (steady in Easy).</summary>
         public float NextFruitDelayAt(float progress01) =>
             Difficulty.Auditory ? auditoryFruitDelay
-                : Difficulty.Easy ? nextFruitDelay : Mathf.Lerp(nextFruitDelay, nextFruitDelayEnd, Ease(progress01));
+                : Difficulty.Easy ? nextFruitDelay : Mathf.Lerp(nextFruitDelay, Difficulty.Hard ? hardNextFruitDelayEnd : nextFruitDelayEnd, Ease(progress01));
 
         /// <summary>
         /// Time between drops (−1 in Easy, which waits for each fruit to land). The drop rate climbs in a straight line
@@ -289,7 +305,7 @@ namespace FruitGame
         {
             if (Difficulty.Gentle) return -1f;
             float startRate = 1f / ((spawnY - rimY) / fallSpeedStart + nextFruitDelay);
-            float endRate = Mathf.Max(startRate, endDropsPer10s / 10f);
+            float endRate = Mathf.Max(startRate, (Difficulty.Hard ? hardEndDropsPer10s : endDropsPer10s) / 10f);
             return 1f / Mathf.Lerp(startRate, endRate, Mathf.Clamp01(progress01));
         }
 
@@ -303,6 +319,11 @@ namespace FruitGame
         /// <summary>Assist strength factor: fades over the round (full in Easy).</summary>
         public float AssistLevelAt(float progress01) =>
             Difficulty.Gentle ? 1f : Mathf.Lerp(1f, assistEndLevel, Mathf.Clamp01(progress01));
+
+        /// <summary>Most fruit in the air at once, for the current mode.</summary>
+        public int MaxFruitInAir => Difficulty.Hard ? hardMaxFruitInAir : maxFruitInAir;
+        /// <summary>Bombs per round, for the current mode (the gentle modes have none).</summary>
+        public int BombsPerRound => Difficulty.Gentle ? 0 : Difficulty.Hard ? hardBombsPerRound : bombsPerRound;
 
         public bool UsesTimer => endCondition != EndCondition.Lives;
         public bool UsesLives => endCondition != EndCondition.Timer;

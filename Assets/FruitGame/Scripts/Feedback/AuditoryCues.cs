@@ -32,6 +32,7 @@ namespace FruitGame
 
         const float HeadRadius = 0.0875f, SpeedOfSound = 343f;
         const float BeepLength = 0.045f;
+        const float GlideTime = 0.02f, LevelGlideTime = 0.002f;
 
         // Written on the main thread, read on the audio thread.
         volatile bool active, steady, golden, chimeGolden;
@@ -43,7 +44,8 @@ namespace FruitGame
         float beepClock, beepAge = 1f;
         float[] delayLine = new float[2048];
         int delayWrite;
-        float farLowpass;
+        // Everything that changes while a tone sounds glides per sample; a step in any of these is an audible click.
+        float level, smoothGain = 1f, delayL, delayR, gainL = 1f, gainR = 1f, lowpassCoefL = 1f, lowpassCoefR = 1f, lowpassL, lowpassR;
         // One-shots: a short note sequence, one oscillator.
         float[] shotNotes;
         float shotNoteLength, shotAge = -1f, shotGain;
@@ -109,12 +111,16 @@ namespace FruitGame
             float az = azimuth;
             float sinAz = Mathf.Sin(Mathf.Abs(az));
             // Interaural time difference in samples (the far ear hears it later), level and head-shadow for the far ear.
-            int itd = Mathf.Min(delayLine.Length - 1, Mathf.RoundToInt(HeadRadius / SpeedOfSound * (Mathf.Abs(az) + sinAz) * sampleRate));
+            float itd = Mathf.Min(delayLine.Length - 2, HeadRadius / SpeedOfSound * (Mathf.Abs(az) + sinAz) * sampleRate);
             float nearGain = 1f + 0.15f * sinAz, farGain = 1f - 0.55f * sinAz;
             float cutoff = Mathf.Lerp(18000f, 1600f, sinAz);
             float lpA = 1f - Mathf.Exp(-2f * Mathf.PI * cutoff / sampleRate);
             bool rightNear = az >= 0f;
-            float hz = toneHz, iv = interval, g = gain * volume;
+            float targetDelayL = rightNear ? itd : 0f, targetDelayR = rightNear ? 0f : itd;
+            float targetGainL = rightNear ? farGain : nearGain, targetGainR = rightNear ? nearGain : farGain;
+            float targetCoefL = rightNear ? lpA : 1f, targetCoefR = rightNear ? 1f : lpA;
+            float glide = 1f - Mathf.Exp(-dt / GlideTime), levelGlide = 1f - Mathf.Exp(-dt / LevelGlideTime);
+            float hz = toneHz, iv = interval, targetVol = gain;
             bool st = steady, gold = golden;
 
             if (chimeRequest != lastChime) { lastChime = chimeRequest; StartShot(chimeGolden ? new[] { 1047f, 1319f, 1568f, 2093f, 2637f } : new[] { 784f, 988f, 1175f }, 0.07f, 0.9f); }
@@ -122,14 +128,20 @@ namespace FruitGame
 
             for (int i = 0; i < data.Length; i += channels)
             {
-                // The beep: a short enveloped tone every `interval`, or a steady tone when lined up.
-                float s = 0f;
+                // The beep: a short enveloped tone every `interval`, or a steady tone when lined up. The oscillator runs
+                // on until the level has faded, so switching between them or stopping never cuts a wave mid-swing.
+                float target = 0f;
                 if (on)
                 {
                     beepClock += dt;
                     if (beepClock >= iv) { beepClock = 0f; beepAge = 0f; }
                     beepAge += dt;
-                    float env = st ? 1f : Envelope(beepAge, BeepLength);
+                    target = st ? 0.55f : Envelope(beepAge, BeepLength) * 0.8f;
+                }
+                level += (target - level) * levelGlide;
+                float s = 0f;
+                if (level > 1e-5f)
+                {
                     phase += hz * dt;
                     float tone = Mathf.Sin((float)(phase * 2.0 * Mathf.PI));
                     if (gold)
@@ -137,24 +149,40 @@ namespace FruitGame
                         shimmerPhase += 7.0 * dt;
                         tone = 0.7f * tone + 0.3f * Mathf.Sin((float)(phase * 4.0 * Mathf.PI)) * (0.6f + 0.4f * Mathf.Sin((float)(shimmerPhase * 2.0 * Mathf.PI)));
                     }
-                    s = tone * env * (st ? 0.55f : 0.8f);
+                    s = tone * level;
                 }
                 if (phase > 1e6) phase -= System.Math.Floor(phase);
 
-                // Binaural placement.
+                // Binaural placement: each ear has its own delay, level and head shadow.
                 delayLine[delayWrite] = s;
-                int readIndex = (delayWrite - itd + delayLine.Length) % delayLine.Length;
-                float far = delayLine[readIndex];
+                delayL += (targetDelayL - delayL) * glide;
+                delayR += (targetDelayR - delayR) * glide;
+                gainL += (targetGainL - gainL) * glide;
+                gainR += (targetGainR - gainR) * glide;
+                lowpassCoefL += (targetCoefL - lowpassCoefL) * glide;
+                lowpassCoefR += (targetCoefR - lowpassCoefR) * glide;
+                smoothGain += (targetVol - smoothGain) * glide;
+                lowpassL += lowpassCoefL * (ReadDelay(delayL) - lowpassL);
+                lowpassR += lowpassCoefR * (ReadDelay(delayR) - lowpassR);
                 delayWrite = (delayWrite + 1) % delayLine.Length;
-                farLowpass += lpA * (far - farLowpass);
-                float near = s * nearGain, farOut = farLowpass * farGain;
-                float left = rightNear ? farOut : near, right = rightNear ? near : farOut;
+                float left = lowpassL * gainL, right = lowpassR * gainR;
+                float g = smoothGain * volume;
 
                 // One-shots (chime, miss) play centred.
                 float shot = ShotSample(dt);
                 data[i] += left * g + shot * volume;
                 data[i + 1] += right * g + shot * volume;
             }
+        }
+
+        float ReadDelay(float samples)
+        {
+            float pos = delayWrite - samples;
+            if (pos < 0f) pos += delayLine.Length;
+            int a = (int)pos;
+            int b = (a + 1) % delayLine.Length;
+            float frac = pos - a;
+            return delayLine[a % delayLine.Length] * (1f - frac) + delayLine[b] * frac;
         }
 
         static float Envelope(float age, float length)

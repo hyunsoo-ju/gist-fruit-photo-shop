@@ -37,6 +37,7 @@ namespace FruitGame
         Vector3 visualBaseScale;
 
         public void SetInput(BasketInputSource source) => input = source;
+        public BasketInputSource Input => input;
         /// <summary>The basket's current sideways speed (m/s).</summary>
         public float VelocityX => velocityX;
 

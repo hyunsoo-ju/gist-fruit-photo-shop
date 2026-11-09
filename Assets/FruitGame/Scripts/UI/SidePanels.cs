@@ -7,7 +7,7 @@ namespace FruitGame
 {
     /// <summary>
     /// The landscape HUD in the side areas beside the play column (Docs/DESIGN.md §4, §15), shown during a round. Left,
-    /// under the score: a cream "점수표" (scoreboard) panel with the live score graph and the catch tally. Right, under
+    /// under the score: a cream "점수표" (scoreboard) panel with the catch tally. Right, under
     /// the timer: a film strip of the round's three action shots, 3:4 portrait like the photos that get printed, each
     /// slot filling in as its shot is taken.
     /// Built at start; hidden in portrait, where the HUD stays over the play area.
@@ -30,23 +30,19 @@ namespace FruitGame
         [SerializeField] float stripTop = 224f;
 
         static readonly Color Ink = new Color32(0x1E, 0x22, 0x33, 0xFF);
-        static readonly Color Cream = new Color32(0xFF, 0xF8, 0xEC, 0xFF);
         const int Cuts = 3;
         const float StripHeight = 1100f;
 
         GameObject left, right;
-        ScoreGraph graph;
         TMP_Text heading, tally;
         readonly RawImage[] slots = new RawImage[Cuts];
-        readonly TMP_Text[] slotLabels = new TMP_Text[Cuts];
         int shownHistory = -1, shownShots = -1;
 
         void Awake()
         {
             left = Panel("Left Panel", new Vector2(0f, 1f), new Vector2(panelWidth * 0.5f + margin, -panelTop), panelWidth, 840f, panelSprite);
             heading = Text(left.transform, "Heading", new Vector2(0f, -28f), new Vector2(panelWidth - 64f, 64f), 48, TextAlignmentOptions.Top);
-            graph = Child<ScoreGraph>(left.transform, "Live Graph", new Vector2(0f, -120f), new Vector2(panelWidth - 64f, 300f));
-            tally = Text(left.transform, "Tally", new Vector2(0f, -460f), new Vector2(panelWidth - 64f, 340f), 32, TextAlignmentOptions.TopLeft);
+            tally = Text(left.transform, "Tally", new Vector2(0f, -120f), new Vector2(panelWidth - 64f, 680f), 48, TextAlignmentOptions.TopLeft);
 
             // Three 3:4 slots stacked, the strip just wide enough for them.
             float gap = 24f, pad = 32f;
@@ -58,10 +54,6 @@ namespace FruitGame
                 var pos = new Vector2(0f, -pad - i * (slotH + gap));
                 var back = Child<Image>(right.transform, $"Slot {i + 1}", pos, new Vector2(slotW, slotH));
                 back.color = new Color(1f, 1f, 1f, 0.12f);
-                slotLabels[i] = Text(back.transform, "Label", Vector2.zero, new Vector2(slotW, slotH), 64, TextAlignmentOptions.Center);
-                slotLabels[i].color = Cream;
-                slotLabels[i].rectTransform.anchorMin = slotLabels[i].rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                slotLabels[i].rectTransform.pivot = new Vector2(0.5f, 0.5f);
                 slots[i] = Child<RawImage>(back.transform, "Shot", Vector2.zero, new Vector2(slotW, slotH));
             }
             Strings.Changed += Refresh;
@@ -79,21 +71,18 @@ namespace FruitGame
         {
             var s = game.State;
             bool inRound = s == GameState.Countdown || s == GameState.Playing || s == GameState.RoundEnding || s == GameState.Paused;
-            bool show = ScreenLayout.IsLandscape && inRound;
+            bool show = ScreenLayout.IsLandscape && (inRound || game.DemoRunning);
             left.SetActive(show);
-            right.SetActive(show);
+            right.SetActive(show && !game.DemoRunning); // The sample round takes no photos.
             if (!show) return;
 
             var stats = game.Stats;
             if (stats.History.Count != shownHistory)
             {
                 shownHistory = stats.History.Count;
-                graph.SetData(stats.History, game.Timer.Duration);
                 var sb = new StringBuilder();
                 foreach (var kv in stats.CaughtByType) sb.AppendLine($"{Strings.Fruit(kv.Key)} × {kv.Value}");
                 tally.text = sb.Length == 0 ? Strings.Get("hud.noCatch") : sb.ToString();
-                // 48 px while the list fits the panel (6 lines), 32 px for a long one.
-                tally.fontSize = stats.CaughtByType.Count <= 6 ? 48 : 32;
             }
             heading.text = Strings.Get("hud.scoreboard");
             int shots = booth != null ? booth.ActionShotCount : 0;
@@ -105,7 +94,6 @@ namespace FruitGame
                     var shot = booth != null ? booth.ActionShot(i) : null;
                     slots[i].texture = shot;
                     slots[i].enabled = shot != null;
-                    slotLabels[i].text = (i + 1).ToString();
                 }
             }
         }

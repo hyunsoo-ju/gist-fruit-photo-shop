@@ -209,174 +209,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3534386}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &19293437
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 19293438}
-  - component: {fileID: 19293439}
-  - component: {fileID: 19293440}
-  - component: {fileID: 19293441}
-  m_Layer: 5
-  m_Name: Tally Right
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &19293438
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19293437}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 599405729}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 630, y: -190}
-  m_SizeDelta: {x: 360, y: 340}
-  m_Pivot: {x: 0.5, y: 1}
---- !u!222 &19293439
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19293437}
-  m_CullTransparentMesh: 1
---- !u!114 &19293440
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19293437}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: 
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0657ef24d009d4ba6a7a35748ba36843, type: 2}
-  m_sharedMaterial: {fileID: 6682905371375370407, guid: 0657ef24d009d4ba6a7a35748ba36843, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 0.2, g: 0.25490198, b: 0.30980393, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656bu
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &19293441
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 19293437}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 190, y: -610}
-    sizeDelta: {x: 360, y: 340}
-    localPosition: {x: 190, y: -180, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 630, y: -190}
-    sizeDelta: {x: 360, y: 340}
-    localPosition: {x: 630, y: 240, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &34202571
 GameObject:
   m_ObjectHideFlags: 0
@@ -2522,7 +2354,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 250, y: 140}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &156747237
 MonoBehaviour:
@@ -3319,6 +3151,7 @@ GameObject:
   - component: {fileID: 176250761}
   - component: {fileID: 176250760}
   - component: {fileID: 176250759}
+  - component: {fileID: 176250762}
   m_Layer: 5
   m_Name: Saved
   m_TagString: Untagged
@@ -3440,11 +3273,41 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 379289300}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 488}
-  m_SizeDelta: {x: 900, y: 96}
-  m_Pivot: {x: 0.5, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 560, y: 260}
+  m_SizeDelta: {x: 960, y: 240}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &176250762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 176250758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 488}
+    sizeDelta: {x: 900, y: 96}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 560, y: 260}
+    sizeDelta: {x: 960, y: 240}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &180449687
 GameObject:
   m_ObjectHideFlags: 0
@@ -7501,7 +7364,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.CameraMenu
   source: {fileID: 1957496576}
   style: {fileID: 1622732323}
-  fontSize: 36
 --- !u!1 &473065592
 GameObject:
   m_ObjectHideFlags: 0
@@ -9458,9 +9320,7 @@ RectTransform:
   - {fileID: 1654194219}
   - {fileID: 1344964447}
   - {fileID: 1690172740}
-  - {fileID: 1895166830}
   - {fileID: 1400001044}
-  - {fileID: 19293438}
   - {fileID: 2023390832}
   - {fileID: 1573731792}
   - {fileID: 2097541227}
@@ -9470,7 +9330,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -20}
-  m_SizeDelta: {x: 1800, y: 860}
+  m_SizeDelta: {x: 1600, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &599405730
 MonoBehaviour:
@@ -9528,8 +9388,8 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
     anchoredPosition: {x: 0, y: -20}
-    sizeDelta: {x: 820, y: 1230}
-    localPosition: {x: 0, y: -20, z: 0}
+    sizeDelta: {x: 1240, y: 1060}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
@@ -9537,8 +9397,8 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
     anchoredPosition: {x: 0, y: -20}
-    sizeDelta: {x: 1800, y: 860}
-    localPosition: {x: 0, y: -20, z: 0}
+    sizeDelta: {x: 1600, y: 1000}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &606041263
 GameObject:
@@ -13152,9 +13012,7 @@ MonoBehaviour:
   gameOverScore: {fileID: 1344964449}
   gameOverBest: {fileID: 1690172742}
   gameOverTallyLeft: {fileID: 1400001046}
-  gameOverTallyRight: {fileID: 19293440}
   gameOverMissed: {fileID: 2023390830}
-  gameOverGraph: {fileID: 1895166828}
   popScale: 1.25
   popTime: 0.2
   pulseFromSeconds: 10
@@ -13322,9 +13180,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.VoxelButtons
   material: {fileID: 2100000, guid: e981e24fc3d2942ce9ecd9f5f10e93bc, type: 2}
   frame: {fileID: 1303592882}
-  viewDistance: 1.87
-  basePitch: 12
-  padding: 0.12
+  turnDistance: 0.5
+  maxTurn: 16
+  closeness: 5
+  margin: 0.16
   enableVoxelButtons: 1
 --- !u!1 &808654194
 GameObject:
@@ -14634,6 +14493,7 @@ GameObject:
   - component: {fileID: 929804219}
   - component: {fileID: 929804218}
   - component: {fileID: 929804221}
+  - component: {fileID: 929804222}
   m_Layer: 5
   m_Name: Back Button
   m_TagString: Untagged
@@ -14656,11 +14516,11 @@ RectTransform:
   - {fileID: 1908725600}
   m_Father: {fileID: 1273078647}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 150}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 720, y: -220}
   m_SizeDelta: {x: 300, y: 110}
-  m_Pivot: {x: 0.5, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &929804218
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14770,6 +14630,36 @@ MonoBehaviour:
   face: {fileID: 1908725600}
   pixel: 4
   lipPixels: 3
+--- !u!114 &929804222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 929804216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 150}
+    sizeDelta: {x: 300, y: 110}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 720, y: -220}
+    sizeDelta: {x: 300, y: 110}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &938512339
 GameObject:
   m_ObjectHideFlags: 0
@@ -15831,7 +15721,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 250, y: 140}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1016857984
 MonoBehaviour:
@@ -19515,7 +19405,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 250, y: 140}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1229384333
 MonoBehaviour:
@@ -20016,8 +19906,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -680}
-  m_SizeDelta: {x: 250, y: 140}
+  m_AnchoredPosition: {x: 0, y: -830}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1256037654
 MonoBehaviour:
@@ -20145,18 +20035,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -1055}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: 0, y: -625, z: 0}
+    anchoredPosition: {x: 0, y: -890}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -680}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: 0, y: -250, z: 0}
+    anchoredPosition: {x: 0, y: -830}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1268558051
 GameObject:
@@ -20615,8 +20505,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.49012345, y: 0}
+  m_AnchorMax: {x: 0.50987655, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -20705,6 +20595,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1309185261}
+  - component: {fileID: 1309185262}
   m_Layer: 5
   m_Name: Buttons
   m_TagString: Untagged
@@ -20729,11 +20620,41 @@ RectTransform:
   - {fileID: 2026881276}
   m_Father: {fileID: 379289300}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 170}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 560, y: -140}
   m_SizeDelta: {x: 960, y: 140}
-  m_Pivot: {x: 0.5, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1309185262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1309185260}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 170}
+    sizeDelta: {x: 960, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 560, y: -140}
+    sizeDelta: {x: 960, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1314444536
 GameObject:
   m_ObjectHideFlags: 0
@@ -21242,8 +21163,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -430, y: -190}
-  m_SizeDelta: {x: 780, y: 120}
+  m_AnchoredPosition: {x: 0, y: -180}
+  m_SizeDelta: {x: 1500, y: 280}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1344964448
 CanvasRenderer:
@@ -21300,15 +21221,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 96
-  m_fontSizeBase: 96
+  m_fontSize: 256
+  m_fontSizeBase: 256
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -21362,18 +21283,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -170}
-    sizeDelta: {x: 780, y: 120}
-    localPosition: {x: 0, y: 260, z: 0}
+    anchoredPosition: {x: 0, y: -180}
+    sizeDelta: {x: 1140, y: 280}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -430, y: -190}
-    sizeDelta: {x: 780, y: 120}
-    localPosition: {x: -430, y: 240, z: 0}
+    anchoredPosition: {x: 0, y: -180}
+    sizeDelta: {x: 1500, y: 280}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1001 &1346571349
 PrefabInstance:
@@ -22206,8 +22127,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 250, y: -190}
-  m_SizeDelta: {x: 360, y: 340}
+  m_AnchoredPosition: {x: 0, y: -550}
+  m_SizeDelta: {x: 1500, y: 190}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1400001045
 CanvasRenderer:
@@ -22264,15 +22185,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -22326,18 +22247,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -190, y: -610}
-    sizeDelta: {x: 360, y: 340}
-    localPosition: {x: -190, y: -180, z: 0}
+    anchoredPosition: {x: 0, y: -550}
+    sizeDelta: {x: 1140, y: 250}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 250, y: -190}
-    sizeDelta: {x: 360, y: 340}
-    localPosition: {x: 250, y: 240, z: 0}
+    anchoredPosition: {x: 0, y: -550}
+    sizeDelta: {x: 1500, y: 190}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1408620337
 GameObject:
@@ -24223,8 +24144,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -300, y: -680}
-  m_SizeDelta: {x: 250, y: 140}
+  m_AnchoredPosition: {x: -395, y: -830}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1573731793
 MonoBehaviour:
@@ -24352,18 +24273,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -270, y: -1055}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: -270, y: -625, z: 0}
+    anchoredPosition: {x: -395, y: -890}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -300, y: -680}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: -300, y: -250, z: 0}
+    anchoredPosition: {x: -395, y: -830}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1583273436
 GameObject:
@@ -25903,7 +25824,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -30}
-  m_SizeDelta: {x: 1700, y: 150}
+  m_SizeDelta: {x: 1500, y: 150}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1654194220
 MonoBehaviour:
@@ -26036,8 +25957,8 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -30}
-    sizeDelta: {x: 780, y: 150}
-    localPosition: {x: 0, y: 400, z: 0}
+    sizeDelta: {x: 1140, y: 150}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
@@ -26045,8 +25966,8 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -30}
-    sizeDelta: {x: 1700, y: 150}
-    localPosition: {x: 0, y: 400, z: 0}
+    sizeDelta: {x: 1500, y: 150}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1666845769
 GameObject:
@@ -26408,8 +26329,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 275}
-  m_SizeDelta: {x: 540, y: 810}
+  m_AnchoredPosition: {x: -340, y: 0}
+  m_SizeDelta: {x: 827, y: 1240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1681387301
 MonoBehaviour:
@@ -26428,18 +26349,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0.5}
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 40}
-    sizeDelta: {x: 852, y: 1278}
-    localPosition: {x: 0, y: 275, z: 0}
+    anchoredPosition: {x: 0, y: 90}
+    sizeDelta: {x: 1000, y: 1500}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 0.5}
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 275}
-    sizeDelta: {x: 540, y: 810}
-    localPosition: {x: 0, y: 275, z: 0}
+    anchoredPosition: {x: -340, y: 0}
+    sizeDelta: {x: 827, y: 1240}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1690172739
 GameObject:
@@ -26476,8 +26397,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -430, y: -305}
-  m_SizeDelta: {x: 780, y: 80}
+  m_AnchoredPosition: {x: 0, y: -460}
+  m_SizeDelta: {x: 1500, y: 80}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1690172741
 CanvasRenderer:
@@ -26542,7 +26463,7 @@ MonoBehaviour:
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -26596,18 +26517,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -285}
-    sizeDelta: {x: 780, y: 80}
-    localPosition: {x: 0, y: 145, z: 0}
+    anchoredPosition: {x: 0, y: -460}
+    sizeDelta: {x: 1140, y: 80}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -430, y: -305}
-    sizeDelta: {x: 780, y: 80}
-    localPosition: {x: -430, y: 125, z: 0}
+    anchoredPosition: {x: 0, y: -460}
+    sizeDelta: {x: 1500, y: 80}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1714264427
 GameObject:
@@ -27920,6 +27841,7 @@ GameObject:
   - component: {fileID: 1772935367}
   - component: {fileID: 1772935366}
   - component: {fileID: 1772935368}
+  - component: {fileID: 1772935369}
   m_Layer: 5
   m_Name: Title
   m_TagString: Untagged
@@ -27941,11 +27863,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1273078647}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -230}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 720, y: 240}
   m_SizeDelta: {x: 980, y: 200}
-  m_Pivot: {x: 0.5, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1772935366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28059,6 +27981,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.LocalizedText
   key: photo.pose
+--- !u!114 &1772935369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772935364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 1}
+    anchorMax: {x: 0.5, y: 1}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: -230}
+    sizeDelta: {x: 980, y: 200}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 720, y: 240}
+    sizeDelta: {x: 980, y: 200}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1773083185
 GameObject:
   m_ObjectHideFlags: 0
@@ -29899,6 +29851,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1892239726}
+  - component: {fileID: 1892239727}
   m_Layer: 5
   m_Name: Share Buttons
   m_TagString: Untagged
@@ -29922,11 +29875,41 @@ RectTransform:
   - {fileID: 1050417286}
   m_Father: {fileID: 379289300}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 330}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 560, y: 40}
   m_SizeDelta: {x: 960, y: 140}
-  m_Pivot: {x: 0.5, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1892239727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1892239725}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 330}
+    sizeDelta: {x: 960, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 560, y: 40}
+    sizeDelta: {x: 960, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1894678209
 GameObject:
   m_ObjectHideFlags: 0
@@ -29940,6 +29923,7 @@ GameObject:
   - component: {fileID: 1894678212}
   - component: {fileID: 1894678211}
   - component: {fileID: 1894678214}
+  - component: {fileID: 1894678215}
   m_Layer: 5
   m_Name: Take Photo Button
   m_TagString: Untagged
@@ -29962,11 +29946,11 @@ RectTransform:
   - {fileID: 1816848143}
   m_Father: {fileID: 1273078647}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0}
-  m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 300}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 720, y: -20}
   m_SizeDelta: {x: 560, y: 170}
-  m_Pivot: {x: 0.5, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1894678211
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30076,6 +30060,36 @@ MonoBehaviour:
   face: {fileID: 1816848143}
   pixel: 4
   lipPixels: 3
+--- !u!114 &1894678215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894678209}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0}
+    anchorMax: {x: 0.5, y: 0}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 300}
+    sizeDelta: {x: 560, y: 170}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 720, y: -20}
+    sizeDelta: {x: 560, y: 170}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1895106899
 GameObject:
   m_ObjectHideFlags: 0
@@ -30166,107 +30180,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895106899}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &1895166827
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1895166830}
-  - component: {fileID: 1895166829}
-  - component: {fileID: 1895166828}
-  - component: {fileID: 1895166831}
-  m_Layer: 5
-  m_Name: Score Graph
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1895166828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895166827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29242060105e04ce28669ab73ae6b032, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.ScoreGraph
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  lineColor: {r: 0.76, g: 0.09, b: 0.36, a: 1}
-  fillColor: {r: 0.76, g: 0.09, b: 0.36, a: 0.15}
-  gridColor: {r: 0.2, g: 0.25, b: 0.31, a: 0.15}
-  lineWidth: 6
-  minYRange: 5
---- !u!222 &1895166829
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895166827}
-  m_CullTransparentMesh: 1
---- !u!224 &1895166830
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895166827}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 599405729}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -430, y: -400}
-  m_SizeDelta: {x: 700, y: 200}
-  m_Pivot: {x: 0.5, y: 1}
---- !u!114 &1895166831
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1895166827}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -380}
-    sizeDelta: {x: 700, y: 200}
-    localPosition: {x: 0, y: 50, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -430, y: -400}
-    sizeDelta: {x: 700, y: 200}
-    localPosition: {x: -430, y: 30, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1900939952
 GameObject:
   m_ObjectHideFlags: 0
@@ -30841,6 +30754,7 @@ GameObject:
   - component: {fileID: 1957496586}
   - component: {fileID: 1957496587}
   - component: {fileID: 1957496588}
+  - component: {fileID: 1957496589}
   m_Layer: 0
   m_Name: Systems
   m_TagString: Untagged
@@ -31146,6 +31060,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f17a94a6d8c5a40609bf672f6f066180, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.BlindTest
+--- !u!114 &1957496589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1957496572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0acf471ac2454db38adc8d36a8681e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.LivingScenery
+  blockMaterial: {fileID: 2100000, guid: 2a461d1ba1d9f499d9cbd11e29b989ec, type: 2}
+  swayShader: {fileID: 4800000, guid: b4c270acd8b874bdabc6098035f5b2d6, type: 3}
+  leafTint: {r: 0.6, g: 0.72, b: 0.58, a: 1}
+  grassTint: {r: 0.62, g: 0.74, b: 0.58, a: 1}
+  leafWind: 0.016
+  grassWind: 0.07
+  flowerWind: 0.09
+  extraShrubs: 28
+  butterflies: 5
+  driftingLeaves: 12
 --- !u!1 &1970129390
 GameObject:
   m_ObjectHideFlags: 0
@@ -32375,7 +32311,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.2, g: 0.25490198, b: 0.30980393, a: 0.75}
+  m_fontColor: {r: 0.2, g: 0.25490198, b: 0.30980393, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -32392,15 +32328,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -32461,8 +32397,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 440, y: -560}
-  m_SizeDelta: {x: 780, y: 60}
+  m_AnchoredPosition: {x: 0, y: -745}
+  m_SizeDelta: {x: 1500, y: 70}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2023390833
 MonoBehaviour:
@@ -32481,18 +32417,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -960}
-    sizeDelta: {x: 780, y: 60}
-    localPosition: {x: 0, y: -530, z: 0}
+    anchoredPosition: {x: 0, y: -805}
+    sizeDelta: {x: 1140, y: 70}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 440, y: -560}
-    sizeDelta: {x: 780, y: 60}
-    localPosition: {x: 440, y: -130, z: 0}
+    anchoredPosition: {x: 0, y: -745}
+    sizeDelta: {x: 1500, y: 70}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &2024783875
 GameObject:
@@ -33282,8 +33218,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 300, y: -680}
-  m_SizeDelta: {x: 250, y: 140}
+  m_AnchoredPosition: {x: 395, y: -830}
+  m_SizeDelta: {x: 370, y: 140}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2097541228
 MonoBehaviour:
@@ -33411,18 +33347,18 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 270, y: -1055}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: 270, y: -625, z: 0}
+    anchoredPosition: {x: 395, y: -890}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 300, y: -680}
-    sizeDelta: {x: 250, y: 140}
-    localPosition: {x: 300, y: -250, z: 0}
+    anchoredPosition: {x: 395, y: -830}
+    sizeDelta: {x: 370, y: 140}
+    localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &2112471191
 GameObject:
@@ -33644,9 +33580,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.49012345
     y: 0
-    width: 1
+    width: 0.019753087
     height: 1
   near clip plane: 0.3
   far clip plane: 50

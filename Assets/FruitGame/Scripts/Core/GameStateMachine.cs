@@ -14,7 +14,9 @@ namespace FruitGame
         RoundEnding,
         Paused,
         GameOver,
-        Photo
+        Photo,
+        /// <summary>Voice assist: instructions read out, waiting for the visitor to press 5 (or 확인).</summary>
+        Gate
     }
 
     /// <summary>
@@ -106,6 +108,7 @@ namespace FruitGame
         void Start()
         {
             hud.ShowLives(config.UsesLives);
+            gameObject.AddComponent<IdleWatch>().Init(this, router, hud, narrator, config);
             ResetRound();
             EnterBoot();
         }
@@ -170,9 +173,38 @@ namespace FruitGame
         void BeginCalibration(bool thenPlay)
         {
             ResetRound();
+            RunCalibration(thenPlay);
+        }
+
+        void RunCalibration(bool thenPlay)
+        {
             SetState(GameState.Calibrate);
             hud.HideMessage();
             calibration.Begin(thenPlay);
+        }
+
+        System.Action gateGo;
+
+        /// <summary>Voice assist: says the instructions, and nothing happens until the visitor presses 5.</summary>
+        void Gate(System.Action go, params string[] keys)
+        {
+            SetState(GameState.Gate);
+            gateGo = go;
+            hud.ShowMessage(Strings.Get("voice.pressFive"), null);
+            narrator.Quiet = false;
+            narrator.SayNow(keys);
+        }
+
+        /// <summary>The 5 key: answers whichever "press 5" is waiting. False if none is.</summary>
+        public bool AffirmIfWaiting()
+        {
+            if (State == GameState.Gate)
+            {
+                hud.HideMessage();
+                gateGo();
+                return true;
+            }
+            return State == GameState.Calibrate && calibration != null && calibration.Affirm();
         }
 
         /// <summary>The walkthrough's choices are made (calibrate, then play) or it was backed out of (title).</summary>
@@ -218,7 +250,11 @@ namespace FruitGame
         {
             if (State != GameState.Boot) return;
             Difficulty.Auditory = !Difficulty.Auditory;
-            if (narrator != null) narrator.SayNow(Difficulty.Auditory ? "mode_on" : "mode_off");
+            if (narrator == null) return;
+            narrator.Quiet = false;
+            narrator.Click();
+            if (Difficulty.Auditory) narrator.SayNow("mode_on", Narrator.Buttons);
+            else narrator.SayNow("mode_off");
         }
 
         bool Narrating => Difficulty.Auditory && narrator != null;
@@ -228,18 +264,102 @@ namespace FruitGame
             if (Narrating) narrator.Say(keys);
         }
 
+        /// <summary>The numpad's 7 in the round: the time left and the score.</summary>
+        public void SayRoundStatus()
+        {
+            if (narrator == null) return;
+            narrator.SayNow(Number("time_left_", Mathf.CeilToInt(Timer.Remaining)), Number("score_now_", Stats.Score));
+        }
+
         static string Number(string prefix, int n) => prefix + Mathf.Clamp(n, 0, 99);
 
         /// <summary>Main menu button: abandons the current round and goes back to the start screen.</summary>
         public void ReturnToMenu()
         {
             Time.timeScale = 1f;
-            // The visit is over: the next player starts in the staff's default mode.
-            if (Difficulty.Auditory && narrator != null) narrator.Stop();
-            Difficulty.ResetTo(config.defaultMode);
-            Steering.ResetTo(config.steerBy);
+            EndVisitSettings();
             ResetRound();
             EnterBoot();
+        }
+
+        /// <summary>The visit is over: the next player starts in the staff's default mode.</summary>
+        void EndVisitSettings()
+        {
+            if (narrator != null) narrator.ResetVisit();
+            if (router != null) router.EndVisit();
+            HighContrast.On = false;
+            Difficulty.ResetTo(config.defaultMode);
+            Steering.ResetTo(config.steerBy);
+        }
+
+        /// <summary>The attract screen's sample round is playing (still on the title: any input or face ends it).</summary>
+        public bool DemoRunning { get; private set; }
+        DemoPilot pilot;
+        BasketInputSource playerInput;
+
+        /// <summary>Starts the silent self-playing round. False if the booth's default is voice assist, which it can't show.</summary>
+        public bool BeginDemo()
+        {
+            if (State != GameState.Boot || DemoRunning) return false;
+            EndVisitSettings();
+            if (Difficulty.Auditory) return false;
+            if (pilot == null)
+            {
+                pilot = gameObject.AddComponent<DemoPilot>();
+                pilot.Init(spawner, config);
+            }
+            playerInput = basket.Input;
+            basket.SetInput(pilot);
+            audioFeedback.Muted = true;
+            DemoRunning = true;
+            hud.ShowRoundHud(true);
+            StartDemoRound();
+            return true;
+        }
+
+        void StartDemoRound()
+        {
+            ResetRound();
+            pilot.Restart();
+            spawner.Begin();
+        }
+
+        public void EndDemo()
+        {
+            if (!DemoRunning) return;
+            DemoRunning = false;
+            audioFeedback.Muted = false;
+            basket.SetInput(playerInput);
+            ResetRound();
+            hud.ShowRoundHud(false);
+        }
+
+        void TickDemo()
+        {
+            Timer.Tick(Time.deltaTime);
+            hud.SetTime(Timer.Remaining, config.UsesTimer);
+            if (!Timer.Expired) return;
+            // Round over: let the last fruit land, then start another with an empty pile.
+            if (spawner.Spawning) spawner.StopSpawning();
+            else if (!spawner.HasActiveFruit) StartDemoRound();
+        }
+
+        /// <summary>Nobody's there any more: closes whatever screen the visit was on and goes back to the title.</summary>
+        public void AbandonVisit()
+        {
+            if (State == GameState.Photo && photoBooth != null) { photoBooth.Done(); return; }
+            if (State == GameState.Calibrate && calibration != null) calibration.Abort();
+            if (State == GameState.Setup && setup != null) setup.Hide();
+            ReturnToMenu();
+        }
+
+        /// <summary>A pause ran past its limit: the round ends with the score so far.</summary>
+        public void EndRoundFromPause()
+        {
+            if (State != GameState.Paused) return;
+            Time.timeScale = 1f;
+            spawner.Clear();
+            EnterGameOver();
         }
 
         void Update()
@@ -258,6 +378,7 @@ namespace FruitGame
             }
 
             UpdateFaceLost();
+            if (DemoRunning) TickDemo();
 
             switch (State)
             {
@@ -292,6 +413,9 @@ namespace FruitGame
 
         void SetState(GameState next)
         {
+            EndDemo();
+            // A new screen cuts the voice; the round's own lines (countdown into play) run on.
+            if (narrator != null && next != GameState.Playing && next != GameState.RoundEnding) narrator.Stop();
             State = next;
             hud.ShowStartMenu(next == GameState.Boot);
             hud.ShowPauseMenu(next == GameState.Paused);
@@ -309,18 +433,21 @@ namespace FruitGame
         void EnterCountdown()
         {
             ResetRound();
+            if (Narrating) { Gate(RunCountdown, "intro", "game_start_ask"); return; }
+            RunCountdown();
+        }
+
+        void RunCountdown()
+        {
             SetState(GameState.Countdown);
             countdownLeft = config.countdownSeconds;
             lastCountdownShown = -1;
             nextAnnouncement = 0;
-            // By ear: the narrator explains the game first; the countdown waits for it.
-            if (Narrating) narrator.SayNow("intro");
             if (config.countdownSeconds <= 0) EnterPlaying();
         }
 
         void TickCountdown()
         {
-            if (Narrating && narrator.IsSpeaking && lastCountdownShown < 0) return;
             countdownLeft -= Time.deltaTime;
             int shown = Mathf.CeilToInt(countdownLeft);
             if (shown != lastCountdownShown && shown > 0)
@@ -357,9 +484,12 @@ namespace FruitGame
             // Easy is for one player: the next round goes back to the staff default unless staff switch it on again.
             if (Difficulty.Easy && config.defaultMode != DefaultMode.Easy) Difficulty.Easy = false;
             // By ear: the final score (not the tally), then the photo.
-            Say("time_up", Number("score_final_", Stats.Score));
+            int caught = 0;
+            foreach (var kv in Stats.CaughtByType) caught += kv.Value;
+            Say("time_up", Number("score_final_", Stats.Score), Number("caught_", caught), Number("missed_", Stats.TotalMissed));
+            if (Stats.BombsCaught > 0) Say(Number("bombs_", Stats.BombsCaught));
             if (newBest) Say("best_new");
-            Say("photo_ask");
+            Say("photo_ask", Narrator.Buttons);
         }
 
         void EnterPause(PauseReason reason)
@@ -370,6 +500,7 @@ namespace FruitGame
             Time.timeScale = 0f;
             hud.HideMessage();
             if (reason == PauseReason.FaceLost) Say("paused");
+            else Say("pause_user", Narrator.Buttons);
             hud.SetPauseTitle(reason == PauseReason.FaceLost
                 ? "<size=112>" + Strings.Get("facelost.title") + "</size>\n<size=64>" + Strings.Get("facelost.sub") + "</size>"
                 : Strings.Get("pause.title"));
@@ -402,8 +533,8 @@ namespace FruitGame
         void ExitPause()
         {
             Time.timeScale = 1f;
-            if (pauseReason == PauseReason.FaceLost) Say("resumed");
             SetState(stateBeforePause);
+            Say("resumed");
             // The countdown re-shows its number on the next tick.
             if (State == GameState.Countdown) lastCountdownShown = -1;
         }

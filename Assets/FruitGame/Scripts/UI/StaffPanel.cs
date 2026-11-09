@@ -215,7 +215,7 @@ namespace FruitGame
             pages.Add(("Gameplay", new List<Row>
             {
                 Setting("Mode each visit starts in", () => config.defaultMode.ToString(),
-                    d => config.defaultMode = (DefaultMode)Mathf.Clamp((int)config.defaultMode + d, 0, 2)),
+                    d => config.defaultMode = (DefaultMode)Mathf.Clamp((int)config.defaultMode + d, 0, 3)),
                 Setting("Assist", () => Pick(assist, assistNames, config.assistScale), d => config.assistScale = Nearest(assist, config.assistScale, d)),
                 Setting("Steering picked at the start", () => config.steerBy == SteerBy.Turn ? "Turning" : "Sliding",
                     d => config.steerBy = d < 0 ? SteerBy.Slide : SteerBy.Turn),
@@ -280,12 +280,12 @@ namespace FruitGame
             bg.color = PanelBack;
             bg.raycastTarget = true; // clicks on the panel never reach the game behind it
 
-            header = Text("Header", column, 22f);
+            header = Text("Header", column, 16f);
             Place(header.rectTransform, 0f, 40f);
             header.color = HeadingColor;
 
             statusCard = Card("Status", column, 52f, 330f);
-            printerLine = Text("Printer Line", statusCard, 20f);
+            printerLine = Text("Printer Line", statusCard, 16f);
             printerLine.textWrappingMode = TextWrappingModes.Normal;
             printerLine.overflowMode = TextOverflowModes.Overflow;
             var pl = printerLine.rectTransform;
@@ -310,7 +310,7 @@ namespace FruitGame
                 t.anchoredPosition = Vector2.zero;
                 t.sizeDelta = new Vector2(-6f, 44f);
                 t.gameObject.AddComponent<Button>().onClick.AddListener(() => ShowPage(index));
-                var label = Text("Label", t, 20f);
+                var label = Text("Label", t, 16f);
                 label.text = $"{i + 1} {pages[i].name}";
                 label.alignment = TextAlignmentOptions.Center;
                 Fill(label.rectTransform);
@@ -341,7 +341,7 @@ namespace FruitGame
             var reset = Panel("Reset", column, new Color(0.45f, 0.2f, 0.22f, 1f), true);
             reset.anchorMin = new Vector2(0f, 0f); reset.anchorMax = new Vector2(1f, 0f); reset.pivot = new Vector2(0.5f, 0f);
             reset.anchoredPosition = new Vector2(0f, 14f); reset.sizeDelta = new Vector2(-32f, 44f);
-            var resetLabel = Text("Label", reset, 20f);
+            var resetLabel = Text("Label", reset, 16f);
             resetLabel.alignment = TextAlignmentOptions.Center;
             Fill(resetLabel.rectTransform);
             reset.gameObject.AddComponent<Button>().onClick.AddListener(() =>
@@ -372,7 +372,7 @@ namespace FruitGame
                 if (row.run != null) { if (row.enabled()) row.run(); }
                 else row.change?.Invoke(+1);
             });
-            row.text = Text("Text", r, 20f);
+            row.text = Text("Text", r, 16f);
             row.text.richText = true;
             Fill(row.text.rectTransform, 14f);
 
@@ -390,7 +390,7 @@ namespace FruitGame
             a.anchorMin = a.anchorMax = new Vector2(1f, 0.5f); a.pivot = new Vector2(0.5f, 0.5f);
             a.anchoredPosition = new Vector2(x, 0f); a.sizeDelta = new Vector2(48f, 36f);
             a.gameObject.AddComponent<Button>().onClick.AddListener(() => onClick());
-            var t = Text("Glyph", a, 20f);
+            var t = Text("Glyph", a, 16f);
             t.text = glyph;
             t.alignment = TextAlignmentOptions.Center;
             Fill(t.rectTransform);
@@ -534,7 +534,7 @@ namespace FruitGame
             var card = Panel(title, parent, CardColor, false);
             card.anchorMin = new Vector2(0f, 1f); card.anchorMax = Vector2.one; card.pivot = new Vector2(0.5f, 1f);
             card.anchoredPosition = new Vector2(0f, -top); card.sizeDelta = new Vector2(-24f, height);
-            var head = Text("Heading", card, 24f);
+            var head = Text("Heading", card, 32f);
             head.text = title;
             head.color = HeadingColor;
             Place(head.rectTransform, 10f, 34f, 16f);

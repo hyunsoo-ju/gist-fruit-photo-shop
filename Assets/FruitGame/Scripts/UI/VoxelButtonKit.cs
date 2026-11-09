@@ -27,7 +27,9 @@ namespace FruitGame
         public const int CornerRadius = 4;
 
         // The border is a warm tan, darker than the old cream so it stands out from the light background.
-        public static readonly Color32 Cream = new Color32(0xB9, 0x8A, 0x5E, 0xFF);
+        static readonly Color32 Tan = new Color32(0xB9, 0x8A, 0x5E, 0xFF);
+        static readonly Color32 ContrastBorder = new Color32(0xFF, 0xD4, 0x00, 0xFF);
+        public static Color32 Cream => HighContrast.On ? ContrastBorder : Tan;
         public static readonly Color32 LabelCream = new Color32(0xFF, 0xF8, 0xEC, 0xFF);
         public static readonly Color32 Edge = new Color32(0x1E, 0x22, 0x33, 0xFF);
 

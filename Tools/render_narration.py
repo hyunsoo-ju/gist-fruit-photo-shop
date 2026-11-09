@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Render the auditory assist mode's narrator lines (Docs/DESIGN.md §11, M18) to WAV clips.
 
-Reads Assets/FruitGame/Audio/Narration/lines.tsv and writes Assets/FruitGame/Resources/Narration/<key>.wav.
+Reads Assets/FruitGame/Resources/NarrationLines.txt and writes Assets/FruitGame/Resources/Narration/s<speed>/<key>.mp3.
 A key containing {n} is rendered for every number 0-99.
 
   Google Cloud Text-to-Speech (the narrator's real voice):
     export GOOGLE_TTS_API_KEY=...        # an API key restricted to the Text-to-Speech API, or
     # sign in with `gcloud auth login` and leave the key unset (the script uses `gcloud auth print-access-token`)
-    python3 Tools/render_narration.py --engine google [--voice ko-KR-Neural2-B] [--rate 1.5] [--pitch 5] [--force]
+    python3 Tools/render_narration.py --engine google [--voice ko-KR-Neural2-B] [--speeds 1,1.25,1.5,1.75,2] [--pitch 0] [--force]
 
   Try a voice on one line first, or list the Korean voices:
     python3 Tools/render_narration.py --engine google --only intro --force --voice ko-KR-Neural2-B
@@ -22,7 +22,7 @@ import argparse, base64, json, os, subprocess, sys, tempfile, time, urllib.reque
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LINES = os.path.join(ROOT, "Assets/FruitGame/Audio/Narration/lines.tsv")
+LINES = os.path.join(ROOT, "Assets/FruitGame/Resources/NarrationLines.txt")
 OUT = os.path.join(ROOT, "Assets/FruitGame/Resources/Narration")
 GOOGLE_URL = "https://texttospeech.googleapis.com/v1/text:synthesize"
 VOICES_URL = "https://texttospeech.googleapis.com/v1/voices?languageCode=ko-KR"
@@ -59,13 +59,13 @@ def render_google(text, path, voice, rate, pitch, headers):
     body = {
         "input": {"text": text},
         "voice": {"languageCode": "ko-KR", "name": voice},
-        "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": 24000, "speakingRate": rate, "pitch": pitch},
+        "audioConfig": {"audioEncoding": "MP3", "sampleRateHertz": 24000, "speakingRate": rate, "pitch": pitch},
     }
     req = urllib.request.Request(GOOGLE_URL, data=json.dumps(body).encode(), headers={**headers, "Content-Type": "application/json"})
     with urllib.request.urlopen(req) as resp:
         audio = base64.b64decode(json.load(resp)["audioContent"])
     with open(path, "wb") as f:
-        f.write(audio)  # LINEAR16 responses include a WAV header
+        f.write(audio)
 
 
 def render_say(text, path, rate):
@@ -92,8 +92,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--engine", choices=["google", "say"], default="google")
     ap.add_argument("--voice", default="ko-KR-Neural2-B", help="Google voice name (e.g. ko-KR-Neural2-A, ko-KR-Wavenet-A)")
-    ap.add_argument("--rate", type=float, default=1.5, help="speaking rate (1 = normal)")
-    ap.add_argument("--pitch", type=float, default=5.0, help="Google pitch in semitones")
+    ap.add_argument("--speeds", default="1,1.25,1.5", help="speaking rates to render, comma separated (Google allows up to 2.0)")
+    ap.add_argument("--pitch", type=float, default=0.0, help="Google pitch in semitones")
     ap.add_argument("--jobs", type=int, default=6, help="lines rendered at once (Google; the macOS voice runs 4)")
     ap.add_argument("--force", action="store_true", help="re-render clips that already exist")
     ap.add_argument("--only", nargs="+", help="render just these keys (e.g. intro score_now_12)")
@@ -106,24 +106,27 @@ def main():
                 print(f"{v['name']:32} {v.get('ssmlGender', '')}")
         return
 
-    os.makedirs(OUT, exist_ok=True)
     headers = google_headers() if args.engine == "google" else None
+    ext = ".mp3" if args.engine == "google" else ".wav"
     todo, skipped = [], 0
-    for key, text in load_lines():
-        if args.only and key not in args.only:
-            continue
-        path = os.path.join(OUT, key + ".wav")
-        if os.path.exists(path) and not args.force:
-            skipped += 1
-        else:
-            todo.append((key, text, path))
+    for rate in [float(r) for r in args.speeds.split(",")]:
+        out = os.path.join(OUT, f"s{round(rate * 100)}")
+        os.makedirs(out, exist_ok=True)
+        for key, text in load_lines():
+            if args.only and key not in args.only:
+                continue
+            path = os.path.join(out, key + ext)
+            if os.path.exists(path) and not args.force:
+                skipped += 1
+            else:
+                todo.append((key, text, path, rate))
 
     def render(item):
-        key, text, path = item
+        key, text, path, rate = item
         if args.engine == "google":
-            render_google(text, path, args.voice, args.rate, args.pitch, headers)
+            render_google(text, path, args.voice, rate, args.pitch, headers)
         else:
-            render_say(text, path, args.rate)
+            render_say(text, path, rate)
         return key
 
     done, failed, start = 0, [], time.time()
@@ -142,11 +145,6 @@ def main():
     print()
     for key, e in failed:
         print(f"  failed: {key}: {e}")
-    if args.only:
-        print(f"rendered {done} of {', '.join(args.only)}")
-        return 1 if failed else 0
-    with open(os.path.join(OUT, "ENGINE.txt"), "w", encoding="utf-8") as f:
-        f.write(f"{args.engine} {args.voice if args.engine == 'google' else 'Yuna'} rate {args.rate}\n")
     print(f"rendered {done}, kept {skipped} existing{f', {len(failed)} failed' if failed else ''}, into {OUT}")
     return 1 if failed else 0
 

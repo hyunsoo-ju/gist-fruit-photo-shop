@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 700" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1040" height="700" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Keypad map (voice assist)</text>
+  <text x="30" y="62" font-size="15" fill="#555">Optional: a USB numpad or the number row above the letters</text>
+  <rect x="30" y="84" width="200" height="50" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="130.0" y="115.0" text-anchor="middle" font-size="16" fill="#9aa4af">Num</text>
+  <rect x="242" y="84" width="200" height="50" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="342.0" y="115.0" text-anchor="middle" font-size="16" fill="#9aa4af">/</text>
+  <rect x="454" y="84" width="200" height="50" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="554.0" y="115.0" text-anchor="middle" font-size="16" fill="#9aa4af">*</text>
+  <rect x="666" y="84" width="90" height="50" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="711.0" y="115.0" text-anchor="middle" font-size="16" fill="#9aa4af">-</text>
+  <rect x="30" y="146" width="200" height="122" rx="12" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+  <text x="46" y="186" font-size="34" font-weight="bold" fill="#222">7</text>
+  <text x="46" y="218" font-size="13" fill="#555">Screens</text>
+  <text x="102" y="218" font-size="16" font-weight="bold" fill="#222">Repeat</text>
+  <text x="46" y="248" font-size="13" fill="#555">Round</text>
+  <text x="102" y="248" font-size="16" font-weight="bold" fill="#222">Time and score</text>
+  <rect x="242" y="146" width="200" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="258" y="186" font-size="34" font-weight="bold" fill="#222">8</text>
+  <text x="258" y="218" font-size="13" fill="#555">Every screen</text>
+  <text x="258" y="248" font-size="18" font-weight="bold" fill="#222">Louder</text>
+  <rect x="454" y="146" width="200" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="470" y="186" font-size="34" font-weight="bold" fill="#222">9</text>
+  <text x="470" y="218" font-size="13" fill="#555">Every screen</text>
+  <text x="470" y="248" font-size="18" font-weight="bold" fill="#222">Speed</text>
+  <rect x="30" y="280" width="200" height="122" rx="12" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+  <text x="46" y="320" font-size="34" font-weight="bold" fill="#222">4</text>
+  <text x="46" y="352" font-size="13" fill="#555">Screens</text>
+  <text x="102" y="352" font-size="16" font-weight="bold" fill="#222">Previous</text>
+  <text x="46" y="382" font-size="13" fill="#555">Round</text>
+  <text x="102" y="382" font-size="16" font-weight="bold" fill="#222">Steer left</text>
+  <rect x="242" y="280" width="200" height="122" rx="12" fill="#fff4e0" stroke="#e0962a" stroke-width="2"/>
+  <text x="258" y="320" font-size="34" font-weight="bold" fill="#222">5</text>
+  <text x="258" y="352" font-size="13" fill="#555">Screens</text>
+  <text x="314" y="352" font-size="16" font-weight="bold" fill="#222">Press</text>
+  <text x="258" y="382" font-size="13" fill="#555">Round</text>
+  <text x="314" y="382" font-size="16" font-weight="bold" fill="#222">Pause</text>
+  <rect x="454" y="280" width="200" height="122" rx="12" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+  <text x="470" y="320" font-size="34" font-weight="bold" fill="#222">6</text>
+  <text x="470" y="352" font-size="13" fill="#555">Screens</text>
+  <text x="526" y="352" font-size="16" font-weight="bold" fill="#222">Next</text>
+  <text x="470" y="382" font-size="13" fill="#555">Round</text>
+  <text x="526" y="382" font-size="16" font-weight="bold" fill="#222">Steer right</text>
+  <rect x="30" y="414" width="200" height="122" rx="12" fill="#e3edf9" stroke="#3a7bd5" stroke-width="2"/>
+  <text x="46" y="454" font-size="34" font-weight="bold" fill="#222">1</text>
+  <text x="46" y="486" font-size="13" fill="#555">Screens</text>
+  <text x="102" y="486" font-size="16" font-weight="bold" fill="#222">Back</text>
+  <text x="46" y="516" font-size="13" fill="#555">Round</text>
+  <text x="102" y="516" font-size="16" fill="#777">No action</text>
+  <rect x="242" y="414" width="200" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="258" y="454" font-size="34" font-weight="bold" fill="#222">2</text>
+  <text x="258" y="486" font-size="13" fill="#555">Every screen</text>
+  <text x="258" y="516" font-size="18" font-weight="bold" fill="#222">Quieter</text>
+  <rect x="454" y="414" width="200" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="470" y="454" font-size="34" font-weight="bold" fill="#222">3</text>
+  <text x="470" y="486" font-size="13" fill="#555">Every screen</text>
+  <text x="470" y="516" font-size="18" font-weight="bold" fill="#222">Stop or mute</text>
+  <rect x="30" y="548" width="412" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="46" y="588" font-size="34" font-weight="bold" fill="#222">0</text>
+  <text x="46" y="620" font-size="13" fill="#555">Every screen</text>
+  <text x="46" y="650" font-size="18" font-weight="bold" fill="#222">Staff help (spoken)</text>
+  <rect x="454" y="548" width="200" height="122" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="554.0" y="615.0" text-anchor="middle" font-size="16" fill="#9aa4af">.</text>
+  <rect x="666" y="146" width="90" height="256" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="711.0" y="280.0" text-anchor="middle" font-size="16" fill="#9aa4af">+</text>
+  <rect x="666" y="414" width="90" height="256" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="711.0" y="548.0" text-anchor="middle" font-size="16" fill="#9aa4af">Enter</text>
+  <rect x="790" y="84" width="220" height="586" rx="12" fill="#fafbfc" stroke="#d3d8de" stroke-width="1.5"/>
+  <text x="806" y="116" font-size="16" font-weight="bold" fill="#222">Good to know</text>
+  <text x="806" y="148" font-size="14" fill="#333">Nothing needs the keypad:</text>
+  <text x="806" y="172" font-size="14" fill="#333">every action is on the</text>
+  <text x="806" y="196" font-size="14" fill="#333">touch screen too, or staff</text>
+  <text x="806" y="220" font-size="14" fill="#333">press it for the visitor.</text>
+  <text x="806" y="258" font-size="14" fill="#333">Press 5 prompts: at each</text>
+  <text x="806" y="282" font-size="14" fill="#333">calibration pose and before</text>
+  <text x="806" y="306" font-size="14" fill="#333">the round, 5 is the only</text>
+  <text x="806" y="330" font-size="14" fill="#333">way on. Staff can press</text>
+  <text x="806" y="354" font-size="14" fill="#333">5 on the laptop.</text>
+  <text x="806" y="392" font-size="14" fill="#333">On the title, 5 turns</text>
+  <text x="806" y="416" font-size="14" fill="#333">voice assist on.</text>
+  <text x="806" y="454" font-size="14" fill="#333">3 stops the current line.</text>
+  <text x="806" y="478" font-size="14" fill="#333">With nothing playing, it</text>
+  <text x="806" y="502" font-size="14" fill="#333">mutes or unmutes.</text>
+</svg>

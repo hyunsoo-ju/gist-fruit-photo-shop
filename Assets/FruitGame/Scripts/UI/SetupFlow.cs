@@ -10,10 +10,10 @@ namespace FruitGame
     /// <summary>
     /// The walkthrough between Start and the round (Docs/DESIGN.md §3, §15): each visitor plays once, so every visit
     /// goes **1 · how to move** (sliding, recommended, or turning, for players who find moving their body hard; each
-    /// card shows a looping pixel figure, MoveDiagram) → **2 · difficulty** (Easy, Normal, Sound) → **3 · calibration**
+    /// card shows a looping pixel figure, MoveDiagram) → **2 · difficulty** (Easy, Normal; voice assist on the title skips it and plays the Sound round) → **3 · calibration**
     /// (CalibrationController), then the countdown. One step per screen: a big question, large cards to tap, step dots
-    /// and Back. Keys: ◀ ▶ pick, Space / Enter choose, Esc back; A picks Sound mode. The narrator reads each step
-    /// aloud for everyone (quieter outside Sound mode). Built at runtime in the HUD frame, in the game's own keycap and
+    /// and Back. Keys: ◀ ▶ pick, Space / Enter choose, Esc back. The narrator reads each step
+    /// aloud with voice assist on. Built at runtime in the HUD frame, in the game's own keycap and
     /// panel art.
     /// </summary>
     public class SetupFlow : MonoBehaviour
@@ -113,18 +113,18 @@ namespace FruitGame
 
         public void Begin()
         {
-            root.gameObject.SetActive(true);
+            UiTransition.Set(root.gameObject, true);
             ShowStep(0);
         }
 
         /// <summary>Back into the flow at a step (calibration's Back returns to the difficulty step).</summary>
         public void ReturnTo(int stepIndex)
         {
-            root.gameObject.SetActive(true);
-            ShowStep(stepIndex);
+            UiTransition.Set(root.gameObject, true);
+            ShowStep(Difficulty.Auditory ? 0 : stepIndex);
         }
 
-        public void Hide() => root.gameObject.SetActive(false);
+        public void Hide() => UiTransition.Set(root.gameObject, false);
 
         void ShowStep(int index)
         {
@@ -136,17 +136,18 @@ namespace FruitGame
                 AddCard("walk.slide", "walk.slide.desc", true, SteerBy.Slide, () => ChooseSteer(SteerBy.Slide));
                 AddCard("walk.turn", "walk.turn.desc", false, SteerBy.Turn, () => ChooseSteer(SteerBy.Turn));
                 highlighted = Steering.Mode == SteerBy.Turn ? 1 : 0;
-                Say("walk_steer");
+                Say("walk_steer", Narrator.Buttons);
             }
             else
             {
                 AddCard("walk.easy", "walk.easy.desc", false, null, () => ChooseMode(DefaultMode.Easy));
                 AddCard("walk.normal", "walk.normal.desc", false, null, () => ChooseMode(DefaultMode.Normal));
-                AddCard("walk.sound", "walk.sound.desc", false, null, () => ChooseMode(DefaultMode.Sound));
-                highlighted = Difficulty.Auditory ? 2 : Difficulty.Easy ? 0 : 1;
-                Say("walk_difficulty");
+                AddCard("walk.hard", "walk.hard.desc", false, null, () => ChooseMode(DefaultMode.Hard));
+                highlighted = Difficulty.Easy ? 0 : Difficulty.Hard ? 2 : 1;
+                Say("walk_difficulty", Narrator.Buttons);
             }
             Refresh();
+            UiTransition.Pop(cardRow.gameObject);
         }
 
         void AddCard(string titleKey, string descKey, bool recommended, SteerBy? diagram, Action choose)
@@ -213,7 +214,7 @@ namespace FruitGame
             Text(card, descKey, 32f, 140f);
 
             int index = cards.Count;
-            card.GetComponent<Button>().onClick.AddListener(() => { highlighted = index; choose(); });
+            card.GetComponent<Button>().onClick.AddListener(() => { highlighted = index; if (Narrator.Instance != null) Narrator.Instance.Click(); choose(); });
             cards.Add(new Card { rect = holder, highlight = hl, choose = choose });
         }
 
@@ -250,16 +251,15 @@ namespace FruitGame
         {
             Steering.Mode = mode;
             Say(mode == SteerBy.Turn ? "walk_turn_chosen" : "walk_slide_chosen");
+            // Voice assist plays the Sound round, so there's no difficulty to pick.
+            if (Difficulty.Auditory) { Hide(); Finished?.Invoke(true); return; }
             ShowStep(1);
         }
 
         void ChooseMode(DefaultMode mode)
         {
-            bool wasAuditory = Difficulty.Auditory;
             Difficulty.ResetTo(mode);
-            if (mode == DefaultMode.Sound) Say("mode_on");
-            else if (wasAuditory) Say("mode_off");
-            else Say(mode == DefaultMode.Easy ? "walk_easy_chosen" : "walk_normal_chosen");
+            Say(mode == DefaultMode.Easy ? "walk_easy_chosen" : "walk_normal_chosen");
             Hide();
             Finished?.Invoke(true);
         }
@@ -286,15 +286,14 @@ namespace FruitGame
             if (kb.leftArrowKey.wasPressedThisFrame) { highlighted = Mathf.Max(0, highlighted - 1); Refresh(); }
             if (kb.rightArrowKey.wasPressedThisFrame) { highlighted = Mathf.Min(cards.Count - 1, highlighted + 1); Refresh(); }
             if (kb.escapeKey.wasPressedThisFrame) { StaffPanel.Consume(); Back(); }
-            if (kb.aKey.wasPressedThisFrame && step == 1) { highlighted = 2; ChooseMode(DefaultMode.Sound); }
         }
 
         /// <summary>Reads a step aloud for everyone during setup; quieter unless in Sound mode.</summary>
-        void Say(string key)
+        void Say(params string[] keys)
         {
-            if (narrator == null || !config.narrateSetup) return;
-            narrator.Quiet = !Difficulty.Auditory;
-            narrator.SayNow(key);
+            if (narrator == null || !Difficulty.Auditory) return;
+            narrator.Quiet = false;
+            narrator.SayNow(keys);
         }
 
         static void Stretch(RectTransform r, Vector2 min, Vector2 max)

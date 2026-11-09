@@ -1,0 +1,106 @@
+# Narrator lines (Docs/DESIGN.md §11, M6 item 6), in-game Korean (해요체): short, plain, calm. key<TAB>text; also the caption strip.
+# A key with {n} is rendered once per number 0–99. Render with Tools/render_narration.py into Resources/Narration/s<speed>/<key>.
+title_invite	화면이 잘 안 보이면 숫자 5번을 누르거나 직원에게 음성 안내를 부탁해 주세요.
+mode_on	음성 안내를 켰어요. 머리로 바구니를 옮겨 과일을 받는 사진 게임이에요. 헤드폰을 쓰면 더 잘 들려요. 키패드가 있으면 4번과 6번으로 버튼을 고르고 5번으로 눌러요. 다시 들으려면 7번이에요. 없으면 직원이 도와드려요.
+mode_off	음성 안내를 껐어요.
+walk_steer	첫 번째 단계예요. 움직이는 방법을 골라요. 머리를 옆으로 옮기는 방법을 추천해요. 고개를 돌리는 방법은 몸을 움직이기 어려운 분께 좋아요.
+walk_slide_chosen	머리를 옆으로 옮기는 방법을 골랐어요.
+walk_turn_chosen	고개를 돌리는 방법을 골랐어요.
+walk_difficulty	난이도를 골라요.
+walk_easy_chosen	쉬움을 골랐어요.
+walk_normal_chosen	보통을 골랐어요.
+calib_intro	두 번째 단계예요. 머리 움직임을 맞출게요. 안내에 따라 머리를 움직여 주세요.
+calib_centre	정면을 보고 잠깐 멈춰 주세요.
+calib_left	머리를 왼쪽으로 편한 만큼 움직이고 멈춰 주세요.
+calib_right	머리를 오른쪽으로 편한 만큼 움직이고 멈춰 주세요.
+calib_left_turn	고개를 왼쪽으로 편한 만큼 돌리고 멈춰 주세요.
+calib_right_turn	고개를 오른쪽으로 편한 만큼 돌리고 멈춰 주세요.
+calib_more_left	조금만 더 왼쪽으로 움직여 주세요.
+calib_more_right	조금만 더 오른쪽으로 움직여 주세요.
+calib_more_left_turn	조금만 더 왼쪽으로 돌려 주세요.
+calib_more_right_turn	조금만 더 오른쪽으로 돌려 주세요.
+calib_try	다 됐어요. 머리를 움직여 바구니를 옮겨 보세요.
+calib_closer	카메라에 조금 더 가까이 와 주세요.
+calib_farther	조금만 뒤로 가 주세요.
+calib_hold	좋아요. 그대로 멈춰 주세요.
+calib_ok	좋아요.
+calib_looking	얼굴을 찾고 있어요. 카메라 앞에 앉거나 서 주세요.
+calib_redo	처음부터 다시 맞출게요.
+calib_done	맞추기가 끝났어요.
+intro	세 번째 단계, 게임이에요. 과일이 떨어지면 삐삐 소리가 나요. 소리가 나는 쪽으로 바구니를 옮겨 주세요. 소리가 길게 이어지면 바구니가 바로 밑에 있어요. 시간은 1분이에요.
+count_3	셋
+count_2	둘
+count_1	하나
+go	시작
+golden	황금 과일
+time_45	45초 남았어요.
+time_30	30초 남았어요.
+time_15	15초 남았어요.
+time_left_{n}	{n}초 남았어요.
+score_now_{n}	지금 {n}점이에요.
+pause_user	잠깐 멈췄어요.
+paused	얼굴이 안 보여서 잠깐 멈췄어요. 카메라 앞으로 돌아와 주세요.
+resumed	다시 시작해요.
+time_up	끝났어요. 정말 잘했어요.
+score_final_{n}	최종 점수는 {n}점이에요.
+caught_{n}	받은 과일은 {n}개예요.
+missed_{n}	놓친 과일은 {n}개예요.
+bombs_{n}	폭탄은 {n}개 받았어요.
+best_new	오늘의 최고 기록이에요.
+photo_ask	기념사진을 찍을 수 있어요.
+pose_intro	사진을 찍을게요. 카메라 쪽을 보고 웃어 주세요.
+pose_left	조금 왼쪽으로 움직여 주세요.
+pose_right	조금 오른쪽으로 움직여 주세요.
+pose_closer	조금만 앞으로 와 주세요.
+pose_back	조금만 뒤로 가 주세요.
+pose_good	좋아요. 그대로 있어 주세요.
+pose_noface	얼굴이 안 보여요. 카메라 앞으로 와 주세요.
+photo_done	찰칵. 사진을 찍었어요. 게임 중 세 장과 방금 찍은 한 장이 네 칸에 담기고, 점수도 함께 적혀요.
+saved	사진을 저장했어요.
+print_start	인쇄를 시작했어요. 다 나오면 직원이 전해 드려요.
+print_down	프린터가 잠시 쉬고 있어요. 직원에게 말씀해 주시면 휴대폰으로 받을 수 있게 도와드려요.
+print_fail	인쇄하지 못했어요. 직원에게 말씀해 주세요.
+share_fail	사진을 보내지 못했어요. 직원에게 말씀해 주세요.
+phone_open	화면에 큐알 코드가 나왔어요. 직원이 휴대폰으로 받는 것을 도와드려요.
+voice_on	음성을 켰어요.
+voice_off	음성을 껐어요. 켜려면 다시 눌러 주세요.
+volume_up	소리를 키웠어요.
+volume_down	소리를 줄였어요.
+volume_max	가장 큰 소리예요.
+volume_min	가장 작은 소리예요.
+speed_100	기본 속도예요.
+speed_125	1.25배 속도예요.
+speed_150	1.5배 속도예요.
+speed_175	1.75배 속도예요.
+speed_200	2배 속도예요.
+contrast_on	고대비 화면을 켰어요.
+contrast_off	고대비 화면을 껐어요.
+staff_called	직원을 불러 주세요. 가까운 직원이 도와드려요.
+no_back	이 화면에는 뒤로 가는 버튼이 없어요.
+btn_start_play	시작
+btn_start_auditory	음성 안내
+btn_start_contrast	고대비
+btn_walk_slide	머리를 옆으로
+btn_walk_turn	고개를 돌려서
+btn_walk_easy	쉬움
+btn_walk_normal	보통
+btn_walk_back	뒤로
+btn_common_back	뒤로
+btn_common_mainMenu	처음으로
+btn_pause_resume	계속하기
+btn_calib_looksGood	좋아요
+btn_calib_redo	다시 하기
+btn_over_playAgain	다시 하기
+btn_over_photo	사진 찍기
+btn_photo_take	사진 찍기
+btn_photo_print	인쇄하기
+btn_photo_phone	휴대폰으로 받기
+btn_photo_save	저장
+btn_photo_retake	다시 찍기
+btn_photo_done	완료
+btn_photo_close	닫기
+buttons_order	버튼은 순서대로
+game_start_ask	게임을 시작하려면 5번을 눌러 주세요.
+calib_affirm_ask	준비되면 5번을 눌러 주세요.
+idle_warn	아직 계세요? 버튼을 누르면 계속해요. 20초 뒤에 처음으로 돌아가요.
+pause_warn	버튼을 누르면 계속 기다려요. 20초 뒤에 게임이 끝나요.

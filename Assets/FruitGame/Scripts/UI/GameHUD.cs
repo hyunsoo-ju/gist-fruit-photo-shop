@@ -29,9 +29,7 @@ namespace FruitGame
         [SerializeField] TMP_Text gameOverScore;
         [SerializeField] TMP_Text gameOverBest;
         [SerializeField] TMP_Text gameOverTallyLeft;
-        [SerializeField] TMP_Text gameOverTallyRight;
         [SerializeField] TMP_Text gameOverMissed;
-        [SerializeField] ScoreGraph gameOverGraph;
 
         [Header("Animation")]
         [SerializeField] float popScale = 1.25f;
@@ -116,22 +114,19 @@ namespace FruitGame
             gameOverScore.text = stats.Score.ToString();
             gameOverBest.text = newBest ? Strings.Get("over.newBest") : Strings.Get("over.best", best);
 
-            // Fruit tally in two columns, filled left column first.
-            var lines = new List<string>();
+            // The fruit in centred rows, each name staying with its count however the rows wrap.
+            var tally = new StringBuilder();
             foreach (var kv in stats.CaughtByType)
-                lines.Add($"{Strings.Fruit(kv.Key)} × {kv.Value}");
-            int leftCount = (lines.Count + 1) / 2;
-            var left = new StringBuilder();
-            var right = new StringBuilder();
-            for (int i = 0; i < lines.Count; i++)
-                (i < leftCount ? left : right).AppendLine(lines[i]);
-            gameOverTallyLeft.text = left.ToString();
-            gameOverTallyRight.text = right.ToString();
-            gameOverMissed.text = lines.Count == 0 ? Strings.Get("over.none") : Strings.Get("over.missed", stats.TotalMissed);
-            if (stats.BombsCaught > 0) gameOverMissed.text += " · " + Strings.Get("over.bombs", stats.BombsCaught);
-            if (gameOverGraph != null) gameOverGraph.SetData(stats.History, roundDuration);
+                tally.Append("<nobr>").Append(Strings.Fruit(kv.Key)).Append(" ×").Append(kv.Value).Append("</nobr>    ");
+            gameOverTallyLeft.text = tally.Length == 0 ? Strings.Get("over.none") : tally.ToString().TrimEnd();
 
-            gameOverPanel.SetActive(true);
+            var extras = new List<string>();
+            if (stats.GoldenCaught > 0) extras.Add(Strings.Get("over.golden", stats.GoldenCaught));
+            extras.Add(Strings.Get("over.missed", stats.TotalMissed));
+            if (stats.BombsCaught > 0) extras.Add(Strings.Get("over.bombs", stats.BombsCaught));
+            gameOverMissed.text = string.Join("  ·  ", extras);
+
+            UiTransition.Set(gameOverPanel, true);
         }
 
         public void HideGameOver() => SetActive(gameOverPanel, false);
@@ -151,9 +146,69 @@ namespace FruitGame
         void OnDisable() => Strings.Changed -= RefreshLanguage;
         void OnDestroy() => Difficulty.Changed -= RefreshEasyTag;
 
-        static void SetActive(GameObject go, bool active)
+        static void SetActive(GameObject go, bool active) => UiTransition.Set(go, active);
+
+        GameObject notice, banner;
+        TMP_Text noticeText, bannerText;
+
+        /// <summary>A timeout's warning (IdleWatch): an opaque card in the middle of the screen, over everything.</summary>
+        public void ShowNotice(string text)
         {
-            if (go != null && go.activeSelf != active) go.SetActive(active);
+            if (notice == null) notice = BuildCard("Timeout Notice", new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1200f, 320f), out noticeText);
+            noticeText.text = text;
+            notice.SetActive(true);
+            notice.transform.SetAsLastSibling();
+        }
+
+        public void HideNotice()
+        {
+            if (notice != null) notice.SetActive(false);
+        }
+
+        /// <summary>The attract screen's invitation: an opaque strip along the top of the screen.</summary>
+        public void ShowBanner(string text)
+        {
+            if (banner == null) banner = BuildCard("Attract Banner", new Vector2(0.5f, 1f), new Vector2(0f, -40f), new Vector2(1200f, 150f), out bannerText);
+            bannerText.text = text;
+            banner.SetActive(true);
+            banner.transform.SetAsLastSibling();
+        }
+
+        public void HideBanner()
+        {
+            if (banner != null) banner.SetActive(false);
+        }
+
+        GameObject BuildCard(string cardName, Vector2 anchor, Vector2 position, Vector2 size, out TMP_Text label)
+        {
+            var style = gameOverPanel.GetComponent<UnityEngine.UI.Image>();
+            var card = new GameObject(cardName, typeof(RectTransform), typeof(UnityEngine.UI.Image)).GetComponent<RectTransform>();
+            card.SetParent(messageSub.rectTransform.parent, false);
+            card.anchorMin = card.anchorMax = card.pivot = anchor;
+            card.anchoredPosition = position;
+            card.sizeDelta = size;
+            var image = card.GetComponent<UnityEngine.UI.Image>();
+            image.sprite = style.sprite;
+            image.type = style.type;
+            image.pixelsPerUnitMultiplier = style.pixelsPerUnitMultiplier;
+            var c = style.color;
+            image.color = new Color(c.r, c.g, c.b, 1f);
+            image.raycastTarget = false;
+            label = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TMP_Text>();
+            var r = label.rectTransform;
+            r.SetParent(card, false);
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
+            r.offsetMin = new Vector2(48f, 16f);
+            r.offsetMax = new Vector2(-48f, -16f);
+            label.font = messageSub.font;
+            label.fontSharedMaterial = messageSub.font.material;
+            label.fontSize = 64f;
+            label.color = new Color32(0x1E, 0x22, 0x33, 0xFF);
+            label.alignment = TextAlignmentOptions.Center;
+            label.textWrappingMode = TextWrappingModes.Normal;
+            label.raycastTarget = false;
+            return card.gameObject;
         }
 
         /// <summary>A short line under the score that rises and fades: "+3" for a golden fruit, the combo, or "−5".</summary>

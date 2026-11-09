@@ -11,7 +11,7 @@ namespace FruitGame
     /// </summary>
     public static class Difficulty
     {
-        static bool easy, auditory;
+        static bool easy, auditory, hard;
 
         public static bool Easy
         {
@@ -20,7 +20,7 @@ namespace FruitGame
             {
                 if (easy == value) return;
                 easy = value;
-                if (value) auditory = false;
+                if (value) { auditory = false; hard = false; }
                 Changed?.Invoke();
             }
         }
@@ -32,7 +32,20 @@ namespace FruitGame
             {
                 if (auditory == value) return;
                 auditory = value;
-                if (value) easy = false;
+                if (value) { easy = false; hard = false; }
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>The faster, busier round (M6 2.6): the same basket and the same movement needed as Normal.</summary>
+        public static bool Hard
+        {
+            get => hard;
+            set
+            {
+                if (hard == value) return;
+                hard = value;
+                if (value) { easy = false; auditory = false; }
                 Changed?.Invoke();
             }
         }
@@ -47,6 +60,7 @@ namespace FruitGame
         {
             Easy = mode == DefaultMode.Easy;
             Auditory = mode == DefaultMode.Sound;
+            Hard = mode == DefaultMode.Hard;
         }
     }
 }

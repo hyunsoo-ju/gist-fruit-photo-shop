@@ -12,6 +12,9 @@ namespace FruitGame
         [SerializeField] GameConfig config;
         [SerializeField] Camera worldCamera;
 
+        /// <summary>−1 to 1 from the optional numpad's 4 and 6 (VoiceAssist).</summary>
+        public static float KeyAxis;
+
         float targetX;
         bool mouseActive;
 
@@ -31,6 +34,7 @@ namespace FruitGame
                 if (keyboard.rightArrowKey.isPressed || keyboard.dKey.isPressed) axis += 1f;
             }
 
+            axis += KeyAxis;
             if (axis != 0f)
             {
                 mouseActive = false;

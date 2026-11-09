@@ -17,7 +17,7 @@ namespace FruitGame
         [SerializeField] WebcamSource source;
         [Tooltip("A debug text to copy the font and colour from (the F1 status line).")]
         [SerializeField] TMP_Text style;
-        [SerializeField] float fontSize = 36f;
+        const float fontSize = 32f;
 
         /// <summary>True while the menu is open (other staff boxes leave the number keys to it).</summary>
         public static bool IsOpen { get; private set; }

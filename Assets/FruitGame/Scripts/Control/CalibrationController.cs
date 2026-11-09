@@ -49,13 +49,13 @@ namespace FruitGame
             thenPlay = startRoundAfter;
             previous = mapper.Calibration;
             working = CalibrationData.Default;
-            panel.SetActive(true);
-            if (ByEar) { narrator.Quiet = !Difficulty.Auditory; narrator.SayNow("calib_intro"); }
+            UiTransition.Set(panel, true);
+            if (ByEar) { narrator.Quiet = false; narrator.SayNow("calib_intro"); }
             Enter(Step.Centre);
         }
 
-        /// <summary>Spoken prompts: in Sound mode, and for everyone while narrateSetup is on (quieter then).</summary>
-        bool ByEar => narrator != null && (Difficulty.Auditory || config.narrateSetup);
+        /// <summary>Spoken prompts: only with voice assist on.</summary>
+        bool ByEar => narrator != null && Difficulty.Auditory;
 
         /// <summary>"Looks good": save and finish.</summary>
         public void Accept()
@@ -84,10 +84,31 @@ namespace FruitGame
             Finish(false);
         }
 
+        /// <summary>The visitor has walked away: closes without saving and without going back to the walkthrough.</summary>
+        public void Abort()
+        {
+            if (step == Step.Idle) return;
+            mapper.Calibration = previous;
+            step = Step.Idle;
+            awaitingFive = false;
+            UiTransition.Set(panel, false);
+            mapper.ResetFilter();
+        }
+
+        /// <summary>The 5 key at a pose: the visitor knows the direction, so the lead-in can start. False if not waiting.</summary>
+        public bool Affirm()
+        {
+            if (!awaitingFive || step == Step.Idle || step == Step.Try) return false;
+            awaitingFive = false;
+            narrator.Stop();
+            return true;
+        }
+
         void Finish(bool accepted)
         {
             step = Step.Idle;
-            panel.SetActive(false);
+            awaitingFive = false;
+            UiTransition.Set(panel, false);
             mapper.ResetFilter();
             Finished?.Invoke(accepted, thenPlay);
         }
@@ -107,6 +128,8 @@ namespace FruitGame
                 if (next != Step.Centre) narrator.Say("calib_ok");
                 string side = Turning ? "_turn" : "";
                 narrator.Say(next == Step.Centre ? "calib_centre" : next == Step.Left ? "calib_left" + side : next == Step.Right ? "calib_right" + side : "calib_try");
+                narrator.Say(next == Step.Try ? Narrator.Buttons : "calib_affirm_ask");
+                awaitingFive = next != Step.Try;
             }
             switch (next)
             {
@@ -125,6 +148,16 @@ namespace FruitGame
         void Update()
         {
             if (step == Step.Idle || step == Step.Try) return;
+
+            // Voice assist: nothing counts until the visitor has heard the direction and pressed 5.
+            if (awaitingFive)
+            {
+                hint.text = Strings.Get("voice.pressFive");
+                ring.gameObject.SetActive(false);
+                history.Clear();
+                steadySince = -1f;
+                return;
+            }
 
             // A lead-in to read the prompt before the pose starts counting: 5 s for the centre, 3 s after that.
             // By ear it starts once the narrator has finished the prompt.
@@ -187,6 +220,7 @@ namespace FruitGame
         }
 
         float leadInStart = -1f;
+        bool awaitingFive;
         bool Turning => Steering.Mode == SteerBy.Turn;
 
         float lastPrompt = -10f;

@@ -79,7 +79,7 @@ namespace FruitGame
         public void Open(int roundScore)
         {
             score = roundScore;
-            panel.SetActive(true);
+            UiTransition.Set(panel, true);
             pile.SetPhotoMode(true);
             ApplyBeauty();
             SetHidden(true);
@@ -88,7 +88,32 @@ namespace FruitGame
 
         // The beauty filter stays on all the time (not just in the booth), so the action shots taken mid-round match the
         // final shot on the print.
-        void Start() => ApplyBeauty();
+        void Start()
+        {
+            ApplyBeauty();
+            DeleteOldPhotos();
+        }
+
+        static string PhotoFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "FruitGame");
+
+        /// <summary>Visitors' saved cards don't stay on this computer for good (M6 3.4). Only this game's own files.</summary>
+        void DeleteOldPhotos()
+        {
+            if (config == null || config.photoAutoDeleteDays <= 0 || !Directory.Exists(PhotoFolder)) return;
+            var cutoff = DateTime.Now.AddDays(-config.photoAutoDeleteDays);
+            int deleted = 0;
+            foreach (var path in Directory.GetFiles(PhotoFolder, "FruitGame_*.png"))
+            {
+                try
+                {
+                    if (File.GetLastWriteTime(path) >= cutoff) continue;
+                    File.Delete(path);
+                    deleted++;
+                }
+                catch (Exception e) { Debug.LogWarning($"[FruitGame] Couldn't delete an old photo: {e.Message}"); }
+            }
+            if (deleted > 0) Debug.Log($"[FruitGame] Deleted {deleted} photo(s) older than {config.photoAutoDeleteDays} days.");
+        }
 
         void ApplyBeauty()
         {
@@ -105,7 +130,7 @@ namespace FruitGame
             step = Step.Countdown;
             countdownLeft = countdownSeconds;
             lastShown = -1;
-            poseGroup.SetActive(false);
+            UiTransition.Set(poseGroup, false);
             countdownText.gameObject.SetActive(true);
         }
 
@@ -119,6 +144,7 @@ namespace FruitGame
             if (step != Step.Preview || LastPhoto == null) return;
             EnsureSaved();
             savedText.text = Strings.Get("photo.saved");
+            Speak("saved");
         }
 
         /// <summary>
@@ -130,15 +156,16 @@ namespace FruitGame
             if (step != Step.Preview || LastPhoto == null || printer == null) return;
             if (printed) return;
             // A stopped or offline printer would only queue it: tell the player now, so they take the phone route.
-            if (printer.HasProblem) { savedText.text = Strings.Get("photo.printerDown"); return; }
+            if (printer.HasProblem) { savedText.text = Strings.Get("photo.printerDown"); Speak("print_down"); return; }
             string path = EnsureSaved();
             if (printer.Print(path, out int ahead))
             {
                 printed = true;
                 int wait = printer.WaitSeconds(ahead);
                 savedText.text = ahead > 0 ? Strings.Get("photo.printQueued", ahead, wait) : Strings.Get("photo.printing", wait);
+                Speak("print_start");
             }
-            else savedText.text = Strings.Get("photo.printFail");
+            else { savedText.text = Strings.Get("photo.printFail"); Speak("print_fail"); }
         }
 
         /// <summary>Phone button: saves (once), publishes the photo on the local network and shows the link / QR.</summary>
@@ -150,6 +177,7 @@ namespace FruitGame
             if (url == null)
             {
                 savedText.text = share.LastError ?? Strings.Get("photo.shareFail");
+                Speak("share_fail");
                 return;
             }
             var qr = QrEncoder?.Invoke(url);
@@ -161,10 +189,11 @@ namespace FruitGame
             }
             // One size for both lines: the pixel font only stays crisp at multiples of 16 px.
             phoneLink.text = Strings.Get(qr != null ? "photo.linkQr" : "photo.link", url);
-            phonePanel.SetActive(true);
+            UiTransition.Set(phonePanel, true);
+            if (ByEar) narrator.SayNow("phone_open", Narrator.Buttons);
         }
 
-        public void ClosePhone() => phonePanel.SetActive(false);
+        public void ClosePhone() => UiTransition.Set(phonePanel, false);
 
         /// <summary>Forgets the previous round's action shots (a new round is starting).</summary>
         public void ClearActionShots()
@@ -187,7 +216,7 @@ namespace FruitGame
         string EnsureSaved()
         {
             if (saved) return savedPath;
-            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "FruitGame");
+            string dir = PhotoFolder;
             Directory.CreateDirectory(dir);
             savedPath = Path.Combine(dir, $"FruitGame_{DateTime.Now:yyyyMMdd_HHmmss}_{score}.png");
             File.WriteAllBytes(savedPath, LastPhoto.EncodeToPNG());
@@ -201,7 +230,7 @@ namespace FruitGame
         {
             if (step == Step.Off) return;
             step = Step.Off;
-            panel.SetActive(false);
+            UiTransition.Set(panel, false);
             pile.SetPhotoMode(false);
             SetHidden(false);
             Closed?.Invoke();
@@ -212,13 +241,15 @@ namespace FruitGame
             step = Step.Pose;
             saved = false;
             printed = false;
-            poseGroup.SetActive(true);
-            previewGroup.SetActive(false);
+            UiTransition.Set(poseGroup, true);
+            UiTransition.Set(previewGroup, false);
             countdownText.gameObject.SetActive(false);
             if (phonePanel != null) phonePanel.SetActive(false);
-            if (ByEar) narrator.Say("pose_intro");
+            if (ByEar) narrator.SayNow("pose_intro", Narrator.Buttons);
             nextGuide = Time.unscaledTime + poseGuideEvery;
         }
+
+        void Speak(string key) { if (ByEar) narrator.SayNow(key); }
 
         bool ByEar => Difficulty.Auditory && narrator != null;
         float nextGuide;
@@ -278,11 +309,14 @@ namespace FruitGame
             flash.gameObject.SetActive(true);
             flashT = 0f;
             if (audioFeedback != null) audioFeedback.PlayShutter();
-            if (ByEar) narrator.Say("photo_done");
+            if (ByEar) narrator.SayNow("photo_done");
+            if (ByEar && printer != null && printer.HasProblem) narrator.Say("print_down");
+            if (ByEar) narrator.Say(Narrator.Buttons);
 
             previewImage.texture = LastPhoto;
-            savedText.text = printer != null && printer.HasProblem ? Strings.Get("photo.printerDown") : "";
-            previewGroup.SetActive(true);
+            savedText.text = printer != null && printer.HasProblem ? Strings.Get("photo.printerDown")
+                : printer != null ? Strings.Get("photo.printTime", Mathf.RoundToInt(config.printSeconds)) : "";
+            UiTransition.Set(previewGroup, true);
             step = Step.Preview;
         }
 

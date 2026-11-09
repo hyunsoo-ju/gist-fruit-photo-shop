@@ -33,9 +33,9 @@ namespace FruitGame
             return Mathf.Lerp(-0.25f, -0.6f, (absX - Crest) / 3f);
         }
 
-        static readonly Color Top = new Color32(0x8C, 0xC8, 0x4B, 0xFF);
-        static readonly Color GrassLight = new Color32(0x74, 0xB4, 0x46, 0xFF);
-        static readonly Color GrassDeep = new Color32(0x4A, 0x82, 0x34, 0xFF);
+        static readonly Color Top = new Color32(0x62, 0x96, 0x3C, 0xFF);
+        static readonly Color GrassLight = new Color32(0x52, 0x88, 0x38, 0xFF);
+        static readonly Color GrassDeep = new Color32(0x34, 0x62, 0x2A, 0xFF);
         static readonly Color Flower = new Color32(0xF2, 0x8C, 0xB2, 0xFF);
         static readonly Color Stone = new Color32(0xB4, 0xAE, 0xA4, 0xFF);
         const int Levels = 6;              // grass shades from just under the top to the deepest

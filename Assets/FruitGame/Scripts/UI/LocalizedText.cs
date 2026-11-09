@@ -24,6 +24,10 @@ namespace FruitGame
 
         void OnDisable() => Strings.Changed -= Refresh;
 
-        void Refresh() => GetComponent<TMP_Text>().text = Strings.Get(key);
+        void Refresh()
+        {
+            // A label built at runtime is enabled the moment it's added, before it's been given its key.
+            if (!string.IsNullOrEmpty(key)) GetComponent<TMP_Text>().text = Strings.Get(key);
+        }
     }
 }
