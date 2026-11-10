@@ -69,9 +69,11 @@ namespace FruitGame
                 StackUnderPlay((RectTransform)auditory, 0);
                 auditory.gameObject.SetActive(true);
             }
-            if (calibrate != null)
+            // The scene keeps a Contrast Button (so the Editor shows the title as it plays); older scenes get one made here.
+            var saved = menu != null ? menu.Find("Contrast Button") : null;
+            if (saved != null || calibrate != null)
             {
-                var contrast = Instantiate(calibrate.gameObject, menu).GetComponent<Button>();
+                var contrast = saved != null ? saved.GetComponent<Button>() : Instantiate(calibrate.gameObject, menu).GetComponent<Button>();
                 contrast.name = "Contrast Button";
                 contrast.onClick = new Button.ButtonClickedEvent();
                 contrast.onClick.AddListener(ToggleContrast);
@@ -82,7 +84,7 @@ namespace FruitGame
                 contrast.gameObject.SetActive(true);
                 // The "voice assist on" tag sits under the lowest button.
                 var tag = auditory != null ? auditory.Find("Easy Tag") : null;
-                if (tag != null) tag.SetParent(contrast.transform, false);
+                if (tag != null && tag.parent != contrast.transform) tag.SetParent(contrast.transform, false);
             }
 
             // Focus ring: four bars, moved onto the focused button.
@@ -298,12 +300,21 @@ namespace FruitGame
             if (Difficulty.Auditory) narrator.SayFocus(HighContrast.On ? "contrast_on" : "contrast_off");
         }
 
-        /// <summary>One short quiet line when someone comes up to the title, for visitors who can't see the screen.</summary>
+        /// <summary>
+        /// A short quiet line on the title for visitors who can't see the screen: when someone comes up, shortly after
+        /// the title comes back from a visit (the same person may still be there, and voice assist was reset), and
+        /// again every InviteCooldown while someone stays on the title with voice assist off.
+        /// </summary>
         void UpdateInvite()
         {
             bool face = tracker != null && tracker.HasFace;
-            if (game.State == GameState.Boot && !Difficulty.Auditory && face && !faceWasThere
-                && Time.unscaledTime - lastFaceSeen >= FaceAwayBeforeInvite && Time.unscaledTime - lastInvite >= InviteCooldown)
+            bool onTitle = game.State == GameState.Boot && !game.DemoRunning;
+            if (onTitle && !wasOnTitle) titleSince = Time.unscaledTime;
+            wasOnTitle = onTitle;
+            bool arrived = face && !faceWasThere && Time.unscaledTime - lastFaceSeen >= FaceAwayBeforeInvite;
+            bool due = Time.unscaledTime - lastInvite >= InviteCooldown;
+            if (onTitle && !Difficulty.Auditory && face && due && !narrator.IsSpeaking
+                && (arrived || Time.unscaledTime - titleSince >= TitleSettleBeforeInvite))
             {
                 lastInvite = Time.unscaledTime;
                 narrator.Quiet = true;
@@ -312,6 +323,11 @@ namespace FruitGame
             if (face) lastFaceSeen = Time.unscaledTime;
             faceWasThere = face;
         }
+
+        bool wasOnTitle;
+        float titleSince;
+        /// <summary>Seconds on the title before the invitation, so it doesn't talk over the screen change.</summary>
+        const float TitleSettleBeforeInvite = 1.5f;
 
         // ---- Numpad (optional) ---------------------------------------------------------------------------------------
 

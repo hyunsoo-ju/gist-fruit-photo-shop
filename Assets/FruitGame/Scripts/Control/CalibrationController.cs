@@ -43,6 +43,9 @@ namespace FruitGame
         CalibrationData previous;
         readonly List<(float time, float u)> history = new List<(float, float)>();
         float steadySince = -1f;
+        float smoothedU;
+        /// <summary>Time constant (s) of the smoothing the stillness check looks at.</summary>
+        const float SteadySmoothing = 0.12f;
 
         public void Begin(bool startRoundAfter)
         {
@@ -193,28 +196,36 @@ namespace FruitGame
             if (face.width < 0.12f) { Prompt("calib_closer"); Hold(false, Strings.Get("calib.closer")); return; }
             if (face.width > 0.45f) { Prompt("calib_farther"); Hold(false, Strings.Get("calib.farther")); return; }
 
-            float u = HeadSignal.Value(config, tracker, mesh);
+            float raw = HeadSignal.Value(config, tracker, mesh);
             float now = Time.unscaledTime;
+            // Stillness is judged on a lightly smoothed signal: the face detector works on a 128 px copy of the frame,
+            // so its box wobbles by a pixel or two (about 0.02 of the play area) even when the head is still. The
+            // smoothing takes that out and still shows any real movement.
+            bool fresh = history.Count == 0;
+            float u = fresh ? raw : Mathf.Lerp(smoothedU, raw, 1f - Mathf.Exp(-Time.unscaledDeltaTime / SteadySmoothing));
+            smoothedU = u;
             history.Add((now, u));
             history.RemoveAll(h => now - h.time > config.steadyHoldTime);
 
-            float min = float.MaxValue, max = float.MinValue;
-            foreach (var h in history) { min = Mathf.Min(min, h.u); max = Mathf.Max(max, h.u); }
+            float min = float.MaxValue, max = float.MinValue, sum = 0f;
+            foreach (var h in history) { min = Mathf.Min(min, h.u); max = Mathf.Max(max, h.u); sum += h.u; }
             bool steady = max - min <= config.steadyTolerance * 2f;
+            // The pose is recorded as the average over the hold, not the last sample.
+            float held = sum / history.Count;
 
             float minRange = config.calibMinRangePerSide;
             switch (step)
             {
                 case Step.Centre:
-                    if (Hold(steady, Strings.Get("calib.holdStill"))) { working.centre = u; Enter(Step.Left); }
+                    if (Hold(steady, Strings.Get("calib.holdStill"))) { working.centre = held; Enter(Step.Left); }
                     break;
                 case Step.Left:
                     if (u > working.centre - minRange) { Prompt(Turning ? "calib_more_left_turn" : "calib_more_left"); Hold(false, "A little further left"); break; }
-                    if (Hold(steady, Strings.Get("calib.holdThere"))) { working.left = u; Enter(Step.Right); }
+                    if (Hold(steady, Strings.Get("calib.holdThere"))) { working.left = held; Enter(Step.Right); }
                     break;
                 case Step.Right:
                     if (u < working.centre + minRange) { Prompt(Turning ? "calib_more_right_turn" : "calib_more_right"); Hold(false, "A little further right"); break; }
-                    if (Hold(steady, Strings.Get("calib.holdThere"))) { working.right = u; Enter(Step.Try); }
+                    if (Hold(steady, Strings.Get("calib.holdThere"))) { working.right = held; Enter(Step.Try); }
                     break;
             }
         }
@@ -241,7 +252,7 @@ namespace FruitGame
             if (!steady)
             {
                 steadySince = -1f;
-                ringFill.fillAmount = 0f;
+                SetRingProgress(0f);
                 return false;
             }
             if (steadySince < 0f)
@@ -251,21 +262,115 @@ namespace FruitGame
                 if (ByEar && !holdSpoken && !narrator.IsSpeaking) { holdSpoken = true; narrator.Say("calib_hold"); }
             }
             float progress = Mathf.Clamp01((Time.unscaledTime - steadySince) / config.steadyHoldTime);
-            ringFill.fillAmount = progress;
+            SetRingProgress(progress);
             return progress >= 1f;
         }
 
-        /// <summary>Centres the progress ring on the face (a rect in HUD frame UV).</summary>
+        // ---- The hold ring: pixel art around the face --------------------------------------------------------------
+
+        /// <summary>Canvas units per UI art pixel (the same as the buttons and text; ScreenLayout).</summary>
+        const float ArtPixel = 4f;
+        const int RingBand = 8;   // art pixels of fill between the outlines
+        static readonly Color32 RingOutline = new Color32(0x1E, 0x22, 0x33, 0xE6);
+        static readonly Color32 RingTrack = new Color32(0xFF, 0xF8, 0xEC, 0x8C);
+        static readonly Color32 RingFill = new Color32(0xC2, 0x18, 0x5B, 0xFF);
+        static readonly Color32 RingFillLight = new Color32(0xE8, 0x5A, 0x8E, 0xFF);
+
+        RawImage ringImage;
+        Texture2D ringTex;
+        Color32[] ringPixels;
+        int ringSize;
+        float ringShown = -1f;
+        // Per ring pixel: its index, how far round it is (0 at the top, clockwise), and whether it's outline, lit edge or band.
+        int[] ringIndex;
+        float[] ringAngle;
+        byte[] ringKind;
+
+        void Awake()
+        {
+            // The old disk images stay in the scene but no longer draw; the ring is a generated, point-filtered texture.
+            foreach (var g in ring.GetComponentsInChildren<Graphic>(true)) g.enabled = false;
+            ringImage = new GameObject("Pixel Ring", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+            ringImage.transform.SetParent(ring, false);
+            var rt = ringImage.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            ringImage.raycastTarget = false;
+        }
+
+        void OnDestroy()
+        {
+            if (ringTex != null) Destroy(ringTex);
+        }
+
+        /// <summary>
+        /// Centres the progress ring on the face (a rect in HUD frame UV), about 1.45 face widths across. Its size is a
+        /// whole number of art pixels and its centre sits on the art-pixel grid, so every pixel stays square.
+        /// </summary>
         void PlaceRing(Rect face)
         {
             ring.gameObject.SetActive(true);
+            var parent = (RectTransform)ring.parent;
+            Vector2 area = parent.rect.size;
             var c = face.center;
-            // A circle spanning `size` in u spans size × aspect in v (the frame is 9:16 or 16:9).
-            float aspect = ScreenLayout.Aspect;
-            float size = Mathf.Max(face.width, face.height / aspect) * 1.6f;
-            ring.anchorMin = new Vector2(c.x - size * 0.5f, c.y - size * aspect * 0.5f);
-            ring.anchorMax = new Vector2(c.x + size * 0.5f, c.y + size * aspect * 0.5f);
-            ring.offsetMin = ring.offsetMax = Vector2.zero;
+            // A circle spanning `size` in u spans size × aspect in v (the frame is 9:16 or 16:9): the same canvas units.
+            float size = Mathf.Max(face.width, face.height / ScreenLayout.Aspect) * 1.45f;
+            int n = Mathf.Max(24, Mathf.RoundToInt(size * area.x / ArtPixel / 2f) * 2);
+            ring.anchorMin = ring.anchorMax = Vector2.zero;
+            ring.pivot = new Vector2(0.5f, 0.5f);
+            ring.sizeDelta = new Vector2(n * ArtPixel, n * ArtPixel);
+            ring.anchoredPosition = new Vector2(Mathf.Round(c.x * area.x / ArtPixel) * ArtPixel, Mathf.Round(c.y * area.y / ArtPixel) * ArtPixel);
+            if (n != ringSize) BuildRing(n);
+        }
+
+        /// <summary>Works out which pixels of an n × n ring are outline, band and lit edge, and their angle round it.</summary>
+        void BuildRing(int n)
+        {
+            ringSize = n;
+            if (ringTex == null) ringTex = new Texture2D(n, n, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp, name = "Calibration Ring" };
+            else ringTex.Reinitialize(n, n);
+            ringImage.texture = ringTex;
+            ringPixels = new Color32[n * n];
+            var index = new List<int>();
+            var angle = new List<float>();
+            var kind = new List<byte>();
+            float outer = n * 0.5f, inner = outer - RingBand - 2f;
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = x + 0.5f - outer, dy = y + 0.5f - outer;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    if (d > outer || d <= inner) continue;
+                    byte k = d > outer - 1f || d <= inner + 1f ? (byte)0 : d > outer - 2f ? (byte)1 : (byte)2;
+                    float a = Mathf.Atan2(dx, dy) / (2f * Mathf.PI);
+                    index.Add(y * n + x);
+                    angle.Add(a < 0f ? a + 1f : a);
+                    kind.Add(k);
+                }
+            ringIndex = index.ToArray();
+            ringAngle = angle.ToArray();
+            ringKind = kind.ToArray();
+            ringShown = -1f;
+            SetRingProgress(Mathf.Max(0f, ringFill != null ? ringFill.fillAmount : 0f), true);
+        }
+
+        /// <summary>Lights the band pixel by pixel, clockwise from the top, as the hold progresses (0…1).</summary>
+        void SetRingProgress(float progress, bool force = false)
+        {
+            if (ringFill != null) ringFill.fillAmount = progress;
+            if (ringTex == null || (!force && Mathf.Abs(progress - ringShown) < 0.001f)) return;
+            ringShown = progress;
+            System.Array.Clear(ringPixels, 0, ringPixels.Length);
+            for (int i = 0; i < ringIndex.Length; i++)
+            {
+                byte k = ringKind[i];
+                ringPixels[ringIndex[i]] = k == 0 ? RingOutline
+                    : ringAngle[i] < progress ? (k == 1 ? RingFillLight : RingFill)
+                    : RingTrack;
+            }
+            ringTex.SetPixels32(ringPixels);
+            ringTex.Apply(false);
         }
     }
 }

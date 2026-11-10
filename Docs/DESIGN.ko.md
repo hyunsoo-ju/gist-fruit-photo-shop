@@ -261,7 +261,7 @@
 4. **해 보기**: 바구니가 새 대응을 따르고, 안내 줄에 규칙 줄(카운트다운 아래와 같음)이 나옵니다. **좋아요**는 저장, **다시 하기**는 반복, **뒤로**는 취소하고 이전 보정을 유지합니다.
 
 ### 접근성 세부 사항
-- "가만히"는 얼굴이 1초 동안 ±0.015(u) 안에 머무는 것이며, 얼굴 둘레에 차오르는 고리로 보여 줍니다. 허용치와 유지 시간은 떨림이 있는 플레이어를 위한 설정입니다.
+- "가만히"는 얼굴이 1초 동안 ±0.02(u) 안에 머무는 것이며, 얼굴 둘레에 차오르는 고리로 보여 줍니다. 고리는 UI와 같은 픽셀 크기(캔버스 4단위, 정사각형, 포인트 필터링)의 픽셀 아트로, 얼굴 폭의 약 1.45배이고 픽셀 격자에 맞춰 놓입니다. 슬레이트색 테두리 안의 8픽셀 옅은 띠가 위에서부터 시계 방향으로 한 픽셀씩 분홍으로 차오르고, 바깥 가장자리는 더 밝습니다(`CalibrationController`가 만듦. 흐린 원판을 대신함). 허용치와 유지 시간은 떨림이 있는 플레이어를 위한 설정입니다. 살짝 평활화한 신호(0.12초)로 판단합니다. 얼굴 상자는 프레임을 128 px로 줄인 사본에서 나오므로 머리가 가만히 있어도 1초에 0.02–0.03쯤 흔들리기 때문입니다(DSLR로 잰 값, 2026-11-10). 원래 신호에 ±0.015로는 가만히 있어도 자주 인정되지 않았습니다. 각 자세는 마지막 값이 아니라 유지하는 동안의 평균으로 기록합니다.
 - 왼쪽과 오른쪽 범위는 **따로** 저장하며, 대칭으로 만드는 `min()`이 없습니다.
 - 아주 작은 범위도 받아들입니다. 계산을 안정적으로 하기 위해 한쪽에 0.03의 하한만 있습니다. 데드존과 필터가 범위에 맞춰 조정되므로 안정적입니다.
 - 얼굴 상자가 플레이 영역 폭의 12 % 미만이거나 45 %를 넘으면 "가까이 와 주세요" 또는 "뒤로 가 주세요"를 안내합니다.
@@ -297,7 +297,7 @@
   - **음이 높아짐:** 과일이 바구니에 가까이 떨어질수록 높아져, 곧 떨어질 것을 들을 수 있습니다.
   - 받으면 밝게 올라가는 **차임**(황금 과일은 더 반짝임), 놓치면 부드럽게 내려가는 **음**. 내레이터가 말하는 동안 삐 소리는 작아집니다. 모든 크기, 지연, 머리 그림자 변화가 샘플 단위로 부드럽게 바뀌고, 소리는 끊지 않고 페이드하므로 바구니를 움직여도 딸깍 소리가 나지 않습니다.
 ### 내레이터
-- **누가 듣나:** 음성 안내를 켠 방문객만(시작 화면의 음성 안내 버튼). 다른 사람은 시작 화면에 다가올 때 짧고 조용한 초대 한 번만 듣습니다.
+- **누가 듣나:** 음성 안내를 켠 방문객만(시작 화면의 음성 안내 버튼). 다른 사람은 시작 화면에서 짧고 조용한 초대(`title_invite`)를 듣습니다: 누군가 다가올 때, 방문이 끝나 시작 화면으로 돌아오고 1.5초 뒤(같은 방문객이 아직 있을 수 있고 음성 안내는 초기화됨), 그리고 음성 안내가 꺼진 채 누군가 시작 화면에 머무는 동안 30초마다.
 - **내레이터**(한국어, 차분하고 쉬운 말, Google Cloud Text-to-Speech ko-KR-Neural2-B로 미리 만든 음성, 방문객이 고르는 1배부터 2배까지 다섯 속도): 카운트다운 전에 목표를 설명하고, 카운트다운을 세고, 45·30·15초에 남은 시간과 점수를 알려 주고("30초 남았어요, 지금 12점!"), 최종 점수를 말하고(과일별 목록은 말하지 않음), 사진을 찍을지 묻고(동행인이 **사진 찍기**를 누름), 얼굴 추적으로 포즈를 안내하고("조금 왼쪽으로", "조금 가까이", "좋아요, 그대로!") 촬영을 셉니다. 보정도 안내합니다: 소개, 자세마다(정면, 왼쪽, 오른쪽), 가만히 있게 되면 "그대로 있어요"(진행 고리가 보이지 않으므로), 자세마다 "좋아요!", "조금 더 왼쪽/오른쪽으로", 가까이 또는 뒤로, "얼굴을 찾고 있어요", 확정하거나 다시 하는 방법(동행인이 버튼을 누름), 마무리 대사. 모든 대사는 `Tools/render_narration.py`가 `Assets/FruitGame/Resources/NarrationLines.txt`에서 한 번 만든 클립이며(0–99 숫자는 각각 클립), 속도마다 `Resources/Narration/s<속도>/`에 만들어 오프라인과 Windows에서도 동작합니다.
 - **음성 만들기:** `GOOGLE_TTS_API_KEY`를 설정하고(또는 `gcloud`로 로그인) `python3 Tools/render_narration.py --engine google --speeds 1,1.25,1.5,1.75,2`. 없는 클립만 만들며(`--force`는 다시 만들고, `--only <키>`는 대사를 고름), 6개씩 진행 막대와 함께 만듭니다. `--voice`와 `--pitch`로 목소리를 고릅니다(ko-KR-Neural2-B, 피치 0). `--engine say`는 테스트용으로 macOS 음성 미리보기를 빠르게 만듭니다.
 ### 테스트
@@ -529,6 +529,8 @@
 - **Build Orchard And Plant Variety**(`OrchardBuilder`)가 §4의 L1/L4b 다양성을 팔레트 재질 색조(`<material>__<variant>`)로 `Generated` 컨테이너에 만들며, 실행할 때마다 다시 만듭니다. 표시하고 굽기 전에 실행합니다.
 - OBJ 색은 조심해야 합니다. Unity는 OBJ의 `Kd`를 선형으로 읽으므로, `ArtLibrary`가 OBJ 재질을 의도한 sRGB 색의 팔레트 재질로 다시 만듭니다.
 
+**재생 전 시작 화면 미리보기**(`Scripts/Editor/TitlePreview.cs`, **FruitGame > Title Preview**, 기본으로 켜짐, *Refresh*로 다시 만듦): 에디터가 재생 중이 아닐 때도 게임 화면에 게임이 그리는 그대로의 시작 화면이 보입니다. 실행 중에만 만들어지는 부분(복셀 버튼, 3D 제목, 상자 벽, 언덕, 풍경 띠, 상자 받침, 살아 있는 풍경의 색·관목·나비·구름, 픽셀 렌더)은 각각 `IEditPreview`를 구현해 자기 코드로 편집 모드에서 정지된 모습을 만듭니다. 미리보기가 만든 것은 모두 숨겨지고 저장되지 않으며, 저장 전, 재생 전, 스크립트 다시 불러오기 전에 모두 치우고 저장되는 객체에 바꾼 것도 되돌린 뒤 다시 만듭니다(세로·가로 전환 뒤에도). 장면 자체에도 시작 화면 배치(시작 아래로 쌓인 음성 안내·고대비 버튼, 현재 문구, 숨긴 게임 HUD)를 저장해 두어, 에디터와 게임이 같은 화면에서 시작합니다. 움직임(블록이 떨어지는 등장, 바람, 흘러가는 구름)은 재생 중에만 있습니다.
+
 ---
 
 ## 17. 조정값 (`GameConfig` ScriptableObject)
@@ -570,7 +572,7 @@
 | `deadZone` / `softClampKnee` | 0 / 0.8 | t 단위 |
 | `calibMinRangePerSide` | 0.03 | |
 | `oneEuroMinCutoff` / `oneEuroBeta` | 3 / 1 | 바구니 x(미터). 웹캠 때는 1 / 0.5 |
-| `steadyTolerance` / `steadyHoldTime` | 0.015 / 1.0초 | 떨림이 있으면 올림 |
+| `steadyTolerance` / `steadyHoldTime` | 0.02 / 1.0초 | 떨림이 있으면 올림. 0.015였음 |
 | `calibLeadInCentre` / `calibLeadIn` | 5초 / 3초 | 자세를 세기 전에 보정 안내를 읽을 시간 |
 | `steerBy` / `turnDegreesPerWidth` | Slide / 100° | 준비 흐름이 열릴 때 고른 카드, 카메라 폭 전체로 치는 회전 각도 |
 | `faceLostPauseDelay` / `faceReturnGrace` | 1.0초 / 1.0초 | |
@@ -610,7 +612,7 @@ Assets/FruitGame/
   Scenes/     Boot.unity (빌드는 여기서 시작)  Game.unity
   Shaders/    PersonCutout  BeautyPrep  MaskSmooth  BokehBlur  BokehBackdrop  FruitRim  PixelText  DitherFade  PixelComposite  VoxelTitle
   Scripts/
-    Core/      GameConfig, GameStateMachine, IdleWatch, BootLoader, SaveData, RoundTimer, LivesCounter, ScreenLayout, GuestDisplay, ViewFill, Difficulty
+    Core/      GameConfig, GameStateMachine, IdleWatch, BootLoader, SaveData, RoundTimer, LivesCounter, ScreenLayout, GuestDisplay, ViewFill, Difficulty, IEditPreview
     Art/       VoxelSource, PixelRenderer, PixelSnap, BlockMesh, VoxelTitle, SceneryBands, FarHills, LivingScenery, BlockFx, BombFuse, GoldenSparkle
     Control/   BasketInputSource, FallbackInput, BasketInputRouter, DemoPilot, FaceToBasketMapper, OneEuroFilter, CalibrationData, CalibrationController
     Gameplay/  FruitType, ScoreRules, RoundStats, FruitSpawner, FallingFruit, BasketController, BasketAssist, FruitPile, PileFruit, CrateWalls
@@ -618,7 +620,7 @@ Assets/FruitGame/
     Photo/     PhotoBooth, PhotoFrame, PhotoShare, QrCode, ActionShots
     UI/        GameHUD, UiTransition, SetupFlow, FaceDebugOverlay, StaffScreen, StaffPanel, StaffAlert, ScreenFade, CameraMenu, KeycapButton, VoxelButtons, VoxelButtonKit, VoxelText, HudCamera, HighContrast, Strings, LocalizedText, LanguageSwitch, AspectLayout, SidePanels
     Feedback/  AudioFeedback, AuditoryCues, Narrator, VoiceAssist
-    Editor/    ArtLibrary, TitleExporter, PixelFontBaker, Voxels/ (VoxelMesher, VoxelBaker, OrchardBuilder)
+    Editor/    ArtLibrary, TitleExporter, PixelFontBaker, TitlePreview, Voxels/ (VoxelMesher, VoxelBaker, OrchardBuilder)
   Resources/  Strings.txt (한국어/영어 문구 표), NarrationLines.txt, Narration/s100…s200/ (속도별 음성)
 ```
 
@@ -742,7 +744,7 @@ Assets/FruitGame/
 | 6.12 | **부스 자체** | 모든 조작부는 바닥에서 400–1,220 mm, 필수 화면 정보는 1,400 mm 이하(K 9.a–b, 508 407.8)로, 32인치 디스플레이 설치와 세로 배치를 제한. 터치 대상은 최소 12 × 12 mm, 간격 2.5 mm(K 1.b–c). 인쇄물 받는 곳은 K 1.i대로. 키오스크 위치를 알리는 음성 장치, 또는 호출벨이 있는 직원(한국 시행령의 대안). | P0 |
 | 6.13 | **대상이 되는 분들과 테스트** | 5.2의 일반 플레이 테스트보다 먼저, 최소한 시각장애인과 저시력인 테스터가 음성 흐름을 시험. 기준의 평가단은 12명: 비장애인 3, 전맹 2, 저시력 2, 휠체어 사용자 2, 청각·언어장애인 1, 65세 이상 2(K 2부, UI). | P0 |
 
-**행사를 위해 구현함(2026-11-10), 검토 대기.** 모두 소프트웨어이며 숫자 키패드 없이도 됩니다. 시작 화면의 자체 버튼인 음성 안내(`VoiceAssist`, 키패드의 5도)는 소리 판을 하고 난이도 단계를 건너뜀. 누군가 시작 화면에 다가오면 짧고 조용한 초대. 새 화면이나 키가 줄을 끊는 하나의 음성 경로(`Narrator`)와 다시 듣기, 멈춤 또는 음소거, 6 dB씩 네 단계 음량, 속도 선택. 모두 방문이 끝나면 초기화. 음성 안내가 켜져 있는 동안 음성 조절 터치 버튼 줄과 자막 띠. 다시 쓴 대본(`Resources/NarrationLines.txt`)으로 오류를 포함한 모든 화면을 말함. 화면마다 끝에 4와 6으로 넘기는 순서대로 버튼 이름을 말하며, 화면에서 만들어 어긋날 수 없음(위치 설명은 뺌). 짧게만 답하는 키(버튼 이름, 음량, 속도)는 끊은 안내를 다시 읽음. 보정 자세마다(정면, 왼쪽, 오른쪽)와 판 시작 전에 음성 안내는 방향이나 안내를 이해했을 때 누르는 5를 기다리며, 5만이 넘어가는 방법이고 키패드가 없으면 직원이 노트북에서 누름. 버튼 클릭 소리. 시작 화면의 고대비 전환. 4.5:1을 넘도록 주황 버튼을 어둡게. **선택 숫자 키패드**(또는 키보드 윗줄 숫자): 7 다시 듣기, 8과 2 음량, 9 속도, 3 멈춤 또는 음소거, 4와 6 버튼 고르기(이름을 말함, 판 중에는 조작), 5 누르기, 1 뒤로, 0 직원 부르기(직원이 지울 때까지 진행자 화면에 소리 없는 빨간 막대. 부스의 소리 출력은 하나뿐이고 방문객 것이어야 하므로. 소개에서 이 키를 알려 줌). 판 중 7은 남은 시간과 점수. 음성은 속도별 MP3로 렌더하며(`Tools/render_narration.py --speeds`, `Resources/Narration/s<속도>/`로), 렌더한 속도만 제공합니다.
+**행사를 위해 구현함(2026-11-10), 검토 대기.** 모두 소프트웨어이며 숫자 키패드 없이도 됩니다. 시작 화면의 자체 버튼인 음성 안내(`VoiceAssist`, 키패드의 5도)는 소리 판을 하고 난이도 단계를 건너뜀. 누군가 시작 화면에 다가올 때와 방문이 끝난 뒤, 그리고 머무는 동안 30초마다 짧고 조용한 초대. 새 화면이나 키가 줄을 끊는 하나의 음성 경로(`Narrator`)와 다시 듣기, 멈춤 또는 음소거, 6 dB씩 네 단계 음량, 속도 선택. 모두 방문이 끝나면 초기화. 음성 안내가 켜져 있는 동안 음성 조절 터치 버튼 줄과 자막 띠. 다시 쓴 대본(`Resources/NarrationLines.txt`)으로 오류를 포함한 모든 화면을 말함. 화면마다 끝에 4와 6으로 넘기는 순서대로 버튼 이름을 말하며, 화면에서 만들어 어긋날 수 없음(위치 설명은 뺌). 짧게만 답하는 키(버튼 이름, 음량, 속도)는 끊은 안내를 다시 읽음. 보정 자세마다(정면, 왼쪽, 오른쪽)와 판 시작 전에 음성 안내는 방향이나 안내를 이해했을 때 누르는 5를 기다리며, 5만이 넘어가는 방법이고 키패드가 없으면 직원이 노트북에서 누름. 버튼 클릭 소리. 시작 화면의 고대비 전환. 4.5:1을 넘도록 주황 버튼을 어둡게. **선택 숫자 키패드**(또는 키보드 윗줄 숫자): 7 다시 듣기, 8과 2 음량, 9 속도, 3 멈춤 또는 음소거, 4와 6 버튼 고르기(이름을 말함, 판 중에는 조작), 5 누르기, 1 뒤로, 0 직원 부르기(직원이 지울 때까지 진행자 화면에 소리 없는 빨간 막대. 부스의 소리 출력은 하나뿐이고 방문객 것이어야 하므로. 소개에서 이 키를 알려 줌). 판 중 7은 남은 시간과 점수. 음성은 속도별 MP3로 렌더하며(`Tools/render_narration.py --speeds`, `Resources/Narration/s<속도>/`로), 렌더한 속도만 제공합니다.
 
 ![키패드 조작표](images/07-keypad-ko.svg)
 

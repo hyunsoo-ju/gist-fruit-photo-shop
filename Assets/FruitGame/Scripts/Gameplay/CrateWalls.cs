@@ -11,7 +11,7 @@ namespace FruitGame
     /// random so they don't look copied. Outside it (seen in landscape) shorter crate stacks step down toward the screen
     /// edge, each topped with a barrel with fruit heaped on its lid, and a barrel stands at the foot. Every piece gets its own size and a slightly different wood colour. When a fruit bounces off a wall, the piece it hit wobbles, a few wood chips fly and a knock plays.
     /// </summary>
-    public class CrateWalls : MonoBehaviour
+    public class CrateWalls : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [SerializeField] GameObject crate;
@@ -234,6 +234,20 @@ namespace FruitGame
                 chip.velocity.y -= 9f * dt;
                 chip.transform.position += chip.velocity * dt;
             }
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 3;
+        public void BuildPreview() => Awake();
+
+        public void EndPreview()
+        {
+            FallingFruit.WallBounced -= OnWallBounced;
+            pieces.Clear();
+            chips.Clear();
+            if (chipMesh != null) DestroyImmediate(chipMesh);
+            chipMesh = null;
         }
     }
 }

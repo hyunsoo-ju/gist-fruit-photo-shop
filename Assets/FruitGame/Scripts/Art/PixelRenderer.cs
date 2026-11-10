@@ -13,7 +13,7 @@ namespace FruitGame
     /// covers the player's outline wherever the basket or plants overlap.
     /// </summary>
     [RequireComponent(typeof(Camera))]
-    public class PixelRenderer : MonoBehaviour
+    public class PixelRenderer : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [Tooltip("Off: this camera renders everything at full resolution as before (for comparison).")]
@@ -180,7 +180,8 @@ namespace FruitGame
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Quad);
             go.name = name;
-            Destroy(go.GetComponent<Collider>());
+            var collider = go.GetComponent<Collider>();
+            if (Application.isPlaying) Destroy(collider); else DestroyImmediate(collider); // edit-mode preview too
             go.layer = LayerMask.NameToLayer(CompositeLayer);
             go.transform.SetParent(transform, false);
             var r = go.GetComponent<MeshRenderer>();
@@ -188,6 +189,27 @@ namespace FruitGame
             r.shadowCastingMode = ShadowCastingMode.Off;
             r.receiveShadows = false;
             return go.transform;
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 9;
+        public void BuildPreview() => Awake();
+
+        public void EndPreview()
+        {
+            ScreenLayout.Changed -= MakeTargets;
+            if (main != null) main.cullingMask = originalMask;
+            if (backCam != null) backCam.targetTexture = null;
+            if (frontCam != null) frontCam.targetTexture = null;
+            if (backRt != null) { backRt.Release(); DestroyImmediate(backRt); }
+            if (frontRt != null) { frontRt.Release(); DestroyImmediate(frontRt); }
+            if (backMat != null) DestroyImmediate(backMat);
+            if (frontMat != null) DestroyImmediate(frontMat);
+            backRt = frontRt = null;
+            backMat = frontMat = null;
+            backCam = frontCam = null;
+            backQuad = frontQuad = null;
         }
     }
 }

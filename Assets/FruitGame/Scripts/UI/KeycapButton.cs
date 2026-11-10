@@ -14,7 +14,7 @@ namespace FruitGame
     /// dark lip and the face (holding the label) sits on it; hover lifts the face a pixel, pressing sinks it.
     /// </summary>
     [RequireComponent(typeof(Button))]
-    public class KeycapButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    public class KeycapButton : MonoBehaviour, IEditPreview, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
         [SerializeField] RectTransform face;
         [Tooltip("Canvas units per UI pixel (the sprites are drawn at 1 pixel = this many units; one voxel too).")]
@@ -229,6 +229,47 @@ namespace FruitGame
             cam.Render();
             pivot.gameObject.SetActive(false);
             cam.targetTexture = null;
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        Color previewLip;
+        bool previewFace, previewLabel, previewing;
+
+        public int PreviewOrder => 1;
+
+        public void BuildPreview()
+        {
+            Awake();
+            var lip = GetComponent<Image>();
+            var faceImg = face != null ? face.GetComponent<Image>() : null;
+            var text = GetComponentInChildren<TMP_Text>(true);
+            previewLip = lip != null ? lip.color : Color.white;
+            previewFace = faceImg != null && faceImg.enabled;
+            previewLabel = text != null && text.enabled;
+            previewing = true;
+            Start();
+            if (voxel && VoxelButtons.Instance != null) VoxelButtons.Instance.RenderPending();
+        }
+
+        public void EndPreview()
+        {
+            if (!previewing) return;
+            previewing = false;
+            // Put the flat keycap back as it's saved: Start hid it under the voxel view.
+            if (lipImage != null) lipImage.color = previewLip;
+            if (faceImage != null) faceImage.enabled = previewFace;
+            if (label != null) label.enabled = previewLabel;
+            if (borderMesh != null) DestroyImmediate(borderMesh);
+            if (capMesh != null) DestroyImmediate(capMesh);
+            if (target != null) { target.Release(); DestroyImmediate(target); }
+            voxel = false;
+            view = null;
+            pivot = borderT = capT = null;
+            borderMesh = capMesh = null;
+            target = null;
+            builtLabel = null;
+            lastState = -1;
         }
     }
 }

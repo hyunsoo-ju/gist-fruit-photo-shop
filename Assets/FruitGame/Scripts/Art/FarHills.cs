@@ -12,7 +12,7 @@ namespace FruitGame
     /// than the grass around them), flowers and the odd stone, each dithered toward the sky like the rest of the far
     /// layer. OrchardBuilder plants the side trees on SurfaceY.
     /// </summary>
-    public class FarHills : MonoBehaviour
+    public class FarHills : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [SerializeField] Shader ditherShader;
@@ -117,5 +117,11 @@ namespace FruitGame
                 }
             }
         }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 3;
+        public void BuildPreview() => Awake();
+        public void EndPreview() { }
     }
 }

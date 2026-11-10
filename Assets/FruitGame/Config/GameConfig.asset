@@ -101,7 +101,7 @@ MonoBehaviour:
   calibMinRangePerSide: 0.03
   oneEuroMinCutoff: 3
   oneEuroBeta: 1
-  steadyTolerance: 0.015
+  steadyTolerance: 0.02
   steadyHoldTime: 1
   calibLeadInCentre: 5
   calibLeadIn: 3

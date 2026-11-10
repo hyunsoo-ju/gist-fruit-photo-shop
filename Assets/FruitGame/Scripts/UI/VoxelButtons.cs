@@ -11,7 +11,7 @@ namespace FruitGame
     /// inside of a box seen from its middle: a button in the middle faces straight out, and the further out one is, the
     /// more its outer edge swings toward the viewer and grows, its inner edge shrinking away.
     /// </summary>
-    public class VoxelButtons : MonoBehaviour
+    public class VoxelButtons : MonoBehaviour, IEditPreview
     {
         [Tooltip("Lit vertex-colour material for the blocks (the title's).")]
         [SerializeField] Material material;
@@ -105,6 +105,22 @@ namespace FruitGame
             r.GetWorldCorners(corners);
             var centre = (corners[0] + corners[2]) * 0.5f;
             return (Vector2)frame.InverseTransformPoint(centre) - frame.rect.center;
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 0;
+        public void BuildPreview() => Awake();
+        /// <summary>Draws the buttons waiting to be drawn now (the preview has no LateUpdate in edit mode).</summary>
+        public void RenderPending() => LateUpdate();
+
+        public void EndPreview()
+        {
+            if (Instance == this) Instance = null;
+            dirty.Clear();
+            cam = null;
+            if (blockMaterial != null) DestroyImmediate(blockMaterial);
+            blockMaterial = null;
         }
     }
 }

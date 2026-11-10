@@ -11,7 +11,7 @@ namespace FruitGame
     /// the letters whenever the start screen appears; then it bobs gently and a band of light sweeps across now and then.
     /// It's built at runtime from the bitmaps, so changing the text only needs new bitmaps.
     /// </summary>
-    public class VoxelTitle : MonoBehaviour
+    public class VoxelTitle : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameStateMachine game;
         [SerializeField] Material material;
@@ -304,6 +304,31 @@ namespace FruitGame
                 }
             }
             strip += strips;
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 2;
+
+        /// <summary>The title as it rests on the title screen, every block landed.</summary>
+        public void BuildPreview()
+        {
+            Build();
+            SetVisible(true);
+            foreach (var p in pieces)
+            {
+                p.renderer.enabled = true;
+                p.transform.localPosition = p.home;
+            }
+        }
+
+        public void EndPreview()
+        {
+            root = null;
+            pieces.Clear();
+            shown = false;
+            if (instance != null) DestroyImmediate(instance);
+            instance = null;
         }
     }
 }

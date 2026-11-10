@@ -185,7 +185,7 @@ namespace FruitGame
         [Tooltip("One-Euro filter: higher = less lag when moving fast.")]
         public float oneEuroBeta = 1f;
         [Tooltip("Calibration: how still the face must be (± in webcam u) to count as holding a pose. Raise for tremor.")]
-        public float steadyTolerance = 0.015f;
+        public float steadyTolerance = 0.02f;
         [Tooltip("Calibration: how long a pose must be held.")]
         public float steadyHoldTime = 1f;
         [Tooltip("Calibration: seconds to read the prompt before the centre pose starts counting (after the narration, by ear).")]

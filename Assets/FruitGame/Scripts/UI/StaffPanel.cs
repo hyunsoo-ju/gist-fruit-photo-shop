@@ -235,7 +235,7 @@ namespace FruitGame
             string OnOff(bool b) => b ? "On" : "Off";
             var assist = new[] { 0f, 0.5f, 1f };
             var assistNames = new[] { "Off", "Low", "Normal" };
-            var tolerances = new[] { 0.01f, 0.015f, 0.02f, 0.03f, 0.04f };
+            var tolerances = new[] { 0.01f, 0.015f, 0.02f, 0.025f, 0.03f, 0.04f };
             var holds = new[] { 0.5f, 0.75f, 1f, 1.5f, 2f };
             var rounds = new[] { 30f, 45f, 60f, 90f };
             // Coolness: 0.5 is the material's own tone; each side shifts the hue by up to 25°.

@@ -12,7 +12,7 @@ namespace FruitGame
     /// - <b>Ground bank</b>: grass over soil across the bottom, just below the basket, so missed fruit disappear behind it
     ///   in portrait, where the view reaches below the miss line. In landscape it's a thin strip behind the bushes.
     /// </summary>
-    public class SceneryBands : MonoBehaviour
+    public class SceneryBands : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [Tooltip("Lit vertex-colour material (FruitGame/Voxel Title with no sweep).")]
@@ -113,5 +113,11 @@ namespace FruitGame
             }
             return BlockMesh.Build(Cell, size, b, Vector3.zero, "Ground Bank");
         }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 3;
+        public void BuildPreview() => Awake();
+        public void EndPreview() { }
     }
 }

@@ -11,7 +11,7 @@ namespace FruitGame
     /// free space, extra solver iterations, freezing settled fruit and its own physics layer. Nothing is ever removed during a round: the heap grows until it
     /// reaches the drop height (no free spot left up there), or the safety cap `pileMax`, and then stops growing.
     /// </summary>
-    public class FruitPile : MonoBehaviour
+    public class FruitPile : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [SerializeField] FruitSpawner spawner;
@@ -353,6 +353,28 @@ namespace FruitGame
             if (audioFeedback == null || Time.time - lastLandSound < landSoundCooldown) return;
             lastLandSound = Time.time;
             audioFeedback.PlayPileLand();
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 3;
+
+        /// <summary>
+        /// Only the crate platform: Awake also sets the project's physics layer collisions and swaps a saved material
+        /// reference, neither of which the preview may touch.
+        /// </summary>
+        public void BuildPreview()
+        {
+            floorY = BuildPlatform();
+            foreach (var haze in heapHaze.Values)
+                if (haze.HasProperty("_Fade")) haze.SetFloat("_Fade", config.pileDither);
+        }
+
+        public void EndPreview()
+        {
+            heapRenderers.Clear();
+            foreach (var haze in heapHaze.Values) if (haze != null) DestroyImmediate(haze);
+            heapHaze.Clear();
         }
     }
 }

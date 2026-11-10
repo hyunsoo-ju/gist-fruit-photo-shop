@@ -11,7 +11,7 @@ namespace FruitGame
     /// left or right across the sky, each coming back in from the other side. Everything alive moves in the
     /// far layer, behind the player and the fruit, so it can't be mistaken for something to catch.
     /// </summary>
-    public class LivingScenery : MonoBehaviour
+    public class LivingScenery : MonoBehaviour, IEditPreview
     {
         [Tooltip("Lit vertex-colour material (FruitGame/Voxel Title with no sweep), for the butterflies and leaves.")]
         [SerializeField] Material blockMaterial;
@@ -37,6 +37,7 @@ namespace FruitGame
         readonly List<Butterfly> flying = new List<Butterfly>();
         readonly List<Leaf> leaves = new List<Leaf>();
         readonly List<Cloud> clouds = new List<Cloud>();
+        readonly Dictionary<Renderer, Material[]> recoloured = new Dictionary<Renderer, Material[]>();
         System.Random cloudRng;
         readonly List<Mesh> meshes = new List<Mesh>();
         Material blocks;
@@ -163,7 +164,11 @@ namespace FruitGame
                     var swap = Swap(mats[i], far);
                     if (swap != mats[i]) { mats[i] = swap; changed = true; }
                 }
-                if (changed) r.sharedMaterials = mats;
+                if (changed)
+                {
+                    if (!recoloured.ContainsKey(r)) recoloured[r] = r.sharedMaterials;
+                    r.sharedMaterials = mats;
+                }
             }
         }
 
@@ -193,7 +198,9 @@ namespace FruitGame
             else if (isGrass) copy.SetColor("_BaseColor", Natural(c, grassTint));
             // Less washed out toward the sky, so the far orchard reads as green.
             if (isLeaf && dithered) copy.SetFloat("_Fade", m.GetFloat("_Fade") * FarLeafFade);
-            copy.SetFloat("_Wind", (isFlower ? flowerWind : isGrass ? grassWind : isLeaf ? leafWind : 0f) * (far ? 0.6f : 1f));
+            // No wind in the Editor's still preview of the title (it would sway while nothing else moves).
+            float wind = (isFlower ? flowerWind : isGrass ? grassWind : isLeaf ? leafWind : 0f) * (far ? 0.6f : 1f);
+            copy.SetFloat("_Wind", Application.isPlaying ? wind : 0f);
             copy.SetFloat("_WindSpeed", isFlower ? 3.4f : isGrass ? 2.2f : 1.5f);
             swapped[(m, far)] = copy;
             return copy;
@@ -311,6 +318,28 @@ namespace FruitGame
             foreach (var m in swapped.Values) Destroy(m);
             foreach (var m in meshes) Destroy(m);
             if (blocks != null) Destroy(blocks);
+        }
+
+        // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
+
+        public int PreviewOrder => 4;
+        public void BuildPreview() => Awake();
+
+        /// <summary>Puts the scene's own materials back on the recoloured plants and frees the copies.</summary>
+        public void EndPreview()
+        {
+            foreach (var kv in recoloured)
+                if (kv.Key != null) kv.Key.sharedMaterials = kv.Value;
+            recoloured.Clear();
+            foreach (var m in swapped.Values) if (m != null) DestroyImmediate(m);
+            swapped.Clear();
+            foreach (var m in meshes) if (m != null) DestroyImmediate(m);
+            meshes.Clear();
+            if (blocks != null) DestroyImmediate(blocks);
+            blocks = null;
+            flying.Clear();
+            leaves.Clear();
+            clouds.Clear();
         }
     }
 }
