@@ -28,6 +28,7 @@ namespace FruitGame
         [SerializeField] FaceDebugOverlay debug;
         [SerializeField] BlindTest blindTest;
         [SerializeField] Printer printer;
+        PhotoShare share;
         [Tooltip("A text to copy the font from.")]
         [SerializeField] TMP_Text style;
         [SerializeField] float cornerHoldSeconds = 3f;
@@ -150,6 +151,7 @@ namespace FruitGame
             F("lipStrength", () => config.lipStrength, v => config.lipStrength = v);
             F("lipCoolness", () => config.lipCoolness, v => config.lipCoolness = v);
             S("printerName", () => config.printerName ?? "", v => config.printerName = v);
+            F("shareOverInternet", () => config.shareOverInternet ? 1 : 0, v => config.shareOverInternet = v > 0.5f);
         }
 
         void LoadPrefs()
@@ -213,6 +215,14 @@ namespace FruitGame
             int best = 0;
             for (int i = 1; i < options.Length; i++) if (Mathf.Abs(options[i] - v) < Mathf.Abs(options[best] - v)) best = i;
             return options[Mathf.Clamp(best + dir, 0, options.Length - 1)];
+        }
+
+        string PhoneLinkState()
+        {
+            if (!config.shareOverInternet) return "Local Wi-Fi";
+            if (share == null) share = FindAnyObjectByType<PhotoShare>();
+            if (share == null) return "Internet";
+            return share.TunnelUp ? "Internet · up" : "<color=#FF7A6E>Internet · " + share.TunnelStatus + "</color>";
         }
 
         Row Setting(string label, Func<string> value, Action<int> change) =>
@@ -298,6 +308,9 @@ namespace FruitGame
                 }),
                 Action("Paper tray refilled", "R", () => printer != null ? $"{printer.PaperLeft}/{config.trayCapacity}" : "", () => printer?.PaperRefilled()),
                 Action("New ink cassette", "I", () => printer != null ? $"{printer.InkLeft}/{config.inkCapacity}" : "", () => printer?.InkReplaced()),
+                // On: an internet link (Cloudflare tunnel) phones open on mobile data. Off: the local Wi-Fi link.
+                // The value says whether the tunnel is up (its address) or why not; until it's up, links use the local Wi-Fi.
+                Setting("Phone link", PhoneLinkState, d => config.shareOverInternet = !config.shareOverInternet),
             }, null));
             pages.Add(("Beauty", new List<Row>
             {

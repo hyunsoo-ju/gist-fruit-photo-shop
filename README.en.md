@@ -36,7 +36,7 @@ Written so the booth can be run from this section alone when the project lead is
 | Printer, Canon SELPHY CP1500 | Prints the four-cut photo | USB-C. **RP-108** paper (postcard, 4 × 6 in, 18 sheets at a time); one ink cassette prints 36 |
 | Headphones | For voice-assist visitors (the beeps that say where the fruit is) | The laptop's headphone socket or Bluetooth |
 | USB numpad (optional) | Controls for voice-assist visitors | USB. Without one, the number row on the laptop keyboard does the same |
-| Wi-Fi | Getting the photo on a phone | The visitor's phone and the laptop must be on **the same Wi-Fi** |
+| Internet | Getting the photo on a phone | The laptop needs internet (venue Wi-Fi, or a phone's hotspot). Visitors open the link on their own mobile data, so they don't join any Wi-Fi. Needs `cloudflared` on the laptop ([First-time setup](#first-time-setup) step 4) |
 
 **Display arrangement (macOS):** in System Settings ▸ Displays ▸ Arrange, drag the white menu bar **onto the touch display** to make it the main display. The guest screen then appears on the touch display and the staff screen on the laptop. With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
 
@@ -64,7 +64,7 @@ Written so the booth can be run from this section alone when the project lead is
 - [ ] Standing in front of the camera puts a face box on the staff screen's mirror, and the background behind the person is cleanly removed. If it's the wrong camera, choose one with **C** in the panel.
 - [ ] The printer is on, with paper and ink, and the `Printer:` line in the staff panel's status card shows no problem.
 - [ ] The headphones play sound (press **Voice assist** on the title to check, then press it again to turn it off).
-- [ ] Phones are on the same Wi-Fi as the laptop.
+- [ ] Staff panel ▸ Printing page ▸ **Phone link** says `Internet · up` (about 10 s after starting). Scan a test photo's QR code with a phone on mobile data, Wi-Fi off.
 - [ ] If wanted, reset today's best score (staff panel ▸ Gameplay page ▸ "Today's best score", pressed twice).
 
 ### One visit, and what staff do
@@ -134,7 +134,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 | The basket is too twitchy or too sluggish | Start again from the **title** so they calibrate afresh. If it persists, adjust the sensitivity on the panel's Gameplay page. |
 | The background behind the person isn't removed | Try another background removal model on the panel's Camera page. |
 | Nothing prints | Check the printer's power, the USB-C cable, paper and ink. Choose the printer on the panel's Printing page. Meanwhile, offer the phone download. |
-| The QR link won't open on a phone | Check the phone and laptop are on the same Wi-Fi. If the venue Wi-Fi blocks devices from talking to each other, connect phones to the laptop's personal hotspot. |
+| The QR link won't open on a phone | Look at staff panel ▸ Printing ▸ **Phone link**. If it's red, the laptop has no internet or `cloudflared` is missing: connect the laptop to the internet (a phone's hotspot works); the link comes back by itself within a minute. Meanwhile links use the local Wi-Fi, so phones must be on the laptop's Wi-Fi. If **Phone link** says `Local Wi-Fi`, that was chosen on purpose: phones join the laptop's Wi-Fi. |
 | The panel's letter keys don't respond | Press **`** (or fn+F1) first to turn the panel keys on; its header changes to "keys on". In the Editor, click a Game view once first. |
 | The guest and staff screens are swapped | Make the touch display the main display (Displays ▸ Arrange) and restart the app. |
 | The guest screen is black | Press **F5** once (the blank-screen test is on). |
@@ -182,7 +182,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 
 ### The four-cut photo
 
-Three shots taken automatically during the round plus the final pose become a four-cut photo with the title, score and logos. A gentle beauty filter touches only the visitor. Print it as a postcard, or get it on a phone by QR code on the same Wi-Fi; phone links expire after 15 minutes.
+Three shots taken automatically during the round plus the final pose become a four-cut photo with the title, score and logos. A gentle beauty filter touches only the visitor. Print it as a postcard, or get it on a phone by QR code over mobile data; phone links expire after 15 minutes.
 
 The screen fits both landscape (16:9) and portrait (9:16) displays.
 
@@ -230,6 +230,8 @@ The folder's `README (English).md` has the details and troubleshooting. If you o
 4. Press **▶ Play** at the top centre. Allow camera access if macOS asks.
 
 **Check it worked:** fruit, trees and the crates at the sides are all made of blocks, and standing in front of the camera removes the background behind you. If fruit look like grey balls, do step 3 again.
+
+**For phone links:** the booth laptop also needs Cloudflare's `cloudflared`, which gives each photo an internet link so phones can open it without joining the venue Wi-Fi. On a Mac, in Terminal: `brew install cloudflared` (Homebrew: [brew.sh](https://brew.sh)). On Windows: `winget install --id Cloudflare.cloudflared`. No Cloudflare account is needed. Photos pass through Cloudflare on their way to the phone. Without it, phone links fall back to the local Wi-Fi.
 
 ### Getting updates
 

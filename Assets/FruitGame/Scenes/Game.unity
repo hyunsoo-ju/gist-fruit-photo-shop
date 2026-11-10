@@ -31230,6 +31230,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d03e2a7e9772a4228968b858cd81ced4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.PhotoShare
+  config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   port: 8765
   linkLifetimeMinutes: 15
 --- !u!114 &1957496585

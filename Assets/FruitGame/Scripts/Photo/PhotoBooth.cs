@@ -169,7 +169,7 @@ namespace FruitGame
             else { savedText.text = Strings.Get("photo.printFail"); Speak("print_fail"); }
         }
 
-        /// <summary>Phone button: saves (once), publishes the photo on the local network and shows the link / QR.</summary>
+        /// <summary>Phone button: saves (once), publishes the photo (through the tunnel, or on the local network) and shows the link / QR.</summary>
         public void ShowPhone()
         {
             if (step != Step.Preview || LastPhoto == null || share == null) return;
@@ -189,7 +189,10 @@ namespace FruitGame
                 qrImage.texture = qr;
             }
             // One size for both lines: the pixel font only stays crisp at multiples of 16 px.
-            phoneLink.text = Strings.Get(qr != null ? "photo.linkQr" : "photo.link", url);
+            // A tunnel link opens on mobile data; a local one needs the booth's Wi-Fi. The tunnel's address is too long to
+            // read or type (and wider than the card), so with a QR code it isn't shown.
+            string key = (qr != null ? "photo.linkQr" : "photo.link") + (share.LastLinkPublic ? "Web" : "");
+            phoneLink.text = Strings.Get(key, url);
             UiTransition.Set(phonePanel, true);
             if (ByEar) narrator.SayNow("phone_open", Narrator.Buttons);
         }

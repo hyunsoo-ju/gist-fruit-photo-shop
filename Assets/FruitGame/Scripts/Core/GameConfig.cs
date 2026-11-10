@@ -233,6 +233,11 @@ namespace FruitGame
         [Tooltip("Lip tone: 0.5 = the base cool pink; lower = warmer (rose), higher = cooler (berry).")]
         [Range(0f, 1f)] public float lipCoolness = 0.5f;
 
+        [Tooltip("Get it on your phone: share the photo link through a Cloudflare quick tunnel, an https link phones open on mobile data without joining any Wi-Fi (needs cloudflared and internet on this computer; works on Wi-Fi that keeps devices apart). Off = the local-network link, for phones on the same Wi-Fi. While the tunnel isn't up the local link is used. Staff panel: Printing.")]
+        public bool shareOverInternet = true;
+        [Tooltip("Path to the cloudflared program. Empty = look in the usual places (Homebrew, /usr/local/bin, Program Files), then PATH.")]
+        public string cloudflaredPath = "";
+
         [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]
         public float fruitBlockSize = 0.044f;
