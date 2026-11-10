@@ -10,7 +10,7 @@ namespace FruitGame
 {
     /// <summary>
     /// The staff panel (Docs/DESIGN.md §15, M6 3.2): one place for every staff action and setting, so staff only
-    /// remember **F1**. A Status card (camera, face, matte, mask, printer) over four pages: Gameplay, Camera, Display and
+    /// remember **F1** (or **`**, since a Mac's F1 is screen brightness without fn). A Status card (camera, face, matte, mask, printer) over four pages: Gameplay, Camera, Display and
     /// Printing. Every row is clickable; while the panel's keys are on, the letter printed beside an action does it,
     /// ↑ ↓ pick a setting, ◀ ▶ change it, Enter runs an action, 1–4 or Tab switch pages and Esc turns the keys off.
     /// With one screen, F1 (or holding the top-left corner for 3 s) opens the panel over the right of the guest screen
@@ -78,11 +78,15 @@ namespace FruitGame
 
         readonly List<Pref> prefs = new List<Pref>();
         readonly List<(string name, List<Row> rows, RectTransform page)> pages = new List<(string, List<Row>, RectTransform)>();
+        readonly List<ScrollRect> scrolls = new List<ScrollRect>();
+        int shownSelected = -1;
         readonly List<Image> tabs = new List<Image>();
         int page;
         int selected;
         bool twoScreens;
         bool resetArmed;
+        bool bestArmed;
+        float bestArmedUntil;
         float resetArmedUntil;
         float cornerHeld;
         bool cornerFired;
@@ -99,6 +103,12 @@ namespace FruitGame
 
         void Awake()
         {
+#if UNITY_EDITOR
+            // In the Editor, keys reach the game whichever Game view (guest or staff) has focus; by default they only
+            // do while the guest view is focused, so staff keys typed with the staff view selected went nowhere.
+            InputSystem.settings.editorInputBehaviorInPlayMode =
+                InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView;
+#endif
             DefinePrefs();
             LoadPrefs();
         }
@@ -198,6 +208,14 @@ namespace FruitGame
         Row Setting(string label, Func<string> value, Action<int> change) =>
             new Row { label = label, value = value, change = d => { change(d); Save(); ApplyLive(); } };
 
+        /// <summary>A setting with a letter too: the letter flips it (one step the other way).</summary>
+        static Row LetterSetting(Row row, string letter, Func<int> step)
+        {
+            row.letter = letter;
+            row.run = () => row.change(step());
+            return row;
+        }
+
         Row Action(string label, string letter, Func<string> value, Action run, Func<bool> enabled = null) =>
             new Row { label = label, letter = letter, value = value, run = run, enabled = enabled ?? (() => true) };
 
@@ -226,6 +244,14 @@ namespace FruitGame
                 Setting("Round length (next round)", () => $"{config.roundDuration:0} s", d => config.roundDuration = Nearest(rounds, config.roundDuration, d)),
                 Action("Easy for the next round", "E", () => OnOff(Difficulty.Easy), () => Difficulty.Easy = !Difficulty.Easy, OnTitle),
                 Action("Recalibrate", null, () => OnTitle() ? "" : "on the title screen", () => game.StartCalibration(), OnTitle),
+                Action("Visitor's call for help (0)", "H", () => StaffAlert.Active ? "waiting " + StaffAlert.Waiting + ", clear" : "none",
+                    StaffAlert.Clear, () => StaffAlert.Active),
+                Action("Today's best score", null, () => bestArmed ? "press again to reset" : SaveData.BestScore + ", reset",
+                    () =>
+                    {
+                        if (bestArmed) { SaveData.BestScore = 0; bestArmed = false; }
+                        else { bestArmed = true; bestArmedUntil = Time.unscaledTime + 4f; }
+                    }),
                 Action("Basket follows the mouse", "M", () => OnOff(router != null && router.MouseControl), () => router?.ToggleMouseControl()),
             }, null));
             pages.Add(("Camera", new List<Row>
@@ -242,8 +268,9 @@ namespace FruitGame
             {
                 Setting("Orientation", () => config.orientation.ToString(),
                     d => config.orientation = (OrientationSetting)Mathf.Clamp((int)config.orientation + d, 0, 2)),
-                Setting("Language", () => config.language == Language.Korean ? "한국어" : "English",
-                    d => config.language = d < 0 ? Language.Korean : Language.English),
+                LetterSetting(Setting("Language", () => config.language == Language.Korean ? "한국어" : "English",
+                    d => config.language = d < 0 ? Language.Korean : Language.English), "L",
+                    () => config.language == Language.Korean ? +1 : -1),
                 Setting("Screens (after restart)", () => config.screens.ToString(),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),
@@ -326,7 +353,24 @@ namespace FruitGame
                 pageRect.SetParent(column, false);
                 pageRect.anchorMin = Vector2.zero; pageRect.anchorMax = Vector2.one;
                 pageRect.offsetMin = new Vector2(0f, 70f); pageRect.offsetMax = new Vector2(0f, -pageTop);
-                for (int r = 0; r < rows.Count; r++) BuildRow(rows[r], pageRect, r, p);
+                // The rows scroll (mouse wheel, or ↑ ↓ keep the selected row in view) when a page has more than fit.
+                var content = new GameObject("Rows", typeof(RectTransform)).GetComponent<RectTransform>();
+                content.SetParent(pageRect, false);
+                content.anchorMin = new Vector2(0f, 1f); content.anchorMax = Vector2.one; content.pivot = new Vector2(0.5f, 1f);
+                content.anchoredPosition = Vector2.zero; content.sizeDelta = new Vector2(0f, rows.Count * RowStep);
+                pageRect.gameObject.AddComponent<RectMask2D>();
+                var catcher = pageRect.gameObject.AddComponent<Image>();
+                catcher.color = PanelBack; // opaque, and catches the wheel between rows
+                var scroll = pageRect.gameObject.AddComponent<ScrollRect>();
+                scroll.content = content;
+                scroll.viewport = pageRect;
+                scroll.horizontal = false;
+                scroll.movementType = ScrollRect.MovementType.Clamped;
+                scroll.scrollSensitivity = RowStep;
+                scroll.verticalScrollbar = BuildScrollbar(pageRect);
+                scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+                scrolls.Add(scroll);
+                for (int r = 0; r < rows.Count; r++) BuildRow(rows[r], content, r, p);
                 if (name == "Printing")
                 {
                     printingBoxArea = new GameObject("Printer Box Area", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -358,12 +402,45 @@ namespace FruitGame
         }
 
         TMP_Text resetRow;
+        const float RowStep = 50f;
+
+        /// <summary>A thin bar on the right edge of a page, shown only when its rows don't all fit.</summary>
+        static Scrollbar BuildScrollbar(RectTransform pageRect)
+        {
+            var track = Panel("Scrollbar", pageRect, TabColor, true);
+            track.anchorMin = new Vector2(1f, 0f); track.anchorMax = Vector2.one; track.pivot = new Vector2(1f, 0.5f);
+            track.anchoredPosition = new Vector2(-8f, 0f); track.sizeDelta = new Vector2(10f, 0f);
+            var area = new GameObject("Sliding Area", typeof(RectTransform)).GetComponent<RectTransform>();
+            area.SetParent(track, false);
+            Fill(area);
+            var handle = Panel("Handle", area, TabActive, true);
+            Fill(handle);
+            var bar = track.gameObject.AddComponent<Scrollbar>();
+            bar.handleRect = handle;
+            bar.targetGraphic = handle.GetComponent<Image>();
+            bar.direction = Scrollbar.Direction.BottomToTop;
+            return bar;
+        }
+
+        /// <summary>Scrolls the page so the selected row shows (after ↑ ↓).</summary>
+        void KeepSelectedInView()
+        {
+            if (page >= scrolls.Count || selected == shownSelected) return;
+            shownSelected = selected;
+            var scroll = scrolls[page];
+            float view = scroll.viewport.rect.height, top = selected * RowStep, bottom = top + RowStep;
+            var pos = scroll.content.anchoredPosition;
+            if (top < pos.y) pos.y = top;
+            else if (bottom > pos.y + view) pos.y = bottom - view;
+            scroll.content.anchoredPosition = pos;
+        }
 
         void BuildRow(Row row, RectTransform pageRect, int index, int pageIndex)
         {
             var r = Panel(row.label, pageRect, RowColor, true);
             r.anchorMin = new Vector2(0f, 1f); r.anchorMax = Vector2.one; r.pivot = new Vector2(0.5f, 1f);
-            r.anchoredPosition = new Vector2(0f, -index * 50f); r.sizeDelta = new Vector2(-24f, 44f);
+            r.anchoredPosition = new Vector2(0f, -index * RowStep); r.sizeDelta = new Vector2(-36f, 44f);
+            r.anchoredPosition += new Vector2(-6f, 0f);
             row.back = r.GetComponent<Image>();
             var button = r.gameObject.AddComponent<Button>();
             button.onClick.AddListener(() =>
@@ -400,6 +477,8 @@ namespace FruitGame
         {
             page = Mathf.Clamp(index, 0, pages.Count - 1);
             selected = 0;
+            shownSelected = -1;
+            if (page < scrolls.Count) scrolls[page].verticalNormalizedPosition = 1f;
             for (int i = 0; i < pages.Count; i++)
             {
                 pages[i].page.gameObject.SetActive(i == page);
@@ -421,11 +500,13 @@ namespace FruitGame
         {
             if (root == null) return;
             var kb = Keyboard.current;
-            if (kb != null && kb.f1Key.wasPressedThisFrame) ToggleKeys();
+            // F1, or ` (the key left of 1): on a Mac keyboard F1 is screen brightness unless fn is held.
+            if (kb != null && (kb.f1Key.wasPressedThisFrame || kb.backquoteKey.wasPressedThisFrame)) ToggleKeys();
             CornerHold();
 
             if (KeysActive && kb != null && !CameraMenu.IsOpen) HandleKeys(kb);
             if (resetArmed && Time.unscaledTime > resetArmedUntil) resetArmed = false;
+            if (bestArmed && Time.unscaledTime > bestArmedUntil) bestArmed = false;
             if (Open) Refresh();
         }
 
@@ -506,13 +587,14 @@ namespace FruitGame
         void Refresh()
         {
             header.text = twoScreens
-                ? (KeysActive ? "Staff panel · <color=#7CFC9A>keys on</color>  (F1 or Esc: off)" : "Staff panel · keys off  (F1: on)")
-                : "Staff panel  (F1 or Esc: close)";
+                ? (KeysActive ? "Staff panel · <color=#7CFC9A>keys on</color>  (` or F1 or Esc: off)" : "Staff panel · keys off  (` or F1: on)")
+                : "Staff panel  (` or F1 or Esc: close)";
             if (printerLine != null && printer != null)
                 printerLine.text = (printer.HasProblem ? "<color=#FF7A6E>" : "") + "Printer: " + printer.Summary;
             if (resetRow != null) resetRow.text = resetArmed ? "Click again to reset every setting" : "Reset settings to defaults";
 
             var rows = pages[page].rows;
+            if (KeysActive) KeepSelectedInView();
             for (int i = 0; i < rows.Count; i++)
             {
                 var row = rows[i];

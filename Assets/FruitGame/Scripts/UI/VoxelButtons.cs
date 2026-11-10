@@ -18,7 +18,7 @@ namespace FruitGame
         [Tooltip("The HUD frame, whose middle the buttons are seen from.")]
         [SerializeField] RectTransform frame;
         [Tooltip("How far out a button must be to turn 45°, as a multiple of the frame's short side: smaller = stronger turn.")]
-        [SerializeField] float turnDistance = 0.5f;
+        [SerializeField] float turnDistance = 1.5f;
         [Tooltip("The most any button turns, sideways or up and down (degrees).")]
         [SerializeField] float maxTurn = 16f;
         [Tooltip("The camera's distance from each button, as a multiple of the button's longer side: smaller = stronger taper.")]
@@ -77,7 +77,7 @@ namespace FruitGame
         void OnValidate()
         {
             if (!Application.isPlaying) return;
-            foreach (var b in FindObjectsByType<KeycapButton>(FindObjectsSortMode.None)) dirty.Add(b);
+            foreach (var b in FindObjectsByType<KeycapButton>()) dirty.Add(b);
         }
 
         void LateUpdate()

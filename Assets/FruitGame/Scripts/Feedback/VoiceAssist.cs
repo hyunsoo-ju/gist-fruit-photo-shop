@@ -44,10 +44,10 @@ namespace FruitGame
         void Start()
         {
             narrator = GetComponent<Narrator>();
-            game = FindFirstObjectByType<GameStateMachine>();
-            tracker = FindFirstObjectByType<FaceTracker>();
-            fallback = FindFirstObjectByType<FallbackInput>();
-            router = FindFirstObjectByType<BasketInputRouter>();
+            game = FindAnyObjectByType<GameStateMachine>();
+            tracker = FindAnyObjectByType<FaceTracker>();
+            fallback = FindAnyObjectByType<FallbackInput>();
+            router = FindAnyObjectByType<BasketInputRouter>();
             if (VoxelButtons.Instance == null || VoxelButtons.Instance.Frame == null) return;
             frame = VoxelButtons.Instance.Frame;
             guestCanvas = frame.GetComponentInParent<Canvas>().rootCanvas;
@@ -330,7 +330,7 @@ namespace FruitGame
             if (Pressed(kb, Key.Numpad2, Key.Digit2)) narrator.ChangeVolume(-1);
             if (Pressed(kb, Key.Numpad9, Key.Digit9)) narrator.NextSpeed();
             if (Pressed(kb, Key.Numpad3, Key.Digit3)) narrator.StopOrMute();
-            if (Pressed(kb, Key.Numpad0, Key.Digit0)) narrator.SayNow("staff_called");
+            if (Pressed(kb, Key.Numpad0, Key.Digit0)) { StaffAlert.Raise(); narrator.SayNow("staff_called"); }
 
             if (InRound)
             {

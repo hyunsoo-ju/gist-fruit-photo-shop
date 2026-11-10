@@ -1,7 +1,7 @@
 # Narrator lines (Docs/DESIGN.md §11, M6 item 6), in-game Korean (해요체): short, plain, calm. key<TAB>text; also the caption strip.
 # A key with {n} is rendered once per number 0–99. Render with Tools/render_narration.py into Resources/Narration/s<speed>/<key>.
 title_invite	화면이 잘 안 보이면 숫자 5번을 누르거나 직원에게 음성 안내를 부탁해 주세요.
-mode_on	음성 안내를 켰어요. 머리로 바구니를 옮겨 과일을 받는 사진 게임이에요. 헤드폰을 쓰면 더 잘 들려요. 키패드가 있으면 4번과 6번으로 버튼을 고르고 5번으로 눌러요. 다시 들으려면 7번이에요. 없으면 직원이 도와드려요.
+mode_on	음성 안내를 켰어요. 머리로 바구니를 옮겨 과일을 받는 사진 게임이에요. 헤드폰을 쓰면 더 잘 들려요. 키패드가 있으면 4번과 6번으로 버튼을 고르고 5번으로 눌러요. 다시 들으려면 7번, 직원을 부르려면 0번이에요. 키패드가 없으면 직원이 도와드려요.
 mode_off	음성 안내를 껐어요.
 walk_steer	첫 번째 단계예요. 움직이는 방법을 골라요. 머리를 옆으로 옮기는 방법을 추천해요. 고개를 돌리는 방법은 몸을 움직이기 어려운 분께 좋아요.
 walk_slide_chosen	머리를 옆으로 옮기는 방법을 골랐어요.
@@ -75,7 +75,7 @@ speed_175	1.75배 속도예요.
 speed_200	2배 속도예요.
 contrast_on	고대비 화면을 켰어요.
 contrast_off	고대비 화면을 껐어요.
-staff_called	직원을 불러 주세요. 가까운 직원이 도와드려요.
+staff_called	직원을 불렀어요. 곧 도와드릴게요.
 no_back	이 화면에는 뒤로 가는 버튼이 없어요.
 btn_start_play	시작
 btn_start_auditory	음성 안내

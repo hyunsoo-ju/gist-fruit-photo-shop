@@ -41,6 +41,8 @@ namespace FruitGame
         static readonly Color Back = new Color(0.06f, 0.07f, 0.1f, 1f);
         static readonly Color Card = new Color(0.12f, 0.13f, 0.18f, 1f);
 
+        GameObject alert;
+        TMP_Text alertText;
         RenderTexture mirror;
         RawImage mirrorImage;
         RectTransform frameMirror;
@@ -50,7 +52,7 @@ namespace FruitGame
         void Awake()
         {
             bool two = config.screens == ScreenMode.Two
-                       || (config.screens == ScreenMode.Auto && !Application.isEditor && Display.displays.Length > 1);
+                       || (config.screens == ScreenMode.Auto && (Application.isEditor ? EditorHasStaffView : Display.displays.Length > 1));
             if (two && !Application.isEditor)
             {
                 if (Display.displays.Length > 1) Display.displays[1].Activate();
@@ -59,6 +61,7 @@ namespace FruitGame
             TwoScreens = two;
 
             Build(two);
+            BuildAlert(two);
             if (!two) return;
             if (printer != null) printer.AlwaysShowBox = true;
             if (debug != null) debug.StaffScreen = true;
@@ -82,6 +85,7 @@ namespace FruitGame
             scaler.referenceResolution = new Vector2(RefW, RefH);
             scaler.matchWidthOrHeight = 0.5f;
             var root = (RectTransform)canvasGo.transform;
+            staffRoot = root;
             if (!two)
             {
                 BuildColumn(root, false);
@@ -158,6 +162,19 @@ namespace FruitGame
             if (two && printerWarning != null) printerWarning.gameObject.SetActive(false);
         }
 
+        /// <summary>In the Editor, Auto uses two screens when a Game view is set to Display 2.</summary>
+        static bool EditorHasStaffView
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return GuestDisplay.EditorHasStaffView;
+#else
+                return false;
+#endif
+            }
+        }
+
         /// <summary>Guest display's shape (the main display; in the Editor, the Game view's).</summary>
         static float GuestAspect
         {
@@ -168,8 +185,36 @@ namespace FruitGame
             }
         }
 
+        Transform staffRoot;
+
+        /// <summary>The visitor's call for help: a red bar across the top of the staff screen (bottom right with one
+        /// screen, clear of the score and timer), until it's clicked or cleared from the panel. No sound.</summary>
+        void BuildAlert(bool two)
+        {
+            var bar = Panel("Help Call", staffRoot, new Color32(0xC6, 0x28, 0x28, 0xFF));
+            bar.GetComponent<Image>().raycastTarget = true;
+            bar.gameObject.AddComponent<Button>().onClick.AddListener(StaffAlert.Clear);
+            if (two) Stretch(bar, new Vector2(0f, 1f), Vector2.one, new Vector2(Gap, -Gap - 112f), new Vector2(-Column - Gap * 2f, -Gap));
+            else Stretch(bar, new Vector2(1f, 0f), new Vector2(1f, 0f), new Vector2(-Column, 96f), new Vector2(0f, 208f));
+            alertText = Text("Text", bar, 32f);
+            alertText.alignment = TextAlignmentOptions.Left;
+            Stretch(alertText.rectTransform, Vector2.zero, Vector2.one, new Vector2(24f, 8f), new Vector2(-24f, -8f));
+            alert = bar.gameObject;
+            alert.SetActive(false);
+        }
+
+        void UpdateAlert()
+        {
+            if (alert == null) return;
+            if (alert.activeSelf != StaffAlert.Active) alert.SetActive(StaffAlert.Active);
+            if (!StaffAlert.Active) return;
+            alert.transform.SetAsLastSibling();
+            alertText.text = $"Visitor pressed 0: they need help ({StaffAlert.Waiting})\n<size=16>Click here, or H with the panel keys on (F1), to clear</size>";
+        }
+
         void Update()
         {
+            UpdateAlert();
             if (!TwoScreens) return;
             mirrorImage.GetComponent<AspectRatioFitter>().aspectRatio = GuestAspect;
 
@@ -207,8 +252,7 @@ namespace FruitGame
                 mirrorImage.uvRect = new Rect(0f, 1f, 1f, -1f);
                 mirrorImage.color = view != null ? Color.white : Card;
                 if (noGuestHint != null) noGuestHint.gameObject.SetActive(view == null);
-                continue;
-#endif
+#else
                 int w = Screen.width, h = Screen.height;
                 if (w <= 0 || h <= 0) continue;
                 if (mirror == null || mirror.width != w || mirror.height != h)
@@ -221,6 +265,7 @@ namespace FruitGame
                 ScreenCapture.CaptureScreenshotIntoRenderTexture(mirror);
                 // The capture comes out upside down where the GPU's texture origin is the top.
                 mirrorImage.uvRect = SystemInfo.graphicsUVStartsAtTop ? new Rect(0f, 1f, 1f, -1f) : new Rect(0f, 0f, 1f, 1f);
+#endif
             }
         }
 

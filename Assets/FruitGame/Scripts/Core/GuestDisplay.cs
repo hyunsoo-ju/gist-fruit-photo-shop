@@ -47,6 +47,18 @@ namespace FruitGame
             return null;
         }
 
+        /// <summary>True when a Game view is set to Display 2, so the staff screen has somewhere to show.</summary>
+        public static bool EditorHasStaffView
+        {
+            get
+            {
+                if (GameViewType == null || TargetDisplay == null) return false;
+                foreach (var w in Resources.FindObjectsOfTypeAll(GameViewType))
+                    if (w is UnityEditor.EditorWindow && (int)TargetDisplay.GetValue(w) == 1) return true;
+                return false;
+            }
+        }
+
         /// <summary>The Display 1 Game view's picture (with its UI), or null if there isn't one.</summary>
         public static RenderTexture EditorTexture
         {

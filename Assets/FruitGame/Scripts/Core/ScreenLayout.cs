@@ -90,7 +90,9 @@ namespace FruitGame
                     // UI art is drawn at 4 canvas units per art pixel; a larger canvas shows it at uiPixelScale screen
                     // pixels per art pixel on the reference screen (3: the booth's smaller UI, still whole pixels).
                     scaler.referenceResolution = (Vector2)Reference * (4f / Mathf.Max(1, config.uiPixelScale));
-                    scaler.matchWidthOrHeight = landscape ? 1f : 0f;
+                    // Scale by the side the letterbox fills: the height when the window is wider than the layout
+                    // (bars at the sides), the width when it's narrower (bars above and below).
+                    scaler.matchWidthOrHeight = window >= aspect ? 1f : 0f;
                 }
 
             if (switched) Changed?.Invoke();

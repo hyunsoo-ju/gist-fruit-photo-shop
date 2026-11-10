@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 956" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1040" height="956" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">Staff keys</text>
+  <text x="30" y="62" font-size="15" fill="#555">Letters work only while the panel's keys are on. On a Mac, F1 and F5 need fn held; ` works without it.</text>
+  <rect x="30" y="84" width="560" height="378" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="48" y="118" font-size="18" font-weight="bold" fill="#222">Staff panel</text>
+  <rect x="48" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">`</text>
+  <rect x="98" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">F1</text>
+  <text x="188" y="159" font-size="15" fill="#333">Panel keys on/off (one screen: open/close)</text>
+  <rect x="48" y="182" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="211" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="205" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Esc</text>
+  <text x="188" y="205" font-size="15" fill="#333">Panel keys off / close</text>
+  <rect x="48" y="228" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="257" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">1–4</text>
+  <text x="188" y="251" font-size="15" fill="#333">Pages: Gameplay, Camera, Display, Printing</text>
+  <rect x="48" y="274" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="303" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="297" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Tab</text>
+  <text x="188" y="297" font-size="15" fill="#333">Next page</text>
+  <rect x="48" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">↑</text>
+  <rect x="98" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">↓</text>
+  <text x="188" y="343" font-size="15" fill="#333">Pick a row (long pages scroll)</text>
+  <rect x="48" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">◀</text>
+  <rect x="98" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">▶</text>
+  <text x="188" y="389" font-size="15" fill="#333">Change a setting</text>
+  <rect x="48" y="412" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="441" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="87.5" y="435" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Enter</text>
+  <text x="188" y="435" font-size="15" fill="#333">Run an action (or click the row)</text>
+  <rect x="610" y="84" width="400" height="470" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="628" y="118" font-size="18" font-weight="bold" fill="#222">Panel letters</text>
+  <rect x="628" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">E</text>
+  <text x="688" y="159" font-size="15" fill="#333">Easy for the next round (title)</text>
+  <rect x="628" y="182" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="211" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="205" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">H</text>
+  <text x="688" y="205" font-size="15" fill="#333">Clear a visitor's help call</text>
+  <rect x="628" y="228" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="257" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">M</text>
+  <text x="688" y="251" font-size="15" fill="#333">Basket follows the mouse</text>
+  <rect x="628" y="274" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="303" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="297" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">C</text>
+  <text x="688" y="297" font-size="15" fill="#333">Choose the camera</text>
+  <rect x="628" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">D</text>
+  <text x="688" y="343" font-size="15" fill="#333">Face box on the guest screen</text>
+  <rect x="628" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">L</text>
+  <text x="688" y="389" font-size="15" fill="#333">Korean ⇄ English</text>
+  <rect x="628" y="412" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="441" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="435" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">B</text>
+  <text x="688" y="435" font-size="15" fill="#333">Blank the guest screen</text>
+  <rect x="628" y="458" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="487" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="481" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">R</text>
+  <text x="688" y="481" font-size="15" fill="#333">Paper tray refilled</text>
+  <rect x="628" y="504" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="533" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="527" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">I</text>
+  <text x="688" y="527" font-size="15" fill="#333">New ink cassette</text>
+  <rect x="30" y="574" width="980" height="332" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="48" y="608" font-size="18" font-weight="bold" fill="#222">Game keys (panel keys off)</text>
+  <rect x="48" y="626" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="655" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="87.5" y="649" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Space</text>
+  <rect x="133" y="626" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="136" y="655" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="172.5" y="649" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Enter</text>
+  <text x="218" y="649" font-size="15" fill="#333">Start, resume, play again</text>
+  <rect x="48" y="672" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="701" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="695" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Esc</text>
+  <rect x="107" y="672" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="110" y="701" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="129.0" y="695" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">P</text>
+  <text x="218" y="695" font-size="15" fill="#333">Pause (P works with the panel keys on too)</text>
+  <rect x="48" y="718" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="747" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="741" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">C</text>
+  <text x="218" y="741" font-size="15" fill="#333">Calibrate (title, game over)</text>
+  <rect x="48" y="764" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="793" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="787" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">A</text>
+  <text x="218" y="787" font-size="15" fill="#333">Voice assist (title)</text>
+  <rect x="48" y="810" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="839" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="833" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">F5</text>
+  <text x="218" y="833" font-size="15" fill="#333">Blank the guest screen, any time</text>
+  <rect x="48" y="856" width="66" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="885" width="60" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="81.0" y="879" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Hold</text>
+  <text x="218" y="879" font-size="15" fill="#333">Top-left corner 3 s: open the panel (one touch screen)</text>
+  <text x="30" y="936" font-size="15" fill="#555">Reset today's best score: Gameplay page, click it twice.</text>
+</svg>

@@ -56,7 +56,7 @@ namespace FruitGame.EditorTools
             EnsureFolder(OutDir + "/World");
             var made = new Dictionary<(Mesh, Vector3Int), Mesh>();
             int objects = 0, faces = 0;
-            foreach (var vs in Object.FindObjectsByType<VoxelSource>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var vs in Object.FindObjectsByType<VoxelSource>(FindObjectsInactive.Include))
             {
                 if (vs.original == null) continue;
                 float block = vs.blockSizeOverride > 0f ? vs.blockSizeOverride

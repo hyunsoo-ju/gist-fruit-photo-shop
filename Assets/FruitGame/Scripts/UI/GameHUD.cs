@@ -133,7 +133,7 @@ namespace FruitGame
 
         (RoundStats stats, int best, bool newBest, float duration)? lastGameOver;
 
-        /// <summary>Language flipped (F3): re-fill the game-over lines if they're on screen.</summary>
+        /// <summary>Language flipped (staff panel L): re-fill the game-over lines if they're on screen.</summary>
         void RefreshLanguage()
         {
             RefreshEasyTag();

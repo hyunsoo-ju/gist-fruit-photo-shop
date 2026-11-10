@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 956" font-family="'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif">
+  <rect width="1040" height="956" fill="#ffffff"/>
+  <text x="30" y="36" font-size="22" font-weight="bold" fill="#222">진행자 키</text>
+  <text x="30" y="62" font-size="15" fill="#555">글자 키는 패널 키가 켜져 있을 때만 동작합니다. Mac에서 F1·F5는 fn과 함께 누르고, `는 그냥 누릅니다.</text>
+  <rect x="30" y="84" width="560" height="378" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="48" y="118" font-size="18" font-weight="bold" fill="#222">진행자 패널</text>
+  <rect x="48" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">`</text>
+  <rect x="98" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">F1</text>
+  <text x="188" y="159" font-size="15" fill="#333">패널 키 켜기/끄기 (화면 하나: 열기/닫기)</text>
+  <rect x="48" y="182" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="211" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="205" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Esc</text>
+  <text x="188" y="205" font-size="15" fill="#333">패널 키 끄기 / 닫기</text>
+  <rect x="48" y="228" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="257" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">1–4</text>
+  <text x="188" y="251" font-size="15" fill="#333">쪽: 게임, 카메라, 화면, 인쇄</text>
+  <rect x="48" y="274" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="303" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="297" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Tab</text>
+  <text x="188" y="297" font-size="15" fill="#333">다음 쪽</text>
+  <rect x="48" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">↑</text>
+  <rect x="98" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">↓</text>
+  <text x="188" y="343" font-size="15" fill="#333">항목 고르기 (긴 쪽은 넘어감)</text>
+  <rect x="48" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">◀</text>
+  <rect x="98" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="101" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="120.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">▶</text>
+  <text x="188" y="389" font-size="15" fill="#333">설정 바꾸기</text>
+  <rect x="48" y="412" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="441" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="87.5" y="435" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Enter</text>
+  <text x="188" y="435" font-size="15" fill="#333">실행 (항목 클릭도 가능)</text>
+  <rect x="610" y="84" width="400" height="470" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="628" y="118" font-size="18" font-weight="bold" fill="#222">패널 글자 키</text>
+  <rect x="628" y="136" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="165" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="159" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">E</text>
+  <text x="688" y="159" font-size="15" fill="#333">다음 한 판 쉬움 (시작 화면)</text>
+  <rect x="628" y="182" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="211" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="205" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">H</text>
+  <text x="688" y="205" font-size="15" fill="#333">손님의 직원 호출 알림 지우기</text>
+  <rect x="628" y="228" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="257" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">M</text>
+  <text x="688" y="251" font-size="15" fill="#333">바구니를 마우스로 조작</text>
+  <rect x="628" y="274" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="303" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="297" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">C</text>
+  <text x="688" y="297" font-size="15" fill="#333">카메라 고르기</text>
+  <rect x="628" y="320" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="349" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="343" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">D</text>
+  <text x="688" y="343" font-size="15" fill="#333">손님 화면의 얼굴 상자</text>
+  <rect x="628" y="366" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="395" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="389" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">L</text>
+  <text x="688" y="389" font-size="15" fill="#333">한국어 ⇄ 영어</text>
+  <rect x="628" y="412" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="441" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="435" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">B</text>
+  <text x="688" y="435" font-size="15" fill="#333">손님 화면 가리기</text>
+  <rect x="628" y="458" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="487" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="481" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">R</text>
+  <text x="688" y="481" font-size="15" fill="#333">용지 채움</text>
+  <rect x="628" y="504" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="631" y="533" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="650.0" y="527" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">I</text>
+  <text x="688" y="527" font-size="15" fill="#333">잉크 카세트 교체</text>
+  <rect x="30" y="574" width="980" height="332" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
+  <text x="48" y="608" font-size="18" font-weight="bold" fill="#222">게임 키 (패널 키가 꺼져 있을 때)</text>
+  <rect x="48" y="626" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="655" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="87.5" y="649" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Space</text>
+  <rect x="133" y="626" width="79" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="136" y="655" width="73" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="172.5" y="649" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Enter</text>
+  <text x="218" y="649" font-size="15" fill="#333">시작, 계속하기, 다시 하기</text>
+  <rect x="48" y="672" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="701" width="47" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="74.5" y="695" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Esc</text>
+  <rect x="107" y="672" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="110" y="701" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="129.0" y="695" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">P</text>
+  <text x="218" y="695" font-size="15" fill="#333">일시정지 (P는 패널 키가 켜져 있어도 동작)</text>
+  <rect x="48" y="718" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="747" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="741" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">C</text>
+  <text x="218" y="741" font-size="15" fill="#333">보정 (시작·게임 끝 화면)</text>
+  <rect x="48" y="764" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="793" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="787" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">A</text>
+  <text x="218" y="787" font-size="15" fill="#333">음성 안내 (시작 화면)</text>
+  <rect x="48" y="810" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="839" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="833" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">F5</text>
+  <text x="218" y="833" font-size="15" fill="#333">손님 화면 가리기, 언제나</text>
+  <rect x="48" y="856" width="44" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
+  <rect x="51" y="885" width="38" height="3" rx="1.5" fill="#cfd6de"/>
+  <text x="70.0" y="879" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">길게</text>
+  <text x="218" y="879" font-size="15" fill="#333">왼쪽 위 모서리 3초: 패널 열기 (터치 화면 하나)</text>
+  <text x="30" y="936" font-size="15" fill="#555">오늘의 최고 점수 초기화: 게임 쪽에서 항목을 두 번 누릅니다.</text>
+</svg>

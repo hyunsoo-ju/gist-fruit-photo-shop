@@ -18,7 +18,7 @@ namespace FruitGame
     /// <summary>One screen (guest view, staff views on keys) or two (guest display + staff display).</summary>
     public enum ScreenMode
     {
-        /// <summary>Two when a second display is connected (builds); one in the Editor.</summary>
+        /// <summary>Two when a second display is connected (builds), or a Game view is set to Display 2 (Editor).</summary>
         Auto,
         One,
         /// <summary>Two even in the Editor, where the staff screen shows in a Game view set to Display 2.</summary>
@@ -248,12 +248,12 @@ namespace FruitGame
         public Color playerOutlineColor = new Color32(0x1E, 0x22, 0x33, 0xFF);
 
         [Header("Language (Docs/DESIGN.md §15)")]
-        [Tooltip("Starting language; F3 flips between Korean and English at runtime.")]
+        [Tooltip("Starting language; the staff panel's L flips between Korean and English at runtime.")]
         public Language language = Language.Korean;
 
         [Header("Screens (Docs/DESIGN.md §15)")]
         [Tooltip("Auto: the guest screen on the main display and the staff screen on a second one when it's connected. " +
-                 "Two: also in the Editor (open a second Game view set to Display 2).")]
+                 "In the Editor, Auto uses two when a Game view is set to Display 2.")]
         public ScreenMode screens = ScreenMode.Auto;
         [Tooltip("Staff screen mirror refreshes per second (a copy of the guest screen).")]
         public float staffMirrorRate = 30f;

@@ -4821,7 +4821,7 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0.5}
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: -35}
+    anchoredPosition: {x: 0, y: -700}
     sizeDelta: {x: 560, y: 190}
     localPosition: {x: 0, y: -120, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -9388,7 +9388,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
     anchoredPosition: {x: 0, y: -20}
-    sizeDelta: {x: 1240, y: 1060}
+    sizeDelta: {x: 1100, y: 1060}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -10747,7 +10747,7 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0.5}
     anchorMax: {x: 0.5, y: 0.5}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 30}
+    anchoredPosition: {x: 0, y: -500}
     sizeDelta: {x: 960, y: 160}
     localPosition: {x: 0, y: -55, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -13180,7 +13180,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.VoxelButtons
   material: {fileID: 2100000, guid: e981e24fc3d2942ce9ecd9f5f10e93bc, type: 2}
   frame: {fileID: 1303592882}
-  turnDistance: 0.5
+  turnDistance: 1.5
   maxTurn: 16
   closeness: 5
   margin: 0.16
@@ -20036,7 +20036,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -890}
-    sizeDelta: {x: 370, y: 140}
+    sizeDelta: {x: 340, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -20505,8 +20505,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.49012345, y: 0}
-  m_AnchorMax: {x: 0.50987655, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -20642,7 +20642,7 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0}
     anchorMax: {x: 0.5, y: 0}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 170}
+    anchoredPosition: {x: 0, y: 150}
     sizeDelta: {x: 960, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -21284,7 +21284,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -180}
-    sizeDelta: {x: 1140, y: 280}
+    sizeDelta: {x: 1000, y: 280}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -22248,7 +22248,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -550}
-    sizeDelta: {x: 1140, y: 250}
+    sizeDelta: {x: 1000, y: 250}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -24273,8 +24273,8 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -395, y: -890}
-    sizeDelta: {x: 370, y: 140}
+    anchoredPosition: {x: -360, y: -890}
+    sizeDelta: {x: 340, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -25957,7 +25957,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -30}
-    sizeDelta: {x: 1140, y: 150}
+    sizeDelta: {x: 1000, y: 150}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -26518,7 +26518,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -460}
-    sizeDelta: {x: 1140, y: 80}
+    sizeDelta: {x: 1000, y: 80}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -29897,7 +29897,7 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0}
     anchorMax: {x: 0.5, y: 0}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 330}
+    anchoredPosition: {x: 0, y: 320}
     sizeDelta: {x: 960, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -30077,7 +30077,7 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 0}
     anchorMax: {x: 0.5, y: 0}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: 300}
+    anchoredPosition: {x: 0, y: 330}
     sizeDelta: {x: 560, y: 170}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -32418,7 +32418,7 @@ MonoBehaviour:
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
     anchoredPosition: {x: 0, y: -805}
-    sizeDelta: {x: 1140, y: 70}
+    sizeDelta: {x: 1000, y: 70}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -33347,8 +33347,8 @@ MonoBehaviour:
     anchorMin: {x: 0.5, y: 1}
     anchorMax: {x: 0.5, y: 1}
     pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 395, y: -890}
-    sizeDelta: {x: 370, y: 140}
+    anchoredPosition: {x: 360, y: -890}
+    sizeDelta: {x: 340, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
@@ -33580,9 +33580,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0.49012345
+    x: 0
     y: 0
-    width: 0.019753087
+    width: 1
     height: 1
   near clip plane: 0.3
   far clip plane: 50

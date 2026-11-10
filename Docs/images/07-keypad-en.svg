@@ -59,7 +59,7 @@
   <rect x="30" y="548" width="412" height="122" rx="12" fill="#eef2f6" stroke="#5a6b7d" stroke-width="2"/>
   <text x="46" y="588" font-size="34" font-weight="bold" fill="#222">0</text>
   <text x="46" y="620" font-size="13" fill="#555">Every screen</text>
-  <text x="46" y="650" font-size="18" font-weight="bold" fill="#222">Staff help (spoken)</text>
+  <text x="46" y="650" font-size="18" font-weight="bold" fill="#222">Call staff</text>
   <rect x="454" y="548" width="200" height="122" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
   <text x="554.0" y="615.0" text-anchor="middle" font-size="16" fill="#9aa4af">.</text>
   <rect x="666" y="146" width="90" height="256" rx="10" fill="#f4f5f7" stroke="#d3d8de" stroke-width="1.5"/>
@@ -79,7 +79,9 @@
   <text x="806" y="354" font-size="14" fill="#333">5 on the laptop.</text>
   <text x="806" y="392" font-size="14" fill="#333">On the title, 5 turns</text>
   <text x="806" y="416" font-size="14" fill="#333">voice assist on.</text>
-  <text x="806" y="454" font-size="14" fill="#333">3 stops the current line.</text>
-  <text x="806" y="478" font-size="14" fill="#333">With nothing playing, it</text>
-  <text x="806" y="502" font-size="14" fill="#333">mutes or unmutes.</text>
+  <text x="806" y="454" font-size="14" fill="#333">0 shows an alert on the</text>
+  <text x="806" y="478" font-size="14" fill="#333">staff screen (silent).</text>
+  <text x="806" y="516" font-size="14" fill="#333">3 stops the current line.</text>
+  <text x="806" y="540" font-size="14" fill="#333">With nothing playing, it</text>
+  <text x="806" y="564" font-size="14" fill="#333">mutes or unmutes.</text>
 </svg>
