@@ -33,7 +33,23 @@ namespace FruitGame
         Material backMat, frontMat;
         int originalMask;
 
-        public bool Active => pixelRender && backCam != null;
+        public bool Active => pixelRender && backCam != null && !direct;
+        bool direct;
+
+        /// <summary>
+        /// Realistic look (SceneLighting): this camera draws the whole 3D scene itself at full resolution, so depth of
+        /// field, reflections and volumetric light work; off again = the pixel layers, exactly as before.
+        /// </summary>
+        public void SetDirect(bool on)
+        {
+            if (main == null || backCam == null || direct == on) return;
+            direct = on;
+            backCam.enabled = frontCam.enabled = !on;
+            backQuad.gameObject.SetActive(!on);
+            frontQuad.gameObject.SetActive(!on);
+            int composite = Mask(CompositeLayer), ui = Mask("UI") | Mask("HUD3D");
+            main.cullingMask = on ? originalMask & ~(composite | ui) : Mask(PersonLayer) | composite;
+        }
 
         void Awake()
         {

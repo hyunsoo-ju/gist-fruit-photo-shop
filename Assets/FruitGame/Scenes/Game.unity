@@ -37,7 +37,7 @@ RenderSettings:
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
-  m_Sun: {fileID: 0}
+  m_Sun: {fileID: 1153856502}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -17992,6 +17992,7 @@ GameObject:
   - component: {fileID: 1153856503}
   - component: {fileID: 1153856502}
   - component: {fileID: 1153856504}
+  - component: {fileID: 1153856505}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -18108,6 +18109,38 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!114 &1153856505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153856501}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d9050397d91c4a1094fa495e71ad78b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.SceneLighting
+  config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
+  sun: {fileID: 1153856502}
+  volumetricShader: {fileID: 4800000, guid: 095ad250c7b7b4cf8bfecbc2d28f9f58, type: 3}
+  skyShader: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
+  sunAngles: {x: 24, y: 128, z: 0}
+  sunColour: {r: 1, g: 0.8, b: 0.58, a: 1}
+  sunIntensity: 3.6
+  smoothness: 0.78
+  glowTint: {r: 1, g: 1, b: 0.4, a: 1}
+  playerRim: 0
+  skyTint: {r: 0.45, g: 0.55, b: 0.7, a: 1}
+  skyExposure: 1.25
+  skyLight: 1.3
+  fogColour: {r: 0.66, g: 0.72, b: 0.8, a: 1}
+  fogDensity: 0.008
+  beamDensity: 0.012
+  dappleTile: 7
+  dappleDrift: {x: 0.06, y: 0.02}
+  focusDistance: 12
+  aperture: 7
 --- !u!1 &1156753506
 GameObject:
   m_ObjectHideFlags: 0
@@ -20505,8 +20538,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.49012345, y: 0}
-  m_AnchorMax: {x: 0.50987655, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -31162,6 +31195,7 @@ MonoBehaviour:
   startWith: 1
   backend: 256
   targetFrameRate: 60
+  minMatteRate: 12
 --- !u!114 &1957496582
 MonoBehaviour:
   m_ObjectHideFlags: 0

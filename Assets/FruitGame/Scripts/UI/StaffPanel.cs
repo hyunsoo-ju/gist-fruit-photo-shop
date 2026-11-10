@@ -143,6 +143,7 @@ namespace FruitGame
             F("matteModel", () => (int)PersonSegmenter.Preferred, v => PersonSegmenter.Preferred = (PersonSegmenter.Option)(int)v);
             F("orientation", () => (int)config.orientation, v => config.orientation = (OrientationSetting)(int)v);
             F("language", () => (int)config.language, v => config.language = (Language)(int)v);
+            F("lightingStyle", () => (int)config.lightingStyle, v => config.lightingStyle = (LightingStyle)(int)v);
             F("staffLanguage", () => (int)config.staffLanguage, v => config.staffLanguage = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
             F("printCopies", () => config.printCopies, v => config.printCopies = Mathf.RoundToInt(v));
@@ -302,6 +303,8 @@ namespace FruitGame
                     () => config.language == Language.Korean ? +1 : -1),
                 Setting("Staff panel language", () => config.staffLanguage == Language.Korean ? "한국어" : "English",
                     d => config.staffLanguage = d < 0 ? Language.Korean : Language.English),
+                Setting("Lighting", () => T(config.lightingStyle.ToString()),
+                    d => config.lightingStyle = d < 0 ? LightingStyle.Classic : LightingStyle.Realistic),
                 Setting("Screens (after restart)", () => T(config.screens.ToString()),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),

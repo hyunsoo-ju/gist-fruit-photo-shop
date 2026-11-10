@@ -60,6 +60,9 @@ namespace FruitGame
             farLayer = FirstRendererLayer(far.transform);
             blocks = new Material(blockMaterial);
             if (blocks.HasProperty("_SweepStrength")) blocks.SetFloat("_SweepStrength", 0f);
+            // Butterflies and drifting leaves are lit by the scene (and glow when backlit), unlike the title.
+            blocks.SetFloat("_SceneLit", 1f);
+            blocks.SetFloat("_Transmission", 0.8f);
 
             AddShrubs(foreground.transform.Find("Shrubs"), far.transform);
             Recolour(foreground.transform, false);
@@ -202,6 +205,8 @@ namespace FruitGame
             float wind = (isFlower ? flowerWind : isGrass ? grassWind : isLeaf ? leafWind : 0f) * (far ? 0.6f : 1f);
             copy.SetFloat("_Wind", Application.isPlaying ? wind : 0f);
             copy.SetFloat("_WindSpeed", isFlower ? 3.4f : isGrass ? 2.2f : 1.5f);
+            // Backlit style: the sun shines through leaves most, grass and petals a little less (VoxelLight.hlsl).
+            copy.SetFloat("_Transmission", (isLeaf ? 1f : isGrass ? 0.8f : isFlower ? 0.7f : 0f) * (far ? 0.7f : 1f));
             swapped[(m, far)] = copy;
             return copy;
         }

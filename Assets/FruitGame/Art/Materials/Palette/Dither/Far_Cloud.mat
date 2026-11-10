@@ -29,9 +29,14 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CookieStrength: 0
     - _DitherPixel: 1
     - _Fade: 0.1925
     - _Levels: 4
+    - _SelfLit: 0.85
+    - _Transmission: 0
+    - _Wind: 0
+    - _WindSpeed: 1.6
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _FadeColor: {r: 0.663, g: 0.776, b: 0.867, a: 1}

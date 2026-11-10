@@ -9,6 +9,8 @@ namespace FruitGame
     public class PixelSnap : MonoBehaviour
     {
         public float renderScale = 0.5f;
+        /// <summary>Off in the realistic look (full-resolution render): visuals move smoothly.</summary>
+        public static bool Enabled = true;
         Vector3 baseLocal;
         Camera cam;
 
@@ -22,6 +24,7 @@ namespace FruitGame
         {
             if (cam == null) return;
             transform.localPosition = baseLocal;
+            if (!Enabled) return;
             var p = transform.position;
             // World size of one game pixel at this depth (reference height × renderScale pixels span the view height).
             float distance = Vector3.Dot(p - cam.transform.position, cam.transform.forward);

@@ -239,6 +239,8 @@ namespace FruitGame
         public string cloudflaredPath = "";
 
         [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
+        [Tooltip("Classic: the pixel-art look. Realistic: full-resolution, physically based glossy blocks, a low sun from behind, sky lighting and reflections, volumetric beams, fog and cinematic post-processing (SceneLighting). Staff panel: Display.")]
+        public LightingStyle lightingStyle = LightingStyle.Classic;
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]
         public float fruitBlockSize = 0.044f;
         [Tooltip("Block size in metres for the play layers: basket, foreground trees and plants.")]

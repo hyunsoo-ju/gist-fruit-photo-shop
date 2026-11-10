@@ -65,7 +65,11 @@ Shader "FruitGame/Person Cutout"
         TEXTURE2D(_LutSkin); SAMPLER(sampler_LutSkin);
         TEXTURE2D(_LutLight); SAMPLER(sampler_LutLight);
 
-        CBUFFER_START(UnityPerMaterial)
+        // Backlit style (SceneLighting): a warm edge of sunlight on the player's outline facing the sun.
+        half _PlayerRim;          // 0 = off
+        half4 _PlayerRimColor;
+        float4 _PlayerRimDir;     // xy: toward the sun in the camera image (uv), z: width in screen px
+                CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
             half _EdgeLow;
             half _EdgeHigh;
@@ -275,6 +279,15 @@ Shader "FruitGame/Person Cutout"
                 clip(cover - 0.02h);   // write no depth where there's no person
                 half3 rgb = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv).rgb;
                 if (_Beauty > 0.001h) rgb = Beautify(uv, rgb);
+                if (_PlayerRim > 0.0h)
+                {
+                    // Where the matte ends a few pixels toward the sun, the edge catches the light: two taps, so the
+                    // band is soft inside and stops at the outline.
+                    float2 step1 = _PlayerRimDir.xy * _PlayerRimDir.z * _OutlineTexel.xy;
+                    half outside = 1.0h - 0.5h * (MaskAt(uv + step1) + MaskAt(uv + step1 * 0.5));
+                    half edge = saturate(outside * 1.6h - 0.2h) * a;
+                    rgb += _PlayerRimColor.rgb * edge * _PlayerRim;
+                }
                 if (ring > 0.0h) rgb = lerp(_OutlineColor.rgb, rgb, smoothstep(0.35h, 1.0h, a));
                 return half4(rgb, cover);
             }
@@ -297,6 +310,35 @@ Shader "FruitGame/Person Cutout"
             {
                 clip(MaskAt(input.uv) - _DepthCutoff);
                 return 0;
+            }
+            ENDHLSL
+        }
+
+        // The realistic look's depth-normals prepass (ambient occlusion, depth of field and the volumetric beams read
+        // its depth): without it the player is missing from the depth, so the beams marched through them to the
+        // crates behind and drew those shadows on top, and the depth of field blurred them as background.
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode" = "DepthNormals" }
+            ZWrite On
+            Cull Off
+
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment fragNormals
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+
+            half4 fragNormals(Varyings input) : SV_Target
+            {
+                clip(MaskAt(input.uv) - _DepthCutoff);
+                float3 n = normalize(-GetViewForwardDir()); // the cut-out faces the camera
+                #if defined(_GBUFFER_NORMALS_OCT)
+                    float2 oct = PackNormalOctQuadEncode(n);
+                    return half4(PackFloat2To888(saturate(oct * 0.5 + 0.5)), 0);
+                #else
+                    return half4(n, 0);
+                #endif
             }
             ENDHLSL
         }

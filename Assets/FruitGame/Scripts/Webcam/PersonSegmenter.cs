@@ -30,6 +30,8 @@ namespace FruitGame
         [SerializeField] BackendType backend = BackendType.GPUCompute;
         [Tooltip("Frame rate the game should keep; RVM gets whatever time is left each frame.")]
         [SerializeField] float targetFrameRate = 60f;
+        [Tooltip("The fewest mattes per second, whatever the frame time: the budget never shrinks below this. Without it a frame already slower than targetFrameRate (the realistic look) squeezed RVM to 2 layers a frame, about one matte a second.")]
+        [SerializeField] float minMatteRate = 12f;
 
         const int MediaPipeSize = 256;
 
@@ -90,6 +92,7 @@ namespace FruitGame
             if (!Available(option)) return;
             worker?.Dispose();
             run = null;
+            runLayers = layersThisRun = 0; // a different model has a different length
             Current = option;
             UsingRvm = option != Option.MediaPipe;
             downsample = option == Option.RvmMobileNet ? rvmLightDownsample : rvmDownsample;
@@ -167,9 +170,12 @@ namespace FruitGame
             for (int i = 0; i < budget; i++)
             {
                 if (!run.MoveNext()) { finished = true; break; }
+                layersThisRun++;
             }
             if (!finished) return;
             run = null;
+            runLayers = layersThisRun;
+            layersThisRun = 0;
 
             // Carry the recurrent state into the next run (copied, since outputs are reused by the worker).
             // CopyOutput can only reuse a tensor that's big enough, so reallocate when the shape changes
@@ -194,8 +200,12 @@ namespace FruitGame
             float dt = Time.unscaledDeltaTime;
             if (dt > target * 1.1f) layersPerFrame *= 0.85f;
             else if (dt < target * 0.95f) layersPerFrame *= 1.05f;
-            layersPerFrame = Mathf.Clamp(layersPerFrame, 2f, 5000f);
+            // Never fewer layers than finish minMatteRate runs a second at the current frame time.
+            float floor = runLayers > 0 ? runLayers * minMatteRate * Mathf.Min(dt, 0.1f) : 2f;
+            layersPerFrame = Mathf.Clamp(layersPerFrame, Mathf.Max(2f, floor), 5000f);
         }
+
+        int runLayers, layersThisRun;
 
         int photoWaiting;
 

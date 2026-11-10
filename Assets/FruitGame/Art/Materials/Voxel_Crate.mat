@@ -25,9 +25,11 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _SceneLit: 1
     - _SweepStrength: 0
     - _SweepWidth: 0.35
     - _SweepX: -100
+    - _Transmission: 0
     m_Colors: []
   m_BuildTextureStacks: []
   m_AllowLocking: 1

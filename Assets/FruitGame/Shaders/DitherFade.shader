@@ -12,6 +12,9 @@ Shader "FruitGame/Dither Fade"
         _DitherPixel("Dither Pixel Size", Float) = 1
         _Wind("Wind (metres of sway per metre of height, 0 = still)", Float) = 0
         _WindSpeed("Wind Speed", Float) = 1.6
+        _Transmission("Light Through (leaves, grass, petals; 0 = opaque)", Range(0, 2)) = 0
+        _CookieStrength("Sun Dapple (0 for clouds)", Range(0, 1)) = 1
+        _SelfLit("Self-lit (clouds: keep their own colour whatever the light)", Range(0, 1)) = 0
     }
 
     SubShader
@@ -27,9 +30,14 @@ Shader "FruitGame/Dither Fade"
             #pragma vertex vert
             #pragma fragment frag
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            #pragma multi_compile_fragment _ _LIGHT_COOKIES
+            #pragma multi_compile_fragment _ _SCREEN_SPACE_OCCLUSION
+            #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #include "VoxelLight.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -43,6 +51,9 @@ Shader "FruitGame/Dither Fade"
                 float _DitherPixel;
                 float _Wind;
                 float _WindSpeed;
+                half _Transmission;
+                half _CookieStrength;
+                half _SelfLit;
             CBUFFER_END
 
             struct Attributes
@@ -58,6 +69,7 @@ Shader "FruitGame/Dither Fade"
                 float2 uv : TEXCOORD0;
                 float3 positionWS : TEXCOORD1;
                 float3 normalWS : TEXCOORD2;
+                half fogFactor : TEXCOORD3;
             };
 
             Varyings vert(Attributes input)
@@ -72,6 +84,7 @@ Shader "FruitGame/Dither Fade"
                     ws.x += _Wind * h * (sin(t + ws.x * 0.7 + ws.z * 1.1) + 0.5 * sin(t * 2.3 + ws.x * 2.3 + ws.y * 1.7));
                 }
                 o.positionCS = TransformWorldToHClip(ws);
+                o.fogFactor = ComputeFogFactor(o.positionCS.z);
                 o.positionWS = ws;
                 o.normalWS = TransformObjectToWorldNormal(input.normalOS);
                 o.uv = TRANSFORM_TEX(input.uv, _BaseMap);
@@ -85,15 +98,17 @@ Shader "FruitGame/Dither Fade"
                 // Mip 0 only: the atlases are palettes of small swatches, and lower mips blend neighbouring swatches.
                 half4 albedo = SAMPLE_TEXTURE2D_LOD(_BaseMap, sampler_BaseMap, input.uv, 0) * _BaseColor;
                 float3 n = normalize(input.normalWS);
-                Light light = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
-                half ndl = saturate(dot(n, light.direction));
-                half3 color = albedo.rgb * (light.color * ndl * light.shadowAttenuation + SampleSH(n));
+                half3 color = VoxelLight(albedo.rgb, n, input.positionWS, _Transmission, _CookieStrength, GetNormalizedScreenSpaceUV(input.positionCS));
+                // Clouds keep their own colour in either lighting style (a top face slightly brighter, for shape).
+                color = lerp(color, albedo.rgb * (1.2h + 0.15h * saturate(n.y)), _SelfLit);
 
                 uint2 cellPos = (uint2)floor(input.positionCS.xy / max(_DitherPixel, 1));
                 float threshold = (bayer[(cellPos.y % 4) * 4 + (cellPos.x % 4)] + 0.5) / 16.0;
-                float f = _Fade * _Levels;
+                // Backlit: less haze, so the distance keeps its light and shade.
+                float f = _Fade * (_VoxelFadeScale > 0 ? _VoxelFadeScale : 1) * _Levels;
                 float level = floor(f) + step(threshold, frac(f));
                 color = lerp(color, _FadeColor.rgb, saturate(level / _Levels));
+                color = MixFog(color, input.fogFactor); // realistic look only (fog is off in the classic)
                 return half4(color, 1);
             }
             ENDHLSL

@@ -83,6 +83,9 @@ namespace FruitGame
             ["One"] = "하나",
             ["Two"] = "둘",
             ["Blank the guest screen"] = "손님 화면 가리기",
+            ["Lighting"] = "조명",
+            ["Classic"] = "기본",
+            ["Realistic"] = "사실적",
 
             // Printing
             ["Copies per print"] = "한 번에 인쇄 매수",

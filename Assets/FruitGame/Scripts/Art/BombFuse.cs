@@ -52,6 +52,7 @@ namespace FruitGame
             var shader = Shader.Find("FruitGame/Voxel Title");
             flameMaterial = shader != null ? new Material(shader) { name = "Fuse Flame" } : fallback;
             if (flameMaterial != null && flameMaterial.HasProperty("_SweepStrength")) flameMaterial.SetFloat("_SweepStrength", 0f);
+            if (flameMaterial != null && flameMaterial.HasProperty("_SceneLit")) flameMaterial.SetFloat("_SceneLit", 1f);
             return flameMaterial;
         }
 
