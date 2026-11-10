@@ -59,8 +59,8 @@ Material:
     m_Floats:
     - _Beauty: 0
     - _BigEye: 0
-    - _BlurAlpha: 0.45
-    - _BlushStrength: 0
+    - _BlurAlpha: 1.4
+    - _BlushStrength: 0.04
     - _Brighten: 1.12
     - _CheekRadius: 0.05
     - _DepthCutoff: 0.5

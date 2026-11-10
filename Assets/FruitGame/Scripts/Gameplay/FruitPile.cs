@@ -8,7 +8,8 @@ namespace FruitGame
     /// behind the person: one fruit deep, so it stacks like a 2D heap but tumbles and looks 3D. It sits on a raised
     /// platform of crates, so the heap shows above the player's shoulders.
     /// Anti-glitch measures: simple colliders, continuous collision, gentle depenetration, spawning only into
-    /// free space, extra solver iterations, freezing settled fruit, a cap on the count, and its own physics layer.
+    /// free space, extra solver iterations, freezing settled fruit and its own physics layer. Nothing is ever removed during a round: the heap grows until it
+    /// reaches the drop height (no free spot left up there), or the safety cap `pileMax`, and then stops growing.
     /// </summary>
     public class FruitPile : MonoBehaviour
     {
@@ -21,7 +22,6 @@ namespace FruitGame
         [Tooltip("Full-colour fruit material used while the photo booth is open (the pile shows in full colour).")]
         [SerializeField] Material photoMaterial;
         [SerializeField] float landSoundCooldown = 0.1f;
-        [SerializeField] float shrinkTime = 0.3f;
 
         [Header("Crate heap")]
         [Tooltip("Crate for the heap under the pile (the crate pack's Box, as on the walls). Empty = the pile sits on the ground.")]
@@ -198,7 +198,8 @@ namespace FruitGame
         /// <param name="golden">A golden catch: the pile copy is gold too.</param>
         public void Add(FruitType type, bool golden = false)
         {
-            if (fruits.Count >= config.pileMax) RemoveOldest();
+            fruits.RemoveAll(f => f == null);
+            if (fruits.Count >= config.pileMax) return;
 
             var go = new GameObject(type != null ? $"Pile_{type.displayName}" : "Pile_Fruit");
             go.transform.SetParent(transform, false);
@@ -209,7 +210,12 @@ namespace FruitGame
             MakeBackground(go, type, golden);
 
             float radius = FitCollider(go);
-            go.transform.position = FreeSpawnPoint(radius);
+            if (!FreeSpawnPoint(radius, out var spawnAt))
+            {
+                Destroy(go); // full to the top
+                return;
+            }
+            go.transform.position = spawnAt;
             go.transform.rotation = Random.rotation;
 
             var body = go.AddComponent<Rigidbody>();
@@ -289,18 +295,6 @@ namespace FruitGame
             fruits.Clear();
         }
 
-        void RemoveOldest()
-        {
-            fruits.RemoveAll(f => f == null);
-            if (fruits.Count == 0) return;
-            var oldest = fruits[0];
-            fruits.RemoveAt(0);
-            oldest.ShrinkAway(shrinkTime);
-            // Anything resting on it must be able to settle into the gap.
-            foreach (var f in fruits)
-                if (f != null && f.Frozen) f.Wake();
-        }
-
         /// <summary>
         /// Fits a sphere, or a capsule along the longest axis for elongated fruit (banana, pear, pineapple),
         /// to the visual. Returns the radius to use for spawn clearance.
@@ -339,19 +333,18 @@ namespace FruitGame
             return sphere.radius;
         }
 
-        Vector3 FreeSpawnPoint(float radius)
+        /// <summary>A free spot at the drop height; false when the heap has reached it everywhere tried (the pile is full).</summary>
+        bool FreeSpawnPoint(float radius, out Vector3 p)
         {
             float range = Mathf.Max(0f, config.pileHalfWidth - radius);
             var origin = transform.position;
-            Vector3 p = origin;
-            for (int attempt = 0; attempt < 6; attempt++)
+            for (int attempt = 0; attempt < 12; attempt++)
             {
                 p = new Vector3(origin.x + Random.Range(-range, range), config.pileSpawnY, origin.z);
-                if (!Physics.CheckSphere(p, radius, mask, QueryTriggerInteraction.Ignore)) return p;
+                if (!Physics.CheckSphere(p, radius, mask, QueryTriggerInteraction.Ignore)) return true;
             }
-            // Everything near the top is busy: drop it from higher up instead.
-            p.y += radius * 3f;
-            return p;
+            p = default;
+            return false;
         }
 
         void HandleLanded(PileFruit fruit)

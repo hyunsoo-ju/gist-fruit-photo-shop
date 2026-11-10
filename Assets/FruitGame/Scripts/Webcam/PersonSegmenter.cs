@@ -135,6 +135,8 @@ namespace FruitGame
         void Update()
         {
             if (worker == null || source == null || !source.HasFrames || source.Output == null) return;
+            // A photo is waiting for its own matte: don't start another live run until it has had its turn.
+            if (photoWaiting > 0 && run == null) return;
 
             if (UsingRvm) StepRvm();
             else RunMediaPipe();
@@ -193,6 +195,54 @@ namespace FruitGame
             if (dt > target * 1.1f) layersPerFrame *= 0.85f;
             else if (dt < target * 0.95f) layersPerFrame *= 1.05f;
             layersPerFrame = Mathf.Clamp(layersPerFrame, 2f, 5000f);
+        }
+
+        int photoWaiting;
+
+        /// <summary>
+        /// Background removal for a photo: the matte of exactly this (held) frame, written into `into` (resized to the
+        /// mask's size if needed). The live matte is time-sliced over several frames, so it trails the picture a
+        /// little; a photo waits for the run in progress to finish, then runs the model in one go on its own frame
+        /// (one frame's worth of GPU work), with RVM's current recurrent state. False if it can't (no model, no time).
+        /// </summary>
+        public async Awaitable<bool> MatteAsync(Texture frame, RenderTexture into)
+        {
+            if (worker == null || frame == null || into == null || Mask == null || !HasMask) return false;
+            float giveUp = Time.unscaledTime + 1f;
+            photoWaiting++;
+            try
+            {
+                while (run != null)
+                {
+                    if (this == null || Time.unscaledTime > giveUp) return false;
+                    await Awaitable.NextFrameAsync();
+                }
+                if (this == null || worker == null) return false;
+                if (UsingRvm)
+                {
+                    EnsureBuffers(RvmSize(frame.width), RvmSize(frame.height));
+                    TextureConverter.ToTensor(frame, input, new TextureTransform());
+                    rvmInputs[0] = input;
+                    for (int i = 0; i < 4; i++) rvmInputs[i + 1] = states[i];
+                    // A seed state (before the first live run) has the wrong shape for a whole run; wait for a live one.
+                    if (states[0] == null || states[0].shape.rank != 4 || states[0].shape[1] == 1) return false;
+                    worker.Schedule(rvmInputs);
+                }
+                else
+                {
+                    EnsureBuffers(MediaPipeSize, MediaPipeSize);
+                    TextureConverter.ToTensor(frame, input, new TextureTransform());
+                    worker.Schedule(input);
+                }
+                TextureConverter.RenderToTexture(worker.PeekOutput(0) as Tensor<float>, into, outputTransform);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[FruitGame] Background removal for a photo failed: {e.Message}");
+                return false;
+            }
+            finally { photoWaiting--; }
         }
 
         void RunMediaPipe()

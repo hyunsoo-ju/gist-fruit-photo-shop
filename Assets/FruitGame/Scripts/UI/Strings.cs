@@ -25,6 +25,10 @@ namespace FruitGame
         /// <summary>Raised when the language changes, so on-screen labels can refresh.</summary>
         public static event Action Changed;
 
+        // Play mode without a domain reload keeps statics: read Strings.txt afresh each run, so edits show.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlay() => table = null;
+
         public static void Load()
         {
             if (table != null) return;

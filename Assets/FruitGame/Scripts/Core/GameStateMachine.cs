@@ -314,6 +314,7 @@ namespace FruitGame
             DemoRunning = true;
             hud.ShowRoundHud(true);
             StartDemoRound();
+            hud.SetTime(Timer.Remaining, false);
             return true;
         }
 
@@ -328,20 +329,41 @@ namespace FruitGame
         {
             if (!DemoRunning) return;
             DemoRunning = false;
+            demoFadeTime = -1f;
+            if (fade != null) fade.Alpha = 0f;
             audioFeedback.Muted = false;
             basket.SetInput(playerInput);
             ResetRound();
             hud.ShowRoundHud(false);
         }
 
+        ScreenFade fade;
+        float demoFadeTime = -1f; // seconds into the fade between sample rounds; negative while playing
+
         void TickDemo()
         {
-            Timer.Tick(Time.deltaTime);
-            hud.SetTime(Timer.Remaining, config.UsesTimer);
-            if (!Timer.Expired) return;
-            // Round over: let the last fruit land, then start another with an empty pile.
-            if (spawner.Spawning) spawner.StopSpawning();
-            else if (!spawner.HasActiveFruit) StartDemoRound();
+            // No clock in the sample round (it plays to a score, not a time). It still runs, held short of time up, to ramp the fruit.
+            if (Timer.Remaining - Time.deltaTime > 1f) Timer.Tick(Time.deltaTime);
+            hud.SetTime(Timer.Remaining, false);
+
+            if (demoFadeTime < 0f)
+            {
+                // Plays on until the target score, then fades out and starts again from 0.
+                if (Stats.Score >= config.demoScoreTarget) demoFadeTime = 0f;
+                return;
+            }
+
+            if (fade == null) fade = gameObject.AddComponent<ScreenFade>();
+            float half = Mathf.Max(0.01f, config.demoFade);
+            float before = demoFadeTime;
+            demoFadeTime += Time.deltaTime;
+            if (before < half && demoFadeTime >= half) StartDemoRound(); // fully covered: reset behind it
+            fade.Alpha = demoFadeTime < half ? demoFadeTime / half : 1f - (demoFadeTime - half) / half;
+            if (demoFadeTime >= 2f * half)
+            {
+                fade.Alpha = 0f;
+                demoFadeTime = -1f;
+            }
         }
 
         /// <summary>Nobody's there any more: closes whatever screen the visit was on and goes back to the title.</summary>
@@ -433,7 +455,13 @@ namespace FruitGame
         void EnterCountdown()
         {
             ResetRound();
-            if (Narrating) { Gate(RunCountdown, "intro", "game_start_ask"); return; }
+            if (Narrating)
+            {
+                // The Sound round has no bombs, so only golden fruit need explaining (the line says 3 points: goldenPoints).
+                if (config.goldenPerRound > 0) Gate(RunCountdown, "intro", "rules_golden", "game_start_ask");
+                else Gate(RunCountdown, "intro", "game_start_ask");
+                return;
+            }
             RunCountdown();
         }
 
@@ -453,7 +481,7 @@ namespace FruitGame
             if (shown != lastCountdownShown && shown > 0)
             {
                 lastCountdownShown = shown;
-                hud.ShowMessage(shown.ToString(), null);
+                hud.ShowMessage(shown.ToString(), ScoreRules.Explain(config));
                 audioFeedback.PlayCountdownTick();
                 if (shown <= 3) Say("count_" + shown);
             }

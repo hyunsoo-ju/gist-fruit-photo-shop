@@ -7,7 +7,8 @@ namespace FruitGame
     /// <summary>
     /// Makes the orchard look natural and alive (Docs/DESIGN.md §4, M6 1.1 and 1.2), at start, over the baked scenery:
     /// darker greens, a band of extra shrubs in the far layer, wind in the leaves and grass with a quicker motion for the
-    /// flowers (FruitGame/Dither Fade's _Wind), and a few butterflies and drifting leaves. Everything alive moves in the
+    /// flowers (FruitGame/Dither Fade's _Wind), a few butterflies and drifting leaves, and the block clouds drifting slowly
+    /// left or right across the sky, each coming back in from the other side. Everything alive moves in the
     /// far layer, behind the player and the fruit, so it can't be mistaken for something to catch.
     /// </summary>
     public class LivingScenery : MonoBehaviour
@@ -23,15 +24,20 @@ namespace FruitGame
         [SerializeField] int extraShrubs = 28;
         [SerializeField] int butterflies = 5;
         [SerializeField] int driftingLeaves = 12;
+        [Tooltip("Cloud drift speed range (m/s); each cloud picks one, and a direction, every time it crosses.")]
+        [SerializeField] Vector2 cloudSpeed = new Vector2(0.07f, 0.16f);
 
         const float FarFade = 0.4f, FarLeafFade = 0.65f;
 
         class Butterfly { public Transform root, left, right; public Vector3 home; public float phase, speed; }
         class Leaf { public Transform transform; public Vector3 spin; public float speed, phase, x; }
+        class Cloud { public Transform transform; public float speed, dir, left, right, homeY; }
 
         readonly Dictionary<(Material, bool), Material> swapped = new Dictionary<(Material, bool), Material>();
         readonly List<Butterfly> flying = new List<Butterfly>();
         readonly List<Leaf> leaves = new List<Leaf>();
+        readonly List<Cloud> clouds = new List<Cloud>();
+        System.Random cloudRng;
         readonly List<Mesh> meshes = new List<Mesh>();
         Material blocks;
         int farLayer;
@@ -62,6 +68,56 @@ namespace FruitGame
             var leafMeshes = new Mesh[LeafColours.Length];
             for (int i = 0; i < leafMeshes.Length; i++) leafMeshes[i] = Solid(LeafColours[i], 3, 2);
             for (int i = 0; i < driftingLeaves; i++) AddLeaf(leafMeshes[i % leafMeshes.Length], rng);
+            FindClouds();
+        }
+
+        /// <summary>The orchard builder's block clouds ("Cloud" groups): each drifts its own way at its own speed.</summary>
+        void FindClouds()
+        {
+            cloudRng = new System.Random(5);
+            int n = 0;
+            foreach (var t in FindObjectsByType<Transform>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (t.name != "Cloud") continue;
+                var rs = t.GetComponentsInChildren<Renderer>();
+                if (rs.Length == 0) continue;
+                var b = rs[0].bounds;
+                foreach (var r in rs) b.Encapsulate(r.bounds);
+                // Alternate the first directions so both are always on show; later crossings pick at random.
+                var c = new Cloud { transform = t, left = t.position.x - b.min.x, right = b.max.x - t.position.x, homeY = t.position.y, dir = n++ % 2 == 0 ? 1f : -1f };
+                c.speed = Mathf.Lerp(cloudSpeed.x, cloudSpeed.y, (float)cloudRng.NextDouble());
+                clouds.Add(c);
+            }
+        }
+
+        /// <summary>Half the view's width at a depth, from the main camera (follows portrait and landscape).</summary>
+        static float HalfViewWidth(Camera cam, float z)
+        {
+            float distance = Mathf.Abs(z - cam.transform.position.z);
+            return distance * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) * cam.aspect;
+        }
+
+        void MoveClouds(float dt)
+        {
+            var cam = Camera.main;
+            if (cam == null || cam.orthographic) return;
+            foreach (var c in clouds)
+            {
+                if (c.transform == null) continue;
+                var p = c.transform.position;
+                p.x += c.dir * c.speed * dt;
+                float edge = HalfViewWidth(cam, p.z) + 0.2f;
+                bool gone = c.dir > 0f ? p.x - c.left > edge : p.x + c.right < -edge;
+                if (gone)
+                {
+                    // Back in from a side, just out of view, at a slightly different height and pace.
+                    c.dir = cloudRng.NextDouble() < 0.5 ? 1f : -1f;
+                    c.speed = Mathf.Lerp(cloudSpeed.x, cloudSpeed.y, (float)cloudRng.NextDouble());
+                    p.x = c.dir > 0f ? -edge - c.right : edge + c.left;
+                    p.y = c.homeY + ((float)cloudRng.NextDouble() - 0.5f) * 0.5f;
+                }
+                c.transform.position = p;
+            }
         }
 
         static int FirstRendererLayer(Transform root)
@@ -247,6 +303,7 @@ namespace FruitGame
                 l.transform.position = p;
                 l.transform.Rotate(l.spin * dt);
             }
+            MoveClouds(dt);
         }
 
         void OnDestroy()

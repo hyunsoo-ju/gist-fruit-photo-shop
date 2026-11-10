@@ -25,7 +25,7 @@ Shader "FruitGame/Person Cutout"
         _VarTex("Variance (gamma)", 2D) = "black" {}
         _LutSkin("LUT Skin (baked)", 2D) = "white" {}
         _LutLight("LUT Skin + Light (baked)", 2D) = "white" {}
-        _BlurAlpha("Smoothing", Range(0, 1)) = 0.9
+        _BlurAlpha("Smoothing (over 1 = stronger still)", Range(0, 4)) = 0.9
         _Sharpen("Sharpen", Range(0, 1)) = 0.3
         _Whiten("Whitening", Range(0, 1)) = 0.6
         _BlushColor("Blush Color", Color) = (1, 0.62, 0.68, 1)

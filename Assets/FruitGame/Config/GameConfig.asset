@@ -52,7 +52,7 @@ MonoBehaviour:
   pileFloorY: -3.6
   pileHalfWidth: 3
   pileSpawnY: 3.6
-  pileMax: 40
+  pileMax: 400
   pileFreezeSpeed: 0.05
   pileFreezeTime: 1.5
   assistRadius: 2.6
@@ -76,6 +76,12 @@ MonoBehaviour:
   bombPenalty: 5
   comboFrom: 5
   comboMultiplier: 2
+  hardFallSpeedMax: 5.2
+  hardDriftCapMax: 2.1
+  hardNextFruitDelayEnd: 0.2
+  hardEndDropsPer10s: 13
+  hardMaxFruitInAir: 4
+  hardBombsPerRound: 7
   auditoryFallSpeed: 2.3
   auditoryDriftCap: 0.4
   auditoryFruitDelay: 1
@@ -90,21 +96,34 @@ MonoBehaviour:
   sensitivity: 1
   steerBy: 0
   turnDegreesPerWidth: 100
-  deadZone: 0.02
+  deadZone: 0
   softClampKnee: 0.8
   calibMinRangePerSide: 0.03
-  oneEuroMinCutoff: 1
-  oneEuroBeta: 0.5
+  oneEuroMinCutoff: 3
+  oneEuroBeta: 1
   steadyTolerance: 0.015
   steadyHoldTime: 1
   calibLeadInCentre: 5
   calibLeadIn: 3
   faceLostPauseDelay: 1
   faceReturnGrace: 1
+  attractAfter: 30
+  demoScoreTarget: 200
+  demoFade: 0.6
+  walkAwayAfter: 20
+  timeoutWarning: 20
+  pauseLimit: 60
+  photoAutoDeleteDays: 14
   photoCaption: GIST Fruit Photo Shop
   beautyStrength: 1
   bigEye: 0.2
   faceSlim: 0.025
+  skinSmoothing: 1.4
+  skinSmoothWidth: 3
+  blushStrength: 0.04
+  blushCoolness: 0.5
+  lipStrength: 0.22
+  lipCoolness: 0.5
   fruitBlockSize: 0.044
   worldBlockSize: 0.063
   farBlockSize: 0.09

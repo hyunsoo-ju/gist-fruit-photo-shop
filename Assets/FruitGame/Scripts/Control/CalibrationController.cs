@@ -138,7 +138,7 @@ namespace FruitGame
                 case Step.Right: title.text = Strings.Get(Turning ? "calib.rightTurn" : "calib.right"); break;
                 case Step.Try:
                     title.text = Strings.Get("calib.try");
-                    hint.text = "";
+                    hint.text = ScoreRules.Explain(config);
                     mapper.Calibration = working;
                     mapper.ResetFilter();
                     break;

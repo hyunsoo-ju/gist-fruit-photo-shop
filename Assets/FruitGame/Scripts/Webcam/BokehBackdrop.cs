@@ -86,7 +86,23 @@ namespace FruitGame
             displayMaterial.SetFloat(LiveId, live ? 1f : 0f);
             if (!live) return;
 
-            var src = source.Output;
+            Show(source.Output, segmenter != null && segmenter.HasMask ? segmenter.Mask : null);
+        }
+
+        /// <summary>
+        /// For rendering a photo: the backdrop from a held camera frame (and its matte, for the bokeh), so the room
+        /// behind the player matches the frame the photo's cut-out comes from. Call ShowLive right after the render.
+        /// </summary>
+        public void ShowPhotoFrame(RenderTexture frame, Texture mask)
+        {
+            if (frame == null || (useIllustration && illustration != null)) return;
+            Show(frame, mask);
+        }
+
+        public void ShowLive() => LateUpdate();
+
+        void Show(RenderTexture src, Texture mask)
+        {
             // Bokeh off: the raw camera frame (alpha is 1, so the display shader's divide is a no-op), ungraded.
             displayMaterial.SetFloat(DesaturateId, bokeh ? gradeDesaturate : 0f);
             displayMaterial.SetFloat(BrightenId, bokeh ? gradeBrighten : 1f);
@@ -102,8 +118,8 @@ namespace FruitGame
             Ensure(ref a, w, h);
             Ensure(ref b, w, h);
 
-            bool hasMask = segmenter != null && segmenter.HasMask;
-            blurMaterial.SetTexture(MaskTexId, hasMask ? segmenter.Mask : Texture2D.blackTexture);
+            bool hasMask = mask != null;
+            blurMaterial.SetTexture(MaskTexId, hasMask ? mask : Texture2D.blackTexture);
             blurMaterial.SetFloat(UseMaskId, hasMask ? 1f : 0f);
             Graphics.Blit(src, a, blurMaterial, 0);
 

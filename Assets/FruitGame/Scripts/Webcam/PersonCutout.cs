@@ -50,14 +50,42 @@ namespace FruitGame
         static readonly int SpacingId = Shader.PropertyToID("_Spacing");
         static readonly int DeltaId = Shader.PropertyToID("_Delta");
 
-        [Tooltip("How quickly the makeup follows the face (higher = snappier, lower = smoother).")]
-        [SerializeField] float makeupFollow = 10f;
+        [Tooltip("How quickly the makeup and reshape follow the face (1/s; higher = snappier, lower = smoother). 30 ≈ 33 ms behind the face mesh.")]
+        [SerializeField] float makeupFollow = 30f;
+
+        static readonly int BlurAlphaId = Shader.PropertyToID("_BlurAlpha");
+        static readonly int BlushStrengthId = Shader.PropertyToID("_BlushStrength");
+        static readonly int BlushColorId = Shader.PropertyToID("_BlushColor");
+        static readonly int LipStrengthId = Shader.PropertyToID("_LipStrength");
+        static readonly int LipColorId = Shader.PropertyToID("_LipColor");
+
+        /// <summary>Where the makeup and reshape go, in webcam-output UV: eased for the live view, exact for a photo.</summary>
+        class Makeup
+        {
+            public Vector2 cheekL, cheekR, mouth;
+            public float cheekRadius, mouthRadius, slimRadius;
+            public Vector3 eyeA, eyeB;
+            public readonly Vector4[] slim = new Vector4[4];
+
+            public void LerpTo(Makeup to, float t)
+            {
+                cheekL = Vector2.Lerp(cheekL, to.cheekL, t);
+                cheekR = Vector2.Lerp(cheekR, to.cheekR, t);
+                mouth = Vector2.Lerp(mouth, to.mouth, t);
+                cheekRadius = Mathf.Lerp(cheekRadius, to.cheekRadius, t);
+                mouthRadius = Mathf.Lerp(mouthRadius, to.mouthRadius, t);
+                slimRadius = Mathf.Lerp(slimRadius, to.slimRadius, t);
+                eyeA = Vector3.Lerp(eyeA, to.eyeA, t);
+                eyeB = Vector3.Lerp(eyeB, to.eyeB, t);
+                for (int i = 0; i < 4; i++) slim[i] = Vector4.Lerp(slim[i], to.slim[i], t);
+            }
+        }
 
         Material prepMaterial;
-        Vector2 cheekL, cheekR, mouthPos;
-        float cheekRadius, mouthRadius, slimRadius;
-        Vector3 eyeA, eyeB;
-        readonly Vector4[] slim = new Vector4[4];
+        readonly Makeup shown = new Makeup(), target = new Makeup(), still = new Makeup();
+        bool shownHasMesh;
+        Color baseBlush, baseLip;
+        RenderTexture heldFrame, heldMask;
         static readonly int OutlineWidthId = Shader.PropertyToID("_OutlineWidth");
         static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
         static readonly int OutlineTexelId = Shader.PropertyToID("_OutlineTexel");
@@ -90,6 +118,9 @@ namespace FruitGame
         {
             smoothMaterial = new Material(smoothShader);
             quadMaterial = new Material(quad.sharedMaterial);
+            // The material's colours are the base tones; GameConfig's coolness turns them warmer or cooler.
+            baseBlush = quadMaterial.GetColor(BlushColorId);
+            baseLip = quadMaterial.GetColor(LipColorId);
             quad.sharedMaterial = quadMaterial;
             quad.enabled = false;
         }
@@ -104,6 +135,8 @@ namespace FruitGame
             Release(tempRt);
             Release(current);
             Release(previous);
+            Release(heldFrame);
+            Release(heldMask);
         }
 
         void LateUpdate()
@@ -153,6 +186,7 @@ namespace FruitGame
                 return;
             }
 
+            ApplySettings();
             RunBeautyPrep(source.Output);
             quadMaterial.SetTexture(MeanTexId, meanRt);
             quadMaterial.SetTexture(VarTexId, varRt);
@@ -173,75 +207,163 @@ namespace FruitGame
             }
 
             // Targets for this frame: from the 478-point face mesh when available, else BlazeFace's six keypoints.
-            Vector2 tCheekL, tCheekR, tMouth, tEyeA, tEyeB;
-            float tCheekRadius, tMouthRadius, tEyeRadius, eyeGap;
-            var slimTargets = new Vector4[4];
-            if (useMesh)
-            {
-                var p = mesh.Points;
-                tEyeA = (p[33] + p[133]) * 0.5f;
-                tEyeB = (p[263] + p[362]) * 0.5f;
-                eyeGap = AspectDistance(tEyeA, tEyeB);
-                tEyeRadius = Mathf.Max(AspectDistance(p[33], p[133]), AspectDistance(p[263], p[362])) * 0.95f;
-                tCheekL = p[50];
-                tCheekR = p[280];
-                tCheekRadius = eyeGap * 0.33f;
-                tMouth = (p[13] + p[14]) * 0.5f;
-                tMouthRadius = AspectDistance(p[61], p[291]) * 0.6f;
-                // V-line: pull the lower jaw (both sides, two points each) toward a point between chin and nose.
-                Vector2 pullTarget = Vector2.Lerp(p[152], p[1], 0.55f);
-                int[] jaw = { 172, 136, 397, 365 };
-                for (int i = 0; i < 4; i++)
-                {
-                    Vector2 start = p[jaw[i]];
-                    slimTargets[i] = new Vector4(start.x, start.y, 0f, 0f);
-                    Vector2 pull = (pullTarget - start) * 0.22f;
-                    slimTargets[i].z = pull.x;
-                    slimTargets[i].w = pull.y;
-                }
-            }
-            else
-            {
-                var k = tracker.Keypoints;
-                Vector2 rightEye = k[0], leftEye = k[1], nose = k[2];
-                eyeGap = Vector2.Distance(rightEye, leftEye);
-                Vector2 down = nose - (rightEye + leftEye) * 0.5f;
-                Vector2 centre = (rightEye + leftEye) * 0.5f;
-                Vector2 CheekUnder(Vector2 eye) => eye + down * 1.05f + (eye - centre).normalized * eyeGap * 0.12f;
-                tCheekL = CheekUnder(leftEye);
-                tCheekR = CheekUnder(rightEye);
-                tCheekRadius = eyeGap * 0.38f;
-                tMouth = k[3];
-                tMouthRadius = eyeGap * 0.42f;
-                tEyeA = rightEye; tEyeB = leftEye; tEyeRadius = 0f;
-            }
+            if (useMesh) FromMesh(mesh.Points, target);
+            else FromKeypoints(tracker.Keypoints, target);
 
             // Ease toward the targets so makeup and reshape glide with the face instead of jumping per detection.
             float t = makeupPrimed ? 1f - Mathf.Exp(-makeupFollow * Time.unscaledDeltaTime) : 1f;
             makeupPrimed = true;
-            cheekL = Vector2.Lerp(cheekL, tCheekL, t);
-            cheekR = Vector2.Lerp(cheekR, tCheekR, t);
-            mouthPos = Vector2.Lerp(mouthPos, tMouth, t);
-            cheekRadius = Mathf.Lerp(cheekRadius, tCheekRadius, t);
-            mouthRadius = Mathf.Lerp(mouthRadius, tMouthRadius, t);
-            eyeA = Vector3.Lerp(eyeA, new Vector3(tEyeA.x, tEyeA.y, tEyeRadius), t);
-            eyeB = Vector3.Lerp(eyeB, new Vector3(tEyeB.x, tEyeB.y, tEyeRadius), t);
-            for (int i = 0; i < 4; i++) slim[i] = Vector4.Lerp(slim[i], slimTargets[i], t);
-            slimRadius = Mathf.Lerp(slimRadius, eyeGap * 0.85f, t);
+            shown.LerpTo(target, t);
+            shownHasMesh = useMesh;
+            Push(shown, useMesh);
+        }
 
-            quadMaterial.SetVector(CheekLId, cheekL);
-            quadMaterial.SetVector(CheekRId, cheekR);
-            quadMaterial.SetFloat(CheekRadiusId, cheekRadius);
-            quadMaterial.SetVector(MouthId, mouthPos);
-            quadMaterial.SetFloat(MouthRadiusId, mouthRadius);
+        /// <summary>The staff-adjustable beauty settings (GameConfig): smoothing, and blush and lip tint strength and tone.</summary>
+        void ApplySettings()
+        {
+            if (config == null) return;
+            quadMaterial.SetFloat(BlurAlphaId, config.skinSmoothing);
+            quadMaterial.SetFloat(BlushStrengthId, config.blushStrength);
+            quadMaterial.SetColor(BlushColorId, Tone(baseBlush, config.blushCoolness));
+            quadMaterial.SetFloat(LipStrengthId, config.lipStrength);
+            quadMaterial.SetColor(LipColorId, Tone(baseLip, config.lipCoolness));
+        }
 
+        /// <summary>Coolness 0.5 keeps the base colour; lower turns its hue toward coral/peach, higher toward lilac/berry.</summary>
+        static Color Tone(Color baseColor, float coolness)
+        {
+            Color.RGBToHSV(baseColor, out float h, out float sat, out float v);
+            h = Mathf.Repeat(h + (0.5f - coolness) * 2f * (25f / 360f), 1f);
+            var c = Color.HSVToRGB(h, sat, v);
+            c.a = baseColor.a;
+            return c;
+        }
+
+        static void FromMesh(Vector2[] p, Makeup m)
+        {
+            m.eyeA = (p[33] + p[133]) * 0.5f;
+            m.eyeB = (p[263] + p[362]) * 0.5f;
+            float eyeGap = AspectDistance(m.eyeA, m.eyeB);
+            float eyeRadius = Mathf.Max(AspectDistance(p[33], p[133]), AspectDistance(p[263], p[362])) * 0.95f;
+            m.eyeA.z = eyeRadius;
+            m.eyeB.z = eyeRadius;
+            m.cheekL = p[50];
+            m.cheekR = p[280];
+            m.cheekRadius = eyeGap * 0.33f;
+            m.mouth = (p[13] + p[14]) * 0.5f;
+            m.mouthRadius = AspectDistance(p[61], p[291]) * 0.6f;
+            // V-line: pull the lower jaw (both sides, two points each) toward a point between chin and nose.
+            Vector2 pullTarget = Vector2.Lerp(p[152], p[1], 0.55f);
+            int[] jaw = { 172, 136, 397, 365 };
+            for (int i = 0; i < 4; i++)
+            {
+                Vector2 start = p[jaw[i]];
+                Vector2 pull = (pullTarget - start) * 0.22f;
+                m.slim[i] = new Vector4(start.x, start.y, pull.x, pull.y);
+            }
+            m.slimRadius = eyeGap * 0.85f;
+        }
+
+        static void FromKeypoints(Vector2[] k, Makeup m)
+        {
+            Vector2 rightEye = k[0], leftEye = k[1], nose = k[2];
+            float eyeGap = Vector2.Distance(rightEye, leftEye);
+            Vector2 down = nose - (rightEye + leftEye) * 0.5f;
+            Vector2 centre = (rightEye + leftEye) * 0.5f;
+            Vector2 CheekUnder(Vector2 eye) => eye + down * 1.05f + (eye - centre).normalized * eyeGap * 0.12f;
+            m.cheekL = CheekUnder(leftEye);
+            m.cheekR = CheekUnder(rightEye);
+            m.cheekRadius = eyeGap * 0.38f;
+            m.mouth = k[3];
+            m.mouthRadius = eyeGap * 0.42f;
+            m.eyeA = new Vector3(rightEye.x, rightEye.y, 0f);
+            m.eyeB = new Vector3(leftEye.x, leftEye.y, 0f);
+            for (int i = 0; i < 4; i++) m.slim[i] = Vector4.zero;
+            m.slimRadius = eyeGap * 0.85f;
+        }
+
+        void Push(Makeup m, bool hasMesh)
+        {
+            quadMaterial.SetVector(CheekLId, m.cheekL);
+            quadMaterial.SetVector(CheekRId, m.cheekR);
+            quadMaterial.SetFloat(CheekRadiusId, m.cheekRadius);
+            quadMaterial.SetVector(MouthId, m.mouth);
+            quadMaterial.SetFloat(MouthRadiusId, m.mouthRadius);
             // Reshape needs the mesh; without it the face keeps its shape.
-            quadMaterial.SetFloat(BigEyeId, useMesh ? BigEyeStrength : 0f);
-            quadMaterial.SetFloat(SlimId, useMesh ? SlimStrength : 0f);
-            quadMaterial.SetVector(EyeAId, eyeA);
-            quadMaterial.SetVector(EyeBId, eyeB);
-            quadMaterial.SetFloat(SlimRadiusId, slimRadius);
-            for (int i = 0; i < 4; i++) quadMaterial.SetVector(SlimIds[i], slim[i]);
+            quadMaterial.SetFloat(BigEyeId, hasMesh ? BigEyeStrength : 0f);
+            quadMaterial.SetFloat(SlimId, hasMesh ? SlimStrength : 0f);
+            quadMaterial.SetVector(EyeAId, m.eyeA);
+            quadMaterial.SetVector(EyeBId, m.eyeB);
+            quadMaterial.SetFloat(SlimRadiusId, m.slimRadius);
+            for (int i = 0; i < 4; i++) quadMaterial.SetVector(SlimIds[i], m.slim[i]);
+        }
+
+        // ---- Photos: the makeup placed on the exact frame ------------------------------------------------------------
+
+        /// <summary>The face mesh, for measuring a photo's held frame.</summary>
+        public FaceMesh Mesh => mesh;
+        /// <summary>The camera frame kept by HoldFrame.</summary>
+        public RenderTexture HeldFrame => heldFrame;
+        /// <summary>The cut-out mask used for the photo (the held live mask, or the photo's own matte once given).</summary>
+        public RenderTexture HeldMask => heldMask;
+        /// <summary>The background removal, for a photo's own matte.</summary>
+        public PersonSegmenter Segmenter => segmenter;
+
+        /// <summary>
+        /// Keeps a copy of this moment's camera frame and cut-out mask for a photo (the live view carries on). False when
+        /// the player isn't showing.
+        /// </summary>
+        public bool HoldFrame()
+        {
+            if (!quad.enabled || source == null || source.Output == null || current == null) return false;
+            Copy(source.Output, ref heldFrame, "Photo Frame Held");
+            Copy(current, ref heldMask, "Photo Mask Held");
+            return true;
+        }
+
+        /// <summary>
+        /// For rendering a photo: shows the held frame instead of the live one, cut out with `matte` (that frame's own
+        /// background removal, softened like the live mask but with no blend from earlier frames) or else the mask held
+        /// with it, and with the makeup and reshape placed exactly from `meshPoints` measured on it (no easing), or as
+        /// they are on screen when null. EndPhotoFrame puts the live view back; call it right after the render.
+        /// </summary>
+        public void BeginPhotoFrame(Vector2[] meshPoints, Texture matte = null)
+        {
+            if (heldFrame == null) return;
+            if (matte != null && heldMask != null)
+            {
+                smoothMaterial.SetTexture(PrevTexId, matte);
+                smoothMaterial.SetFloat(BlendId, 1f);
+                smoothMaterial.SetFloat(SpreadId, blurSpread);
+                Graphics.Blit(matte, heldMask, smoothMaterial);
+            }
+            quadMaterial.SetTexture(MainTexId, heldFrame);
+            quadMaterial.SetTexture(MaskTexId, heldMask);
+            if (BeautyStrength <= 0f) return;
+            RunBeautyPrep(heldFrame);
+            if (meshPoints == null) return;
+            FromMesh(meshPoints, still);
+            Push(still, true);
+        }
+
+        public void EndPhotoFrame()
+        {
+            if (source != null && source.Output != null) quadMaterial.SetTexture(MainTexId, source.Output);
+            if (current != null) quadMaterial.SetTexture(MaskTexId, current);
+            if (BeautyStrength <= 0f || source == null || source.Output == null) return;
+            RunBeautyPrep(source.Output);
+            if (makeupPrimed) Push(shown, shownHasMesh);
+        }
+
+        static void Copy(RenderTexture from, ref RenderTexture to, string name)
+        {
+            if (to == null || to.width != from.width || to.height != from.height || to.format != from.format)
+            {
+                Release(to);
+                to = new RenderTexture(from.width, from.height, 0, from.format) { name = name, filterMode = from.filterMode, wrapMode = from.wrapMode };
+                to.Create();
+            }
+            Graphics.CopyTexture(from, to);
         }
 
         /// <summary>Distance in "u" units on the frame (a v step is 1 / aspect of a u step).</summary>
@@ -257,16 +379,23 @@ namespace FruitGame
             EnsureLinear(ref varRt, w, h, "Beauty Variance");
             EnsureLinear(ref tempRt, w, h, "Beauty Temp");
 
-            prepMaterial.SetFloat(SpacingId, 2f);
+            // Tap spacing is in the source's texels: the horizontal pass reads the full frame and the vertical one the
+            // half-size copy, so the horizontal spacing is scaled up to reach as far (the blur was half as wide as tall).
+            prepMaterial.SetFloat(SpacingId, Width * frame.width / (float)w);
             Graphics.Blit(frame, tempRt, prepMaterial, 0);   // gamma + horizontal
+            prepMaterial.SetFloat(SpacingId, Width);
             Graphics.Blit(tempRt, meanRt, prepMaterial, 2);  // vertical → mean
 
             prepMaterial.SetTexture(MeanTexId, meanRt);
             prepMaterial.SetFloat(DeltaId, highPassDelta);
+            prepMaterial.SetFloat(SpacingId, Width);
             Graphics.Blit(frame, varRt, prepMaterial, 3);    // squared difference
             Graphics.Blit(varRt, tempRt, prepMaterial, 1);   // horizontal
             Graphics.Blit(tempRt, varRt, prepMaterial, 2);   // vertical → variance
         }
+
+        /// <summary>Skin smoothing width (GameConfig.skinSmoothWidth): the mean blur's tap spacing, in texels.</summary>
+        float Width => config != null ? config.skinSmoothWidth : 3f;
 
         static void EnsureLinear(ref RenderTexture rt, int w, int h, string name)
         {

@@ -4,7 +4,8 @@ namespace FruitGame
 {
     /// <summary>
     /// Turns the tracked face position into a basket x (Docs/DESIGN.md §8, "Mapping, per frame"):
-    /// per-side calibrated range × sensitivity → dead zone → soft clamp → One-Euro filter.
+    /// calibrated range (one smooth curve through the centre, no kink) × sensitivity → dead zone (0 by default) →
+    /// soft clamp → One-Euro filter.
     /// The basket's own max speed (BasketController) is the final step.
     /// </summary>
     public class FaceToBasketMapper : BasketInputSource
@@ -51,13 +52,30 @@ namespace FruitGame
             targetX = filter.Filter(x, Time.unscaledDeltaTime);
         }
 
-        /// <summary>Face u → t, where ±1 is the edge of the player's comfortable range on that side.</summary>
+        /// <summary>
+        /// Face u → t, where ±1 is the edge of the player's comfortable range on that side. One curve
+        /// t = lin·d + quad·d² (d = u − centre) through both calibrated edges, so the speed changes smoothly across the
+        /// centre instead of jumping between the left and right scales; it's a straight line when the two sides match.
+        /// Past an edge it carries on in a straight line at that edge's slope.
+        /// </summary>
         float Normalise(float u)
         {
             var c = Calibration;
             float minRange = config.calibMinRangePerSide;
-            float range = u < c.centre ? Mathf.Max(c.centre - c.left, minRange) : Mathf.Max(c.right - c.centre, minRange);
-            float t = (u - c.centre) / range * config.sensitivity;
+            float l = Mathf.Max(c.centre - c.left, minRange), r = Mathf.Max(c.right - c.centre, minRange);
+            float d = u - c.centre;
+            float t;
+            // The curve only stays one-way while neither side is more than about 2.4× the other; past that, two lines.
+            if (Mathf.Max(l, r) > 2.2f * Mathf.Min(l, r)) t = d / (d < 0f ? l : r);
+            else
+            {
+                float k = l * r * (l + r);
+                float lin = (l * l + r * r) / k, quad = (l - r) / k;
+                if (d > r) t = 1f + (lin + 2f * quad * r) * (d - r);
+                else if (d < -l) t = -1f + (lin - 2f * quad * l) * (d + l);
+                else t = lin * d + quad * d * d;
+            }
+            t *= config.sensitivity;
 
             // Dead zone, rescaled so movement starts smoothly from 0 at its edge instead of jumping.
             float a = Mathf.Abs(t);

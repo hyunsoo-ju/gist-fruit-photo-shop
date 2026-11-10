@@ -143,6 +143,12 @@ namespace FruitGame
             F("language", () => (int)config.language, v => config.language = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
             F("printCopies", () => config.printCopies, v => config.printCopies = Mathf.RoundToInt(v));
+            F("skinSmoothing", () => config.skinSmoothing, v => config.skinSmoothing = v);
+            F("skinSmoothWidth", () => config.skinSmoothWidth, v => config.skinSmoothWidth = v);
+            F("blushStrength", () => config.blushStrength, v => config.blushStrength = v);
+            F("blushCoolness", () => config.blushCoolness, v => config.blushCoolness = v);
+            F("lipStrength", () => config.lipStrength, v => config.lipStrength = v);
+            F("lipCoolness", () => config.lipCoolness, v => config.lipCoolness = v);
             S("printerName", () => config.printerName ?? "", v => config.printerName = v);
         }
 
@@ -198,6 +204,10 @@ namespace FruitGame
             return labels[best];
         }
 
+        /// <summary>One step up or down a fixed grid, kept in range.</summary>
+        static float Stepped(float v, int dir, float step, float min, float max) =>
+            Mathf.Clamp(Mathf.Round(v / step + dir) * step, min, max);
+
         static float Nearest(float[] options, float v, int dir)
         {
             int best = 0;
@@ -228,6 +238,8 @@ namespace FruitGame
             var tolerances = new[] { 0.01f, 0.015f, 0.02f, 0.03f, 0.04f };
             var holds = new[] { 0.5f, 0.75f, 1f, 1.5f, 2f };
             var rounds = new[] { 30f, 45f, 60f, 90f };
+            // Coolness: 0.5 is the material's own tone; each side shifts the hue by up to 25°.
+            string Tone(float c) => Mathf.Abs(c - 0.5f) < 0.01f ? "0.5 (base)" : c < 0.5f ? $"{c:0.0} warmer" : $"{c:0.0} cooler";
 
             pages.Clear();
             pages.Add(("Gameplay", new List<Row>
@@ -286,6 +298,19 @@ namespace FruitGame
                 }),
                 Action("Paper tray refilled", "R", () => printer != null ? $"{printer.PaperLeft}/{config.trayCapacity}" : "", () => printer?.PaperRefilled()),
                 Action("New ink cassette", "I", () => printer != null ? $"{printer.InkLeft}/{config.inkCapacity}" : "", () => printer?.InkReplaced()),
+            }, null));
+            pages.Add(("Beauty", new List<Row>
+            {
+                Setting("Skin smoothing", () => config.skinSmoothing.ToString("0.0"),
+                    d => config.skinSmoothing = Stepped(config.skinSmoothing, d, 0.2f, 0f, 4f)),
+                Setting("Smoothing width", () => config.skinSmoothWidth.ToString("0.0"),
+                    d => config.skinSmoothWidth = Stepped(config.skinSmoothWidth, d, 0.2f, 1f, 4f)),
+                Setting("Blush", () => config.blushStrength <= 0f ? "Off" : config.blushStrength.ToString("0.00"),
+                    d => config.blushStrength = Stepped(config.blushStrength, d, 0.01f, 0f, 0.3f)),
+                Setting("Blush tone", () => Tone(config.blushCoolness), d => config.blushCoolness = Stepped(config.blushCoolness, d, 0.1f, 0f, 1f)),
+                Setting("Lip tint", () => config.lipStrength <= 0f ? "Off" : config.lipStrength.ToString("0.00"),
+                    d => config.lipStrength = Stepped(config.lipStrength, d, 0.01f, 0f, 0.8f)),
+                Setting("Lip tone", () => Tone(config.lipCoolness), d => config.lipCoolness = Stepped(config.lipCoolness, d, 0.1f, 0f, 1f)),
             }, null));
         }
 
@@ -554,6 +579,7 @@ namespace FruitGame
             else if (kb.digit2Key.wasPressedThisFrame) ShowPage(1);
             else if (kb.digit3Key.wasPressedThisFrame) ShowPage(2);
             else if (kb.digit4Key.wasPressedThisFrame) ShowPage(3);
+            else if (kb.digit5Key.wasPressedThisFrame && pages.Count > 4) ShowPage(4);
             else if (kb.upArrowKey.wasPressedThisFrame) selected = Mathf.Max(0, selected - 1);
             else if (kb.downArrowKey.wasPressedThisFrame) selected = Mathf.Min(rows.Count - 1, selected + 1);
             else if (kb.leftArrowKey.wasPressedThisFrame) rows[selected].change?.Invoke(-1);

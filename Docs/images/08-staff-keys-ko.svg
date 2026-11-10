@@ -17,8 +17,8 @@
   <text x="188" y="205" font-size="15" fill="#333">패널 키 끄기 / 닫기</text>
   <rect x="48" y="228" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
   <rect x="51" y="257" width="47" height="3" rx="1.5" fill="#cfd6de"/>
-  <text x="74.5" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">1–4</text>
-  <text x="188" y="251" font-size="15" fill="#333">쪽: 게임, 카메라, 화면, 인쇄</text>
+  <text x="74.5" y="251" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">1–5</text>
+  <text x="188" y="251" font-size="15" fill="#333">쪽: 게임, 카메라, 화면, 인쇄, 뷰티</text>
   <rect x="48" y="274" width="53" height="34" rx="7" fill="#fff" stroke="#5a6b7d" stroke-width="2"/>
   <rect x="51" y="303" width="47" height="3" rx="1.5" fill="#cfd6de"/>
   <text x="74.5" y="297" text-anchor="middle" font-size="16" font-weight="bold" fill="#222">Tab</text>

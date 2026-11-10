@@ -96,7 +96,8 @@ namespace FruitGame
         public float pileFloorY = -3.6f;
         public float pileHalfWidth = 3.0f;
         public float pileSpawnY = 3.6f;
-        [Min(1)] public int pileMax = 40;
+        [Tooltip("Safety cap on the background pile; it normally stops growing when it reaches the drop height. Nothing is removed.")]
+        [Min(1)] public int pileMax = 400;
         public float pileFreezeSpeed = 0.05f;
         public float pileFreezeTime = 1.5f;
 
@@ -174,15 +175,15 @@ namespace FruitGame
         public SteerBy steerBy = SteerBy.Slide;
         [Tooltip("Turn: degrees of head turn that count like the whole width of the camera (signal = 0.5 + yaw / this).")]
         public float turnDegreesPerWidth = 100f;
-        [Tooltip("Dead zone in normalised t (fraction of the calibrated range), so it scales with each player's range.")]
-        public float deadZone = 0.02f;
+        [Tooltip("Dead zone in normalised t (fraction of the calibrated range), so it scales with each player's range. 0 = none: the basket follows the head linearly through the centre.")]
+        public float deadZone = 0f;
         [Tooltip("Where the face → basket mapping stops being linear and eases into the travel limit.")]
         [Range(0.5f, 0.99f)] public float softClampKnee = 0.8f;
         public float calibMinRangePerSide = 0.03f;
-        [Tooltip("One-Euro filter on basket x (metres): lower = smoother at rest.")]
-        public float oneEuroMinCutoff = 1.0f;
+        [Tooltip("One-Euro filter on basket x (metres), Hz: lower = smoother at rest but slow, small moves lag. 3 suits a clean camera (was 1 for a noisy webcam).")]
+        public float oneEuroMinCutoff = 3f;
         [Tooltip("One-Euro filter: higher = less lag when moving fast.")]
-        public float oneEuroBeta = 0.5f;
+        public float oneEuroBeta = 1f;
         [Tooltip("Calibration: how still the face must be (± in webcam u) to count as holding a pose. Raise for tremor.")]
         public float steadyTolerance = 0.015f;
         [Tooltip("Calibration: how long a pose must be held.")]
@@ -197,6 +198,10 @@ namespace FruitGame
         [Header("Nobody there (Docs/DESIGN.md §3, M6 3.3)")]
         [Tooltip("Seconds with nobody in front of the camera before the title shows its invitations.")]
         public float attractAfter = 30f;
+        [Tooltip("The attract screen's sample round plays until this score, then fades out and starts again from 0.")]
+        [Min(1)] public int demoScoreTarget = 200;
+        [Tooltip("Seconds for each half of the sample round's fade (out, then back in).")]
+        [Min(0f)] public float demoFade = 0.6f;
         [Tooltip("Seconds with no face and no touch on a visit's screens before the warning starts.")]
         public float walkAwayAfter = 20f;
         [Tooltip("Every timeout warns this many seconds ahead; any touch or key extends it.")]
@@ -215,6 +220,18 @@ namespace FruitGame
         [Range(0f, 1f)] public float bigEye = 0.4f;
         [Tooltip("Photo booth face reshape: V-line jaw slimming (0 = off). Needs the face mesh.")]
         [Range(0f, 1f)] public float faceSlim = 0.0f;
+        [Tooltip("Skin smoothing strength (0 = none; over 1 = stronger still). Staff panel: Beauty.")]
+        [Range(0f, 4f)] public float skinSmoothing = 1.4f;
+        [Tooltip("Skin smoothing width: spacing in texels of the blur that finds the local skin tone (GPUPixel's 2; wider = softer).")]
+        [Range(1f, 4f)] public float skinSmoothWidth = 3f;
+        [Tooltip("Cheek blush strength (0 = off).")]
+        [Range(0f, 0.3f)] public float blushStrength = 0.04f;
+        [Tooltip("Blush tone: 0.5 = the base cool pink; lower = warmer (peach), higher = cooler (lilac).")]
+        [Range(0f, 1f)] public float blushCoolness = 0.5f;
+        [Tooltip("Lip tint strength (0 = off).")]
+        [Range(0f, 1f)] public float lipStrength = 0.22f;
+        [Tooltip("Lip tone: 0.5 = the base cool pink; lower = warmer (rose), higher = cooler (berry).")]
+        [Range(0f, 1f)] public float lipCoolness = 0.5f;
 
         [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]

@@ -71,9 +71,10 @@ namespace FruitGame
         {
             var s = game.State;
             bool inRound = s == GameState.Countdown || s == GameState.Playing || s == GameState.RoundEnding || s == GameState.Paused;
-            bool show = ScreenLayout.IsLandscape && (inRound || game.DemoRunning);
+            // Real rounds only: the attract screen's sample round (on the title) shows just the play and the score.
+            bool show = ScreenLayout.IsLandscape && inRound;
             left.SetActive(show);
-            right.SetActive(show && !game.DemoRunning); // The sample round takes no photos.
+            right.SetActive(show);
             if (!show) return;
 
             var stats = game.Stats;

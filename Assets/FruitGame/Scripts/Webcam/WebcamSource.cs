@@ -13,8 +13,9 @@ namespace FruitGame
     public class WebcamSource : MonoBehaviour
     {
         [SerializeField] GameConfig config;
-        [SerializeField] Vector2Int requestedSize = new Vector2Int(1280, 720);
-        [SerializeField] int requestedFps = 30;
+        [Tooltip("Asked of the camera; it picks its nearest mode. 1080p60 suits the DSLR on the Elgato 4K X (Docs/DESIGN.md §13).")]
+        [SerializeField] Vector2Int requestedSize = new Vector2Int(1920, 1080);
+        [SerializeField] int requestedFps = 60;
         [SerializeField] bool mirror = true;
         [Tooltip("Seconds without a frame before the camera counts as not delivering (e.g. a closed laptop lid).")]
         [SerializeField] float noFrameTimeout = 3f;

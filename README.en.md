@@ -109,7 +109,7 @@ Turn the staff panel's keys on with **`** (the key left of 1) or **F1** (on a Ma
 |---|---|
 | **`** or **F1** | Panel keys on/off (one screen: open/close the panel) |
 | **Esc** | Panel keys off / close the panel |
-| **1–4**, **Tab** | Panel pages: Gameplay, Camera, Display, Printing |
+| **1–5**, **Tab** | Panel pages: Gameplay, Camera, Display, Printing, Beauty |
 | **↑ ↓**, **◀ ▶**, **Enter** | Pick a row, change a setting, run an action (clicking works too; scroll long pages with the mouse wheel) |
 | **E** | Easy for the next round (title) |
 | **H** | Clear a help call |

@@ -17,7 +17,7 @@ namespace FruitGame
     /// </summary>
     public class PhotoBooth : MonoBehaviour
     {
-        enum Step { Off, Pose, Countdown, Preview }
+        enum Step { Off, Pose, Countdown, Capturing, Preview }
 
         [SerializeField] Camera gameCamera;
         [SerializeField] GameConfig config;
@@ -90,6 +90,7 @@ namespace FruitGame
         // final shot on the print.
         void Start()
         {
+            backdrop = FindAnyObjectByType<BokehBackdrop>();
             ApplyBeauty();
             DeleteOldPhotos();
         }
@@ -200,17 +201,79 @@ namespace FruitGame
         {
             foreach (var t in actionShots) if (t != null) Destroy(t);
             actionShots.Clear();
+            shotBatch++;
+        }
+
+        int shotBatch;
+        /// <summary>Whether the last shot's makeup was placed from a face mesh measured on its own frame (debugging).</summary>
+        public bool LastShotMeasured { get; private set; }
+        readonly Vector2[] shotPoints = new Vector2[FaceMesh.Count];
+
+        /// <summary>
+        /// Takes a shot with the beauty makeup placed on that exact moment: keeps a copy of the camera frame, measures the
+        /// face mesh on it (a frame or two), then renders the shot from the copy with the blush, lips and reshape set
+        /// from that measurement. The live view's makeup eases after the face and can trail a quick move; the photo's
+        /// can't. Without a face (or if the mesh can't run) the shot uses the makeup as it is on screen.
+        /// </summary>
+        async Awaitable<Texture2D> ShootAsync(bool pileInColour)
+        {
+            bool held = cutout != null && cutout.HoldFrame();
+            bool measured = false, matted = false;
+            if (held && cutout.BeautyStrength > 0f && cutout.Mesh != null)
+                measured = await cutout.Mesh.MeasureAsync(cutout.HeldFrame, shotPoints);
+            if (this == null) return null;
+            // Background removal on the same held frame, so the cut-out's edge matches the picture exactly.
+            var segmenter = held ? cutout.Segmenter : null;
+            if (segmenter != null && segmenter.Mask != null)
+            {
+                EnsureMatte(segmenter.Mask);
+                matted = await segmenter.MatteAsync(cutout.HeldFrame, photoMatte);
+                if (this == null) return null;
+            }
+            LastShotMeasured = measured;
+            LastShotMatted = matted;
+            if (held)
+            {
+                cutout.BeginPhotoFrame(measured ? shotPoints : null, matted ? photoMatte : null);
+                // The backdrop shows the room from the same frame, or the live player would show up behind the held one.
+                if (backdrop != null) backdrop.ShowPhotoFrame(cutout.HeldFrame, matted ? photoMatte : (Texture)cutout.HeldMask);
+            }
+            if (pileInColour) pile.SetPhotoMode(true);
+            var tex = RenderPhoto();
+            if (pileInColour) pile.SetPhotoMode(false);
+            if (held)
+            {
+                if (backdrop != null) backdrop.ShowLive();
+                cutout.EndPhotoFrame();
+            }
+            return tex;
+        }
+
+        RenderTexture photoMatte;
+        BokehBackdrop backdrop;
+        /// <summary>Whether the last shot's cut-out came from background removal run on its own frame (debugging).</summary>
+        public bool LastShotMatted { get; private set; }
+
+        void EnsureMatte(RenderTexture like)
+        {
+            if (photoMatte != null && photoMatte.width == like.width && photoMatte.height == like.height) return;
+            if (photoMatte != null) { photoMatte.Release(); Destroy(photoMatte); }
+            photoMatte = new RenderTexture(like.width, like.height, 0, like.format) { name = "Photo Matte", filterMode = FilterMode.Bilinear };
+            photoMatte.Create();
         }
 
         /// <summary>
         /// Takes an action shot mid-round: the scene as it is (basket and falling fruit included, no HUD), with the pile in
         /// full colour for the photo like the final shot.
         /// </summary>
-        public void TakeActionShot()
+        public async void TakeActionShot()
         {
-            pile.SetPhotoMode(true);
-            actionShots.Add(RenderPhoto());
-            pile.SetPhotoMode(false);
+            int batch = shotBatch;
+            var shot = await ShootAsync(true);
+            if (shot == null) return;
+            // A new round started while it was being taken: it belongs to no one.
+            if (batch != shotBatch) { Destroy(shot); return; }
+            actionShots.Add(shot);
         }
 
         string EnsureSaved()
@@ -293,12 +356,17 @@ namespace FruitGame
             if (countdownLeft <= 0f) Capture();
         }
 
-        void Capture()
+        async void Capture()
         {
+            step = Step.Capturing;
             countdownText.gameObject.SetActive(false);
+            var shot = await ShootAsync(false);
+            if (shot == null) return;
+            // The booth was closed while the shot was being taken.
+            if (step != Step.Capturing) { Destroy(shot); return; }
             if (LastPhoto != null) Destroy(LastPhoto);
             if (finalShot != null) Destroy(finalShot);
-            finalShot = RenderPhoto();
+            finalShot = shot;
             if (frame != null)
             {
                 var cuts = new List<Texture2D>(actionShots) { finalShot };
@@ -373,6 +441,7 @@ namespace FruitGame
 
         void OnDestroy()
         {
+            if (photoMatte != null) { photoMatte.Release(); Destroy(photoMatte); }
             if (LastPhoto != null) Destroy(LastPhoto);
             if (finalShot != null) Destroy(finalShot);
             ClearActionShots();

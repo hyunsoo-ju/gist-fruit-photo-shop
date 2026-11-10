@@ -113,3 +113,6 @@ idle.pauseWarn	화면을 누르면 계속 기다려요.\n{0}초 뒤에 게임이
 attract.1	카메라 앞에 서 보세요	Stand in front of the camera
 attract.2	머리만 움직여서 과일을 받아요	Catch fruit by moving your head
 attract.3	네컷 사진을 가져가세요	Take home your four-cut photo
+hud.rules	황금 과일은 {0}점!\n폭탄은 피해요 (-{1}점)	Golden fruit: {0} points!\nDodge the bombs (-{1})
+hud.rulesGolden	황금 과일은 {0}점이에요!	Golden fruit are worth {0} points!
+hud.rulesBombs	폭탄은 피해요 (-{0}점)	Dodge the bombs (-{0})
