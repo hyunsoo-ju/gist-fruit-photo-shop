@@ -24,7 +24,7 @@
 
 ## Running the booth (for staff)
 
-Written so the booth can be run from this section alone when the project lead isn't there. **Contact details are in the guide inside the asset folder given to the team.**
+Written so the booth can be run from this section alone when the project lead isn't there.
 
 ### Equipment
 
