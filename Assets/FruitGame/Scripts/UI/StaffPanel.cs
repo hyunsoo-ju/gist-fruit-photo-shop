@@ -66,6 +66,7 @@ namespace FruitGame
             public Func<bool> enabled = () => true;
             public Image back;
             public TMP_Text text;
+            public TMP_Text valueText;
         }
 
         /// <summary>A saved value: written as text to PlayerPrefs, with the GameConfig value as its default.</summary>
@@ -142,6 +143,7 @@ namespace FruitGame
             F("matteModel", () => (int)PersonSegmenter.Preferred, v => PersonSegmenter.Preferred = (PersonSegmenter.Option)(int)v);
             F("orientation", () => (int)config.orientation, v => config.orientation = (OrientationSetting)(int)v);
             F("language", () => (int)config.language, v => config.language = (Language)(int)v);
+            F("staffLanguage", () => (int)config.staffLanguage, v => config.staffLanguage = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
             F("printCopies", () => config.printCopies, v => config.printCopies = Mathf.RoundToInt(v));
             F("skinSmoothing", () => config.skinSmoothing, v => config.skinSmoothing = v);
@@ -184,6 +186,7 @@ namespace FruitGame
         void ApplyLive()
         {
             Strings.SetLanguage(config.language);
+            StaffText.Korean = config.staffLanguage == Language.Korean;
             if (segmenter != null && segmenter.Current != PersonSegmenter.Preferred) segmenter.Use(PersonSegmenter.Preferred);
             if (game != null && game.State == GameState.Boot)
             {
@@ -217,12 +220,15 @@ namespace FruitGame
             return options[Mathf.Clamp(best + dir, 0, options.Length - 1)];
         }
 
+        static string T(string en) => StaffText.T(en);
+        static string F(string en, params object[] a) => StaffText.F(en, a);
+
         string PhoneLinkState()
         {
-            if (!config.shareOverInternet) return "Local Wi-Fi";
+            if (!config.shareOverInternet) return T("Local Wi-Fi");
             if (share == null) share = FindAnyObjectByType<PhotoShare>();
-            if (share == null) return "Internet";
-            return share.TunnelUp ? "Internet · up" : "<color=#FF7A6E>Internet · " + share.TunnelStatus + "</color>";
+            if (share == null) return T("Internet");
+            return share.TunnelUp ? T("Internet") + " · " + T("up") : "<color=#FF7A6E>" + T("Internet") + " · " + T(share.TunnelStatus) + "</color>";
         }
 
         Row Setting(string label, Func<string> value, Action<int> change) =>
@@ -242,33 +248,34 @@ namespace FruitGame
         void DefineRows()
         {
             bool OnTitle() => game != null && game.State == GameState.Boot;
-            string OnOff(bool b) => b ? "On" : "Off";
+            string OnOff(bool b) => T(b ? "On" : "Off");
+            string Secs(float v) => F("{0} s", v.ToString("0.##"));
             var assist = new[] { 0f, 0.5f, 1f };
             var assistNames = new[] { "Off", "Low", "Normal" };
             var tolerances = new[] { 0.01f, 0.015f, 0.02f, 0.025f, 0.03f, 0.04f };
             var holds = new[] { 0.5f, 0.75f, 1f, 1.5f, 2f };
             var rounds = new[] { 30f, 45f, 60f, 90f };
             // Coolness: 0.5 is the material's own tone; each side shifts the hue by up to 25°.
-            string Tone(float c) => Mathf.Abs(c - 0.5f) < 0.01f ? "0.5 (base)" : c < 0.5f ? $"{c:0.0} warmer" : $"{c:0.0} cooler";
+            string Tone(float c) => Mathf.Abs(c - 0.5f) < 0.01f ? F("{0} (base)", "0.5") : F(c < 0.5f ? "{0} warmer" : "{0} cooler", c.ToString("0.0"));
 
             pages.Clear();
             pages.Add(("Gameplay", new List<Row>
             {
-                Setting("Mode each visit starts in", () => config.defaultMode.ToString(),
+                Setting("Mode each visit starts in", () => T(config.defaultMode.ToString()),
                     d => config.defaultMode = (DefaultMode)Mathf.Clamp((int)config.defaultMode + d, 0, 3)),
-                Setting("Assist", () => Pick(assist, assistNames, config.assistScale), d => config.assistScale = Nearest(assist, config.assistScale, d)),
-                Setting("Steering picked at the start", () => config.steerBy == SteerBy.Turn ? "Turning" : "Sliding",
+                Setting("Assist", () => T(Pick(assist, assistNames, config.assistScale)), d => config.assistScale = Nearest(assist, config.assistScale, d)),
+                Setting("Steering picked at the start", () => T(config.steerBy == SteerBy.Turn ? "Turning" : "Sliding"),
                     d => config.steerBy = d < 0 ? SteerBy.Slide : SteerBy.Turn),
                 Setting("Head sensitivity", () => config.sensitivity.ToString("0.0"),
                     d => config.sensitivity = Mathf.Clamp(Mathf.Round((config.sensitivity + d * 0.1f) * 10f) / 10f, 0.6f, 1.6f)),
                 Setting("Calibration: how still", () => $"± {config.steadyTolerance:0.000}", d => config.steadyTolerance = Nearest(tolerances, config.steadyTolerance, d)),
-                Setting("Calibration: hold time", () => $"{config.steadyHoldTime:0.##} s", d => config.steadyHoldTime = Nearest(holds, config.steadyHoldTime, d)),
-                Setting("Round length (next round)", () => $"{config.roundDuration:0} s", d => config.roundDuration = Nearest(rounds, config.roundDuration, d)),
+                Setting("Calibration: hold time", () => Secs(config.steadyHoldTime), d => config.steadyHoldTime = Nearest(holds, config.steadyHoldTime, d)),
+                Setting("Round length (next round)", () => Secs(config.roundDuration), d => config.roundDuration = Nearest(rounds, config.roundDuration, d)),
                 Action("Easy for the next round", "E", () => OnOff(Difficulty.Easy), () => Difficulty.Easy = !Difficulty.Easy, OnTitle),
-                Action("Recalibrate", null, () => OnTitle() ? "" : "on the title screen", () => game.StartCalibration(), OnTitle),
-                Action("Visitor's call for help (0)", "H", () => StaffAlert.Active ? "waiting " + StaffAlert.Waiting + ", clear" : "none",
+                Action("Recalibrate", null, () => OnTitle() ? "" : T("on the title screen"), () => game.StartCalibration(), OnTitle),
+                Action("Visitor's call for help (0)", "H", () => StaffAlert.Active ? F("waiting {0}, clear", StaffAlert.Waiting) : T("none"),
                     StaffAlert.Clear, () => StaffAlert.Active),
-                Action("Today's best score", null, () => bestArmed ? "press again to reset" : SaveData.BestScore + ", reset",
+                Action("Today's best score", null, () => bestArmed ? T("press again to reset") : F("{0}, reset", SaveData.BestScore),
                     () =>
                     {
                         if (bestArmed) { SaveData.BestScore = 0; bestArmed = false; }
@@ -278,36 +285,36 @@ namespace FruitGame
             }, null));
             pages.Add(("Camera", new List<Row>
             {
-                Action("Change camera", "C", () => source != null ? source.DeviceName ?? "none" : "none", () => CameraMenu.Toggle()),
+                Action("Change camera", "C", () => source != null ? source.DeviceName ?? T("none") : T("none"), () => CameraMenu.Toggle()),
                 Setting("Mirror the camera", () => OnOff(config.mirrorCamera), d => config.mirrorCamera = d > 0),
                 Setting("Background removal", () => ModelName(PersonSegmenter.Preferred),
                     d => PersonSegmenter.Preferred = (PersonSegmenter.Option)Mathf.Clamp((int)PersonSegmenter.Preferred + d, 0, 2)),
-                Action("Rotation", null, () => "with the DSLR (M17)", () => { }, () => false),
+                Action("Rotation", null, () => T("not built yet"), () => { }, () => false),
                 Action("Face box on the guest screen", "D", () => OnOff(debug != null && debug.Visible),
                     () => { if (debug != null) debug.Visible = !debug.Visible; }, () => !twoScreens),
             }, null));
             pages.Add(("Display", new List<Row>
             {
-                Setting("Orientation", () => config.orientation.ToString(),
+                Setting("Orientation", () => T(config.orientation.ToString()),
                     d => config.orientation = (OrientationSetting)Mathf.Clamp((int)config.orientation + d, 0, 2)),
-                LetterSetting(Setting("Language", () => config.language == Language.Korean ? "한국어" : "English",
+                LetterSetting(Setting("Game language", () => config.language == Language.Korean ? "한국어" : "English",
                     d => config.language = d < 0 ? Language.Korean : Language.English), "L",
                     () => config.language == Language.Korean ? +1 : -1),
-                Setting("Screens (after restart)", () => config.screens.ToString(),
+                Setting("Staff panel language", () => config.staffLanguage == Language.Korean ? "한국어" : "English",
+                    d => config.staffLanguage = d < 0 ? Language.Korean : Language.English),
+                Setting("Screens (after restart)", () => T(config.screens.ToString()),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),
             }, null));
             pages.Add(("Printing", new List<Row>
             {
                 Setting("Copies per print", () => config.printCopies.ToString(), d => config.printCopies = Mathf.Clamp(config.printCopies + d, 1, 2)),
-                Setting("Printer", () => string.IsNullOrEmpty(config.printerName) ? "Default" : config.printerName, d =>
+                Setting("Printer", () => string.IsNullOrEmpty(config.printerName) ? T("Default") : config.printerName, d =>
                 {
                     var names = new List<string> { "" };
                     names.AddRange(printerNames);
                     config.printerName = names[Step(names.ToArray(), config.printerName ?? "", d)];
                 }),
-                Action("Paper tray refilled", "R", () => printer != null ? $"{printer.PaperLeft}/{config.trayCapacity}" : "", () => printer?.PaperRefilled()),
-                Action("New ink cassette", "I", () => printer != null ? $"{printer.InkLeft}/{config.inkCapacity}" : "", () => printer?.InkReplaced()),
                 // On: an internet link (Cloudflare tunnel) phones open on mobile data. Off: the local Wi-Fi link.
                 // The value says whether the tunnel is up (its address) or why not; until it's up, links use the local Wi-Fi.
                 Setting("Phone link", PhoneLinkState, d => config.shareOverInternet = !config.shareOverInternet),
@@ -318,10 +325,10 @@ namespace FruitGame
                     d => config.skinSmoothing = Stepped(config.skinSmoothing, d, 0.2f, 0f, 4f)),
                 Setting("Smoothing width", () => config.skinSmoothWidth.ToString("0.0"),
                     d => config.skinSmoothWidth = Stepped(config.skinSmoothWidth, d, 0.2f, 1f, 4f)),
-                Setting("Blush", () => config.blushStrength <= 0f ? "Off" : config.blushStrength.ToString("0.00"),
+                Setting("Blush", () => config.blushStrength <= 0f ? T("Off") : config.blushStrength.ToString("0.00"),
                     d => config.blushStrength = Stepped(config.blushStrength, d, 0.01f, 0f, 0.3f)),
                 Setting("Blush tone", () => Tone(config.blushCoolness), d => config.blushCoolness = Stepped(config.blushCoolness, d, 0.1f, 0f, 1f)),
-                Setting("Lip tint", () => config.lipStrength <= 0f ? "Off" : config.lipStrength.ToString("0.00"),
+                Setting("Lip tint", () => config.lipStrength <= 0f ? T("Off") : config.lipStrength.ToString("0.00"),
                     d => config.lipStrength = Stepped(config.lipStrength, d, 0.01f, 0f, 0.8f)),
                 Setting("Lip tone", () => Tone(config.lipCoolness), d => config.lipCoolness = Stepped(config.lipCoolness, d, 0.1f, 0f, 1f)),
             }, null));
@@ -350,6 +357,7 @@ namespace FruitGame
             header.color = HeadingColor;
 
             statusCard = Card("Status", column, 52f, 330f);
+            statusHeading = statusCard.Find("Heading").GetComponent<TMP_Text>();
             printerLine = Text("Printer Line", statusCard, 16f);
             printerLine.textWrappingMode = TextWrappingModes.Normal;
             printerLine.overflowMode = TextOverflowModes.Overflow;
@@ -376,7 +384,7 @@ namespace FruitGame
                 t.sizeDelta = new Vector2(-6f, 44f);
                 t.gameObject.AddComponent<Button>().onClick.AddListener(() => ShowPage(index));
                 var label = Text("Label", t, 16f);
-                label.text = $"{i + 1} {pages[i].name}";
+                tabLabels.Add(label);
                 label.alignment = TextAlignmentOptions.Center;
                 Fill(label.rectTransform);
                 tabs.Add(t.GetComponent<Image>());
@@ -440,6 +448,8 @@ namespace FruitGame
         }
 
         TMP_Text resetRow;
+        TMP_Text statusHeading;
+        readonly List<TMP_Text> tabLabels = new List<TMP_Text>();
         const float RowStep = 50f;
 
         /// <summary>A thin bar on the right edge of a page, shown only when its rows don't all fit.</summary>
@@ -487,9 +497,20 @@ namespace FruitGame
                 if (row.run != null) { if (row.enabled()) row.run(); }
                 else row.change?.Invoke(+1);
             });
+            // Label on the left, value on the right (left of ◀ ▶ for settings); each wraps onto a second line rather
+            // than running out of its box (Korean labels are about twice as wide as English).
             row.text = Text("Text", r, 16f);
-            row.text.richText = true;
-            Fill(row.text.rectTransform, 14f);
+            row.valueText = Text("Value", r, 16f);
+            foreach (var t in new[] { row.text, row.valueText })
+            {
+                t.richText = true;
+                t.textWrappingMode = TextWrappingModes.Normal;
+                t.overflowMode = TextOverflowModes.Truncate;
+                t.alignment = TextAlignmentOptions.MidlineLeft;
+                t.lineSpacing = -12f;
+            }
+            Span(row.text.rectTransform, 0f, 14f, LabelSplit, -6f);
+            Span(row.valueText.rectTransform, LabelSplit, 6f, 1f, row.change != null ? -126f : -14f);
 
             if (row.change != null)
             {
@@ -497,6 +518,16 @@ namespace FruitGame
                 AddArrow(r, "◀", -96f, () => { selected = index; row.change(-1); });
                 AddArrow(r, "▶", -40f, () => { selected = index; row.change(+1); });
             }
+        }
+
+        /// <summary>Where the label ends and the value starts, as a fraction of the row's width.</summary>
+        const float LabelSplit = 0.44f;
+
+        /// <summary>A horizontal span of a row: from `from` (fraction) + `left` px to `to` (fraction) + `right` px, full height.</summary>
+        static void Span(RectTransform r, float from, float left, float to, float right)
+        {
+            r.anchorMin = new Vector2(from, 0f); r.anchorMax = new Vector2(to, 1f);
+            r.offsetMin = new Vector2(left, 0f); r.offsetMax = new Vector2(right, 0f);
         }
 
         void AddArrow(RectTransform rowRect, string glyph, float x, Action onClick)
@@ -626,11 +657,13 @@ namespace FruitGame
         void Refresh()
         {
             header.text = twoScreens
-                ? (KeysActive ? "Staff panel · <color=#7CFC9A>keys on</color>  (` or F1 or Esc: off)" : "Staff panel · keys off  (` or F1: on)")
-                : "Staff panel  (` or F1 or Esc: close)";
+                ? (KeysActive ? $"{T("Staff panel")} · <color=#7CFC9A>{T("keys on")}</color>  ({T("` or F1 or Esc: off")})" : $"{T("Staff panel")} · {T("keys off")}  ({T("` or F1: on")})")
+                : $"{T("Staff panel")}  ({T("` or F1 or Esc: close")})";
             if (printerLine != null && printer != null)
-                printerLine.text = (printer.HasProblem ? "<color=#FF7A6E>" : "") + "Printer: " + printer.Summary;
-            if (resetRow != null) resetRow.text = resetArmed ? "Click again to reset every setting" : "Reset settings to defaults";
+                printerLine.text = (printer.HasProblem ? "<color=#FF7A6E>" : "") + T("Printer: ") + printer.Summary;
+            if (resetRow != null) resetRow.text = T(resetArmed ? "Click again to reset every setting" : "Reset settings to defaults");
+            if (statusHeading != null) statusHeading.text = T("Status");
+            for (int i = 0; i < tabLabels.Count && i < pages.Count; i++) tabLabels[i].text = $"{i + 1} {T(pages[i].name)}";
 
             var rows = pages[page].rows;
             if (KeysActive) KeepSelectedInView();
@@ -640,10 +673,9 @@ namespace FruitGame
                 bool on = row.enabled();
                 string letter = row.letter != null ? $"<color=#FFC93C>[{row.letter}]</color> " : "";
                 string value = row.value != null ? row.value() : "";
-                string body = $"{letter}{row.label}";
-                // Settings leave room on the right for ◀ ▶.
-                string right = row.change != null ? $"<pos=55%>{value}" : $"<pos=62%>{value}";
-                row.text.text = on ? body + right : $"<color=#777777>{body}{right}</color>";
+                string body = $"{letter}{T(row.label)}";
+                row.text.text = on ? body : $"<color=#777777>{body}</color>";
+                row.valueText.text = on ? value : $"<color=#777777>{value}</color>";
                 row.back.color = i == selected && KeysActive ? RowSelected : RowColor;
             }
         }

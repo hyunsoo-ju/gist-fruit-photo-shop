@@ -95,9 +95,9 @@ When a visitor presses **0**, they hear "직원을 불렀어요" (staff are on t
 
 ### Printer
 
-- After refilling the paper press **R**, and after changing the ink cassette press **I** (with the panel keys on), so the counts are right. The staff screen warns when only a few sheets are left.
+- Sheets aren't counted. When the printer reports paper or ink low or out (or a jam, or the cover open), the staff screen shows a warning: then refill the paper or change the ink cassette.
 - If the printer has a problem, the guest screen says the printer is taking a break: offer **Get it on your phone** instead.
-- Printed or saved photos stay in the laptop's `Pictures/FruitGame` folder and are deleted automatically 14 days later, when the game starts. Photos are never uploaded anywhere.
+- Printed or saved photos stay in the laptop's `Pictures/FruitGame` folder and are deleted automatically 14 days later, when the game starts. Photos are never uploaded or stored anywhere else. Only a phone download passes through Cloudflare, and its link is gone after 15 minutes.
 
 ### Staff keys
 
@@ -118,7 +118,6 @@ Turn the staff panel's keys on with **`** (the key left of 1) or **F1** (on a Ma
 | **D** | Face box on the guest screen (one screen) |
 | **L** | Korean ⇄ English |
 | **B**, **F5** | Blank the guest screen (to try playing by sound alone). F5 works whether the panel keys are on or not |
-| **R** / **I** | Paper tray refilled / new ink cassette |
 | *(click twice)* | Reset today's best score (Gameplay page) |
 
 **Game keys** (panel keys off): **Space/Enter** start or resume, **Esc/P** pause, **C** calibrate, **A** voice assist (title).

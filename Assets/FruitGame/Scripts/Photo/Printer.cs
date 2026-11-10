@@ -14,10 +14,10 @@ namespace FruitGame
     /// <summary>
     /// The booth printer (Docs/DESIGN.md §14, M17): sends the card to the Canon SELPHY CP1500 at its exact paper size
     /// (borderless postcard, no rescaling to a page), keeps track of the jobs still in its queue so the preview can say
-    /// how long to wait, and counts the paper in the tray and the prints left in the ink cassette. Its staff text is English, like the other debug views.
-    /// Staff: the printer box (state, queue, paper and ink, the printer's own alerts) is on the staff panel's Printing
-    /// page, with "paper refilled" (R) and "new ink cassette" (I). With one screen, a warning line shows by itself while
-    /// the panel is closed when either is nearly out or the printer reports a problem. macOS prints through CUPS (`lp`); Windows uses the shell "print" verb (no queue info).
+    /// how long to wait, and passes on the printer's own paper and ink warnings and errors (it doesn't guess what's left
+    /// by counting: the SELPHY doesn't report a count). Its staff text is English, like the other debug views.
+    /// Staff: the printer box (state, queue, the printer's alerts, prints so far) is on the staff panel's Printing page.
+    /// With one screen, a warning line shows by itself while the panel is closed whenever the printer reports something. macOS prints through CUPS (`lp`); Windows uses the shell "print" verb (no queue info).
     /// </summary>
     public class Printer : MonoBehaviour
     {
@@ -26,12 +26,10 @@ namespace FruitGame
         [SerializeField] TMP_Text staffBox;
         [Tooltip("Dark backing behind the staff box, shown and hidden with it (optional).")]
         [SerializeField] GameObject staffPanel;
-        [Tooltip("Warning line for staff, shown when paper or ink is low or the printer reports a problem.")]
+        [Tooltip("Warning line for staff, shown when the printer reports a paper or ink warning or any other problem.")]
         [SerializeField] TMP_Text warning;
         [SerializeField] float pollEvery = 2f;
 
-        const string PaperKey = "FruitGame.print.paper";
-        const string InkKey = "FruitGame.print.ink";
         const string TotalKey = "FruitGame.print.total";
 
         static bool IsMac => Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXEditor;
@@ -49,12 +47,8 @@ namespace FruitGame
         bool showBox;
 
         public string LastError { get; private set; }
-        public int PaperLeft => PlayerPrefs.GetInt(PaperKey, config.trayCapacity);
-        public int InkLeft => PlayerPrefs.GetInt(InkKey, config.inkCapacity);
         /// <summary>Our jobs still in the printer's queue (printing or waiting).</summary>
         public int Pending { get { lock (gate) return pending.Count; } }
-        public bool LowPaper => PaperLeft <= config.printWarnAt;
-        public bool LowInk => InkLeft <= config.printWarnAt;
         /// <summary>A problem the player should hear about (shown on the guest screen too): no printer set up, the queue
         /// stopped, or an alert from the printer itself (offline, no paper, no ink, jam).</summary>
         public bool HasProblem
@@ -64,7 +58,7 @@ namespace FruitGame
                 if (!IsMac) return false;
                 string st, al;
                 lock (gate) { st = state; al = alerts; }
-                return (!string.IsNullOrEmpty(al) && al != "none") || st.Contains("stopped") || st.StartsWith("No printer");
+                return Blocking(al) || st.Contains("stopped") || st.StartsWith("No printer");
             }
         }
         /// <summary>Two screens: the printer box sits in the staff column all the time (StaffScreen).</summary>
@@ -127,8 +121,6 @@ namespace FruitGame
             }
 
             LastError = null;
-            PlayerPrefs.SetInt(PaperKey, Mathf.Max(0, PaperLeft - copies));
-            PlayerPrefs.SetInt(InkKey, Mathf.Max(0, InkLeft - copies));
             PlayerPrefs.SetInt(TotalKey, PlayerPrefs.GetInt(TotalKey, 0) + copies);
             PlayerPrefs.Save();
             Debug.Log($"[FruitGame] Sent to printer ({copies}×, {ahead} ahead): {path}");
@@ -138,16 +130,65 @@ namespace FruitGame
         /// <summary>Seconds until a print sent now (with `ahead` queued in front) comes out, roughly.</summary>
         public int WaitSeconds(int ahead) => Mathf.RoundToInt(config.printSeconds * (ahead + 1) * Mathf.Max(1, config.printCopies));
 
-        /// <summary>One line for the staff panel's Status card: state, paper and ink.</summary>
+        /// <summary>One line for the staff panel's Status card: state, and the printer's paper / ink / other alerts.</summary>
         public string Summary
         {
             get
             {
                 string st, al;
                 lock (gate) { st = state; al = alerts; }
-                string problem = !string.IsNullOrEmpty(al) && al != "none" ? $" · alert: {al}" : "";
-                return $"{st} · paper {PaperLeft}/{config.trayCapacity} · ink {InkLeft}/{config.inkCapacity}{problem}";
+                st = StateText(st);
+                string problem = Describe(al);
+                return problem != null ? $"{st} · {problem}" : $"{st} · {StaffText.T("paper and ink OK")}";
             }
+        }
+
+        /// <summary>The printer state in the staff panel's language ("Canon_SELPHY: idle" → "Canon_SELPHY: 대기").</summary>
+        static string StateText(string st)
+        {
+            if (string.IsNullOrEmpty(st)) return st;
+            int colon = st.LastIndexOf(": ", StringComparison.Ordinal);
+            return colon < 0 ? StaffText.T(st) : st.Substring(0, colon + 2) + StaffText.T(st.Substring(colon + 2));
+        }
+
+        /// <summary>An alert that stops printing (an error, not a "running low" warning).</summary>
+        static bool Blocking(string alerts)
+        {
+            if (string.IsNullOrEmpty(alerts)) return false;
+            foreach (var raw in alerts.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string r = raw.Trim().ToLowerInvariant();
+                if (r.EndsWith("-error") || r.StartsWith("media-empty") || r.StartsWith("media-needed") || r.StartsWith("media-jam")
+                    || r.StartsWith("marker-supply-empty") || r.StartsWith("cover-open") || r.StartsWith("offline")) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// The printer's alerts (CUPS printer-state-reasons, e.g. "media-empty-error, marker-supply-low-warning") in
+        /// plain words, or null when there are none. Errors stop printing; warnings mean it's nearly out.
+        /// </summary>
+        static string Describe(string alerts)
+        {
+            if (string.IsNullOrEmpty(alerts) || alerts == "none") return null;
+            var parts = new List<string>();
+            foreach (var raw in alerts.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string r = raw.Trim().ToLowerInvariant();
+                string d = r.StartsWith("media-empty") || r.StartsWith("media-needed") ? "PAPER OUT: refill the tray"
+                    : r.StartsWith("media-low") ? "paper low"
+                    : r.StartsWith("media-jam") ? "PAPER JAM"
+                    : r.StartsWith("input-tray-missing") ? "PAPER TRAY MISSING"
+                    : r.StartsWith("marker-supply-empty") || r.StartsWith("toner-empty") || r.StartsWith("marker-waste-full") ? "INK OUT: change the cassette"
+                    : r.StartsWith("marker-supply-low") || r.StartsWith("toner-low") ? "ink low"
+                    : r.StartsWith("cover-open") || r.StartsWith("door-open") ? "COVER OPEN"
+                    : r.StartsWith("offline") || r.StartsWith("connecting-to-device") ? "printer offline (power or USB-C?)"
+                    : r == "none" || r.StartsWith("cups-") || r.StartsWith("other") ? null
+                    : r;
+                if (d != null) d = StaffText.T(d);
+                if (d != null && !parts.Contains(d)) parts.Add(d);
+            }
+            return parts.Count > 0 ? string.Join(" · ", parts) : null;
         }
 
         /// <summary>The printers this computer knows (macOS: lpstat -e), for the staff Settings.</summary>
@@ -160,18 +201,6 @@ namespace FruitGame
                 return output.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToArray();
             }
             catch { return new string[0]; }
-        }
-
-        public void PaperRefilled()
-        {
-            PlayerPrefs.SetInt(PaperKey, config.trayCapacity);
-            PlayerPrefs.Save();
-        }
-
-        public void InkReplaced()
-        {
-            PlayerPrefs.SetInt(InkKey, config.inkCapacity);
-            PlayerPrefs.Save();
         }
 
         GameObject BoxObject => staffPanel != null ? staffPanel : staffBox != null ? staffBox.gameObject : null;
@@ -189,7 +218,8 @@ namespace FruitGame
             string st, al;
             int queued;
             lock (gate) { st = state; al = alerts; queued = pending.Count; }
-            bool problem = !string.IsNullOrEmpty(al) && al != "none";
+            st = StateText(st);
+            string problem = Describe(al);
 
             if (staffBox != null)
             {
@@ -197,25 +227,20 @@ namespace FruitGame
                 if (showBox)
                     staffBox.text =
                                     $"{st}\n" +
-                                    (problem ? $"Printer alert: {al}\n" : "") +
-                                    $"Queued: {queued}\n" +
-                                    $"Paper: {PaperLeft}/{config.trayCapacity} left\n" +
-                                    $"Ink: {InkLeft}/{config.inkCapacity} prints left\n" +
-                                    $"Printed so far: {PlayerPrefs.GetInt(TotalKey, 0)}" +
+                                    (problem != null ? $"{StaffText.T("Printer: ")}{problem}\n" : StaffText.T("Paper and ink: no warnings") + "\n") +
+                                    StaffText.F("Queued: {0}", queued) + "\n" +
+                                    StaffText.F("Printed so far: {0}", PlayerPrefs.GetInt(TotalKey, 0)) +
                                     (LastError != null ? $"\n{LastError}" : "");
             }
 
             if (warning != null)
             {
-                string w = problem ? $"Printer alert: {al}"
-                    : LowPaper ? $"Paper low: {PaperLeft} left"
-                    : LowInk ? $"Ink low: {InkLeft} prints left"
-                    : null;
+                string w = problem != null ? StaffText.T("Printer: ") + problem : null;
                 // One screen: a staff line on the guest screen while the staff panel is closed (with two screens
                 // StaffScreen turns it off: the panel always shows the printer).
                 bool show = w != null && !StaffPanel.Open && !AlwaysShowBox;
                 if (warning.gameObject.activeSelf != show) warning.gameObject.SetActive(show);
-                if (show) warning.text = w + "  (F1 staff panel)";
+                if (show) warning.text = w + "  " + StaffText.T("(F1 staff panel)");
             }
         }
 

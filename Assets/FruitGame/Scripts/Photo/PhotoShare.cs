@@ -170,7 +170,7 @@ namespace FruitGame
             }
             if (p == tunnel)
             {
-                tunnelNote = "no answer from outside (no internet?)";
+                tunnelNote = "no answer (no internet?)";
                 Debug.LogWarning($"[FruitGame] Photo tunnel {url} didn't answer; photo links use the local network");
                 try { p.Kill(); } catch { } // Update restarts it
             }

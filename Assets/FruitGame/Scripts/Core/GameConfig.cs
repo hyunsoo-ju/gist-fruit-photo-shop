@@ -272,6 +272,8 @@ namespace FruitGame
         [Header("Language (Docs/DESIGN.md §15)")]
         [Tooltip("Starting language; the staff panel's L flips between Korean and English at runtime.")]
         public Language language = Language.Korean;
+        [Tooltip("The staff panel's language, separate from the game's (staff panel ▸ Display).")]
+        public Language staffLanguage = Language.Korean;
 
         [Header("Screens (Docs/DESIGN.md §15)")]
         [Tooltip("Auto: the guest screen on the main display and the staff screen on a second one when it's connected. " +
@@ -295,12 +297,6 @@ namespace FruitGame
         [Range(1, 4)] public int printCopies = 1;
         [Tooltip("About how long one print takes, for the waiting message (the SELPHY postcard: about 40 s).")]
         public float printSeconds = 40f;
-        [Tooltip("Sheets the paper tray holds when full.")]
-        public int trayCapacity = 18;
-        [Tooltip("Prints per ink cassette (RP-108: 36).")]
-        public int inkCapacity = 36;
-        [Tooltip("Warn staff when this few sheets or prints of ink are left.")]
-        public int printWarnAt = 3;
 
         [Header("Fallback input")]
         public float keyboardBasketSpeed = 7f;
