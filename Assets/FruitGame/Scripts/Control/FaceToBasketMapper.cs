@@ -38,7 +38,8 @@ namespace FruitGame
 
         void Update()
         {
-            FaceMesh.NeededForSteering = Steering.Mode == SteerBy.Turn;
+            // Both ways of steering read the face mesh: sliding its centre, turning its yaw.
+            FaceMesh.NeededForSteering = true;
             // Staff switched how to steer: use that way's own saved range.
             if (Steering.Mode != loadedFor)
             {

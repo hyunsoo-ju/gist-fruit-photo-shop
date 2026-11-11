@@ -311,6 +311,7 @@ namespace FruitGame
             playerInput = basket.Input;
             basket.SetInput(pilot);
             audioFeedback.Muted = true;
+            if (pile != null) pile.SetSeeThrough(false); // the sample round shows the pile solid
             DemoRunning = true;
             hud.ShowRoundHud(true);
             StartDemoRound();
@@ -329,6 +330,7 @@ namespace FruitGame
         {
             if (!DemoRunning) return;
             DemoRunning = false;
+            if (pile != null) pile.SetSeeThrough(true);
             demoFadeTime = -1f;
             if (fade != null) fade.Alpha = 0f;
             audioFeedback.Muted = false;

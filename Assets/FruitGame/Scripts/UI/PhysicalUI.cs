@@ -192,6 +192,37 @@ namespace FruitGame
             if (instance == this) instance = null;
         }
 
+        // ---- Photos -----------------------------------------------------------------------------------------------
+
+        readonly List<Renderer> hiddenForPhoto = new List<Renderer>();
+
+        /// <summary>
+        /// Hides the buttons, signs and dimmers (and so their shadows) while a photo is rendered, then shows them again.
+        /// Picked by their materials, not their layer: the sun beams share the layer (both stay out of the sky and sun
+        /// maps), and leaving the layer out took the beams out of the photos too.
+        /// </summary>
+        public void HideForPhoto(bool hide)
+        {
+            foreach (var r in hiddenForPhoto) if (r != null) r.forceRenderingOff = false;
+            hiddenForPhoto.Clear();
+            if (!hide) return;
+            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            {
+                if (r.gameObject.layer != Layer || r.forceRenderingOff || !Owns(r.sharedMaterial)) continue;
+                r.forceRenderingOff = true;
+                hiddenForPhoto.Add(r);
+            }
+        }
+
+        bool Owns(Material m)
+        {
+            if (m == null) return false;
+            if (m == sceneMaterial || m == signMaterial) return true;
+            foreach (var (_, veil) in dimmers)
+                if (veil != null && veil.GetComponent<MeshRenderer>().sharedMaterial == m) return true;
+            return false;
+        }
+
         // ---- Placement ----------------------------------------------------------------------------------------------
 
         /// <summary>

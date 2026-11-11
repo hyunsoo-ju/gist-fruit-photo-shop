@@ -9,7 +9,7 @@ namespace FruitGame
     /// booth's face reshaping and makeup (Docs/DESIGN.md §14). Crops a square around the BlazeFace box, runs the mesh on
     /// the GPU, and maps the points back into webcam-output UV (the same space as FaceTracker / the cut-out).
     /// Only runs while Active (today: whenever the beauty filter is on, which is always). Also gives the head's
-    /// rotation from the 3D points (M6 2.3), for trying rotation steering.
+    /// rotation from the 3D points (M6 2.3) for steering by turning, and the face's centre for steering by sliding.
     /// </summary>
     public class FaceMesh : MonoBehaviour
     {
@@ -37,6 +37,23 @@ namespace FruitGame
         public float Yaw { get; private set; }
         public float Pitch { get; private set; }
         public float Roll { get; private set; }
+        /// <summary>
+        /// The face's centre in webcam-output UV: the middle of the mesh's face outline (36 points around the jaw, cheeks
+        /// and forehead), from each update's points as they come, unsmoothed (the basket's own filter smooths). What
+        /// steering by sliding follows: far finer than the BlazeFace box, which is found on a 128 px copy of the whole
+        /// frame, where the face is only about 20 px across.
+        /// </summary>
+        public Vector2 Centre { get; private set; }
+        /// <summary>Centre relative to the 3:4 play area (CameraFrame.ToPlay), like FaceTracker.PlayFaceCenter.</summary>
+        public Vector2 PlayCentre => CameraFrame.ToPlay(Centre);
+
+        /// <summary>MediaPipe's face outline (FACEMESH_FACE_OVAL).</summary>
+        static readonly int[] Outline =
+        {
+            10, 338, 297, 332, 284, 251, 389, 356, 454, 323, 361, 288, 397, 365, 379, 378, 400, 377,
+            152, 148, 176, 149, 150, 136, 172, 58, 132, 93, 234, 127, 162, 21, 54, 103, 67, 109,
+        };
+
         /// <summary>Meshes per second actually achieved (debug overlay).</summary>
         public float Rate { get; private set; }
         /// <summary>How the last photo measurement went (debugging).</summary>
@@ -80,6 +97,9 @@ namespace FruitGame
                     if (!Active && !NeededForSteering) return;
                     float keep = primed ? smoothing : 0f;
                     UpdatePose(landmarks, keep);
+                    var c = Vector2.zero;
+                    foreach (int i in Outline) c += ToUv(landmarks, i, cropRect);
+                    Centre = c / Outline.Length;
                     CountRate();
                     for (int i = 0; i < Count; i++) Points[i] = Vector2.Lerp(ToUv(landmarks, i, cropRect), Points[i], keep);
                     primed = true;

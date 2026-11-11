@@ -198,9 +198,9 @@ namespace FruitGame
 
             float raw = HeadSignal.Value(config, tracker, mesh);
             float now = Time.unscaledTime;
-            // Stillness is judged on a lightly smoothed signal: the face detector works on a 128 px copy of the frame,
-            // so its box wobbles by a pixel or two (about 0.02 of the play area) even when the head is still. The
-            // smoothing takes that out and still shows any real movement.
+            // Stillness is judged on a lightly smoothed signal: even the face mesh's centre wobbles a little when the
+            // head is still (and the BlazeFace box it falls back to, found on a 128 px copy of the frame, by about 0.02
+            // of the play area). The smoothing takes that out and still shows any real movement.
             bool fresh = history.Count == 0;
             float u = fresh ? raw : Mathf.Lerp(smoothedU, raw, 1f - Mathf.Exp(-Time.unscaledDeltaTime / SteadySmoothing));
             smoothedU = u;

@@ -22,6 +22,9 @@ namespace FruitGame
         [Tooltip("Full-colour fruit material used while the photo booth is open (the pile shows in full colour).")]
         [SerializeField] Material photoMaterial;
         Material fruitHaze;
+        bool seeThrough = true;
+        /// <summary>The pile fruit's current material: see-through in play, solid in the attract screen's sample round.</summary>
+        Material FruitHaze => seeThrough ? fruitHaze : hazeMaterial;
         [SerializeField] float landSoundCooldown = 0.1f;
 
         [Header("Crate heap")]
@@ -257,7 +260,7 @@ namespace FruitGame
         /// </summary>
         void MakeBackground(GameObject go, FruitType type, bool golden)
         {
-            var haze = golden ? FruitType.Golden(fruitHaze) : FruitType.WithAtlas(fruitHaze, type != null ? type.atlasFar : null);
+            var haze = golden ? FruitType.Golden(FruitHaze) : FruitType.WithAtlas(FruitHaze, type != null ? type.atlasFar : null);
             foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -290,9 +293,9 @@ namespace FruitGame
             {
                 if (f == null) continue;
                 var type = f.Type;
-                var mat = f.Golden ? FruitType.Golden(on ? photoMaterial : fruitHaze)
+                var mat = f.Golden ? FruitType.Golden(on ? photoMaterial : FruitHaze)
                     : on ? FruitType.WithAtlas(photoMaterial, type != null ? type.atlas : null)
-                         : FruitType.WithAtlas(fruitHaze, type != null ? type.atlasFar : null);
+                         : FruitType.WithAtlas(FruitHaze, type != null ? type.atlasFar : null);
                 foreach (var r in f.GetComponentsInChildren<Renderer>())
                 {
                     var mats = r.sharedMaterials;
@@ -300,6 +303,19 @@ namespace FruitGame
                     r.sharedMaterials = mats;
                 }
             }
+        }
+
+        /// <summary>
+        /// See-through pile fruit (true, in play: they never pass for falling fruit) or solid (false: the attract
+        /// screen's sample round, where nobody is playing and the full pile looks better). Re-dresses the fruit already
+        /// in the pile.
+        /// </summary>
+        public void SetSeeThrough(bool on)
+        {
+            if (seeThrough == on) return;
+            seeThrough = on;
+            foreach (var f in fruits)
+                if (f != null) MakeBackground(f.gameObject, f.Type, f.Golden);
         }
 
         public void Clear()

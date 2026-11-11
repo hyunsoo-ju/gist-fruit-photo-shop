@@ -392,7 +392,7 @@ namespace FruitGame
         }
 
         /// <summary>
-        /// Renders the game camera (no UI) into a 3:4 portrait photo of the middle of the view. Its size is a whole
+        /// Renders the game camera (no UI, flat or 3D) into a 3:4 portrait photo of the middle of the view. Its size is a whole
         /// multiple of the game pixels it covers (at least 1440 tall), so every game pixel stays a sharp square.
         /// </summary>
         Texture2D RenderPhoto()
@@ -419,8 +419,12 @@ namespace FruitGame
             // 3:4 band of them (in landscape the 3:4 target simply crops the sides).
             if (viewAspect < PhotoAspect)
                 gameCamera.fieldOfView = 2f * Mathf.Atan(Mathf.Tan(oldFov * 0.5f * Mathf.Deg2Rad) * viewAspect / PhotoAspect) * Mathf.Rad2Deg;
+            // No physical UI either (the realistic look's 3D buttons, signs and dimmers, PhysicalUI), nor its shadows.
+            var physicalUi = PhysicalUI.Instance;
+            if (physicalUi != null) physicalUi.HideForPhoto(true);
             gameCamera.targetTexture = rt;
-            gameCamera.Render();
+            try { gameCamera.Render(); }
+            finally { if (physicalUi != null) physicalUi.HideForPhoto(false); }
             foreach (var c in stacked) c.enabled = true;
             gameCamera.targetTexture = oldTarget;
             gameCamera.rect = oldRect;
