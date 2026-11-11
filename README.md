@@ -44,7 +44,9 @@
 
 **A. 앱으로 실행 (빌드한 경우)**
 
-1. 장비를 모두 연결한 뒤 `FruitGame` 앱을 실행합니다. 주 디스플레이(노트북)에 진행자 화면이, 터치 디스플레이에 손님 화면이 전체 화면으로 뜹니다.
+앱 빌드: Unity에서 **FruitGame ▸ Build ▸ macOS**를 누르면 프로젝트 폴더의 `Builds/macOS/GIST Fruit Photo Shop.app`이 만들어지고 Finder에 보입니다(몇 분 걸림, git에는 올라가지 않음). 부스 노트북으로는 `.app`만 옮기면 되며, 옆의 `…_BackUpThisFolder_ButDontShipItWithYourGame` 폴더는 필요 없습니다.
+
+1. 장비를 모두 연결한 뒤 `GIST Fruit Photo Shop` 앱을 실행합니다. 주 디스플레이(노트북)에 진행자 화면이, 터치 디스플레이에 손님 화면이 전체 화면으로 뜹니다.
 2. 처음 실행할 때 macOS가 **카메라** 접근과 **들어오는 네트워크 연결**(휴대폰 사진 받기용)을 물으면 모두 **허용**합니다.
 3. 끌 때는 **⌘Q**(Windows는 Alt+F4)를 누릅니다.
 

@@ -545,6 +545,8 @@
 
 **재생 전 시작 화면 미리보기**(`Scripts/Editor/TitlePreview.cs`, **FruitGame > Title Preview**, 기본으로 켜짐, *Refresh*로 다시 만듦): 에디터가 재생 중이 아닐 때도 게임 화면에 게임이 그리는 그대로의 시작 화면이 보입니다. 실행 중에만 만들어지는 부분(복셀 버튼, 3D 제목, 상자 벽, 언덕, 풍경 띠, 상자 받침, 살아 있는 풍경의 색·관목·나비·구름, 픽셀 렌더)은 각각 `IEditPreview`를 구현해 자기 코드로 편집 모드에서 정지된 모습을 만듭니다. 미리보기가 만든 것은 모두 숨겨지고 저장되지 않으며, 저장 전, 재생 전, 스크립트 다시 불러오기 전, 플레이어 빌드 전에 모두 치우고 저장되는 객체에 바꾼 것도 되돌린 뒤 다시 만듭니다(세로·가로 전환 뒤에도). (빌드 중에 미리보기를 띄워 둔 적이 있는데, 빌드가 미리보기 기록을 되돌리지 않고 지워 메인 카메라에 픽셀 레이어의 마스크가 남고 렌더러에는 빌드가 없앤 머티리얼이 남았습니다. 그래서 재생 중 사실적 모습은 배경만 그리고 나뭇잎은 자홍색으로 나왔습니다. `PixelRenderer`도 이제 카메라에 남은 자기 마스크를 알아보고 씬의 마스크로 되돌립니다.) 장면 자체에도 시작 화면 배치(시작 아래로 쌓인 음성 안내·고대비 버튼, 현재 문구, 숨긴 게임 HUD)를 저장해 두어, 에디터와 게임이 같은 화면에서 시작합니다. 움직임(블록이 떨어지는 등장, 바람, 흘러가는 구름)은 재생 중에만 있습니다.
 
+**앱 빌드**(`Scripts/Editor/BuildScript.cs`, **FruitGame > Build > macOS**): Boot와 Game을 순서대로 macOS용으로 빌드해 프로젝트 루트의 `Builds/macOS/GIST Fruit Photo Shop.app`에 두고(지난 빌드를 바꿈) Finder에서 보여 줍니다(*Open Builds Folder*는 폴더를 엶). `Builds/`는 Unity 표준 `.gitignore`처럼 git에서 제외합니다. 앱 옆의 `…_BackUpThisFolder_ButDontShipItWithYourGame` 폴더는 Burst의 디버그 정보라 부스로 옮기지 않습니다. Unity를 닫은 채 터미널에서 같은 빌드: `Unity -batchmode -quit -projectPath . -executeMethod FruitGame.EditorTools.BuildScript.BuildMac -logFile -`(실패하면 오류 코드로 끝남). 빌드 로그의 버전은 Player Settings ▸ Version(`bundleVersion`)입니다. **앱 아이콘**(`AppIcon`, **FruitGame > Build > Make App Icon**): 복셀 사과를 포토카드 스티커로(`PhotoDecor.StickerArt`, 카드의 스티커 모습 그대로. 첫 번째 사과 모델을 세우고 살짝 돌려 꼭지와 잎이 보이게) 피크닉 체크를 채운 둥근 사각형 위에 얹고, 접시의 테두리와 1픽셀 그림자를 더해 16 px 아트 격자로 그립니다. 1024 × 1024에 macOS 여백을 두며 기본 아이콘으로 정합니다. 비공개 과일 모델에서 그리므로 PNG(`Art/AppIcon/AppIcon.png`)는 모델처럼 git에서 제외하고, 빌드가 없으면 먼저 만듭니다.
+
 ---
 
 ## 17. 조정값 (`GameConfig` ScriptableObject)

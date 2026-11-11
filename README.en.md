@@ -44,7 +44,9 @@ Written so the booth can be run from this section alone when the project lead is
 
 **A. Running the app (once it's built)**
 
-1. With everything connected, open the `FruitGame` app. The staff screen opens on the main display (the laptop) and the guest screen full screen on the touch display.
+To build it: in Unity, choose **FruitGame ▸ Build ▸ macOS**. It makes `Builds/macOS/GIST Fruit Photo Shop.app` in the project folder and shows it in Finder (a few minutes; it isn't put in git). Only the `.app` needs copying to the booth laptop, not the `…_BackUpThisFolder_ButDontShipItWithYourGame` folder beside it.
+
+1. With everything connected, open the `GIST Fruit Photo Shop` app. The staff screen opens on the main display (the laptop) and the guest screen full screen on the touch display.
 2. The first time, macOS asks about **camera** access and **incoming network connections** (for phone downloads): **allow** both.
 3. To quit, press **⌘Q** (Windows: Alt+F4).
 

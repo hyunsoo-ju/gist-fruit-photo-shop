@@ -68,6 +68,10 @@ Assets/FruitGame/Art/Models/Props/*
 Assets/FruitGame/Art/Voxels/Fruit/*.asset
 Assets/FruitGame/Art/Voxels/World/*Tree*.asset
 Assets/FruitGame/Art/Voxels/Props/*.asset
+# The app icon shows the voxel apple, rendered from those models: made by FruitGame > Build > Make App Icon (and before
+# every build when missing).
+Assets/FruitGame/Art/AppIcon/*
+!Assets/FruitGame/Art/AppIcon/*.meta
 
 # Orchard illustration from Photo Booth 2: source and licence unknown.
 Assets/FruitGame/Art/Backdrops/OrchardIllustration.png

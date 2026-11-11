@@ -228,7 +228,7 @@ namespace FruitGame
                 if (!stickerCache.TryGetValue(i, out var art))
                 {
                     if (!types.TryGetValue(s.fruit, out var type)) continue;
-                    var fruit = RenderFruit(type);
+                    var fruit = RenderFruit(type, stickerShader);
                     if (fruit.px == null) continue;
                     art = MakeSticker(fruit.px, fruit.w, fruit.h, s.height, s.angle, s.dark ? BackDark : BackLight);
                     stickerCache[i] = art;
@@ -340,12 +340,25 @@ namespace FruitGame
             return map;
         }
 
+        /// <summary>
+        /// One fruit sticker as the card draws it, in art pixels (y down): `height` art pixels tall, turned by `angle`,
+        /// on the cream backing (or the darker cream). Also used by the Editor for the app icon (AppIcon).
+        /// </summary>
+        public static (Color32[] px, int w, int h) StickerArt(FruitType type, int height, float angle, bool darkBacking,
+            Shader shader = null, int model = 0, Vector3? turn = null)
+        {
+            if (shader == null) shader = Shader.Find("Hidden/FruitGame/Sticker");
+            var fruit = RenderFruit(type, shader, model, turn);
+            if (fruit.px == null) return (null, 0, 0);
+            return MakeSticker(fruit.px, fruit.w, fruit.h, height, angle, darkBacking ? BackDark : BackLight);
+        }
+
         /// <summary>Renders a fruit's first model, slightly turned, on a clear background (256 px, y down).</summary>
-        (Color32[] px, int w, int h) RenderFruit(FruitType type)
+        static (Color32[] px, int w, int h) RenderFruit(FruitType type, Shader stickerShader, int model = 0, Vector3? turn = null)
         {
             if (stickerShader == null) return (null, 0, 0);
             const int size = 256;
-            var prefab = type.visualPrefabs[0];
+            var prefab = type.visualPrefabs[Mathf.Clamp(model, 0, type.visualPrefabs.Length - 1)];
             var holder = new GameObject("Sticker Fruit") { hideFlags = HideFlags.HideAndDontSave };
             var mats = new List<Material>();
             // Copy only the meshes (the prefab's own scripts must not run).
@@ -372,7 +385,7 @@ namespace FruitGame
                 r.receiveShadows = false;
                 mats.Add(m);
             }
-            holder.transform.SetPositionAndRotation(new Vector3(0f, -1000f, 0f), Quaternion.Euler(-15f, 25f, 0f));
+            holder.transform.SetPositionAndRotation(new Vector3(0f, -1000f, 0f), Quaternion.Euler(turn ?? new Vector3(-15f, 25f, 0f)));
             var bounds = new Bounds(holder.transform.position, Vector3.zero);
             bool any = false;
             foreach (var r in holder.GetComponentsInChildren<Renderer>())
@@ -406,7 +419,7 @@ namespace FruitGame
                 read.Apply(false);
                 RenderTexture.active = prev;
                 var up = read.GetPixels32();
-                Object.Destroy(read);
+                Object.DestroyImmediate(read); // also from the Editor, outside Play
                 px = new Color32[up.Length];
                 for (int y = 0; y < size; y++) System.Array.Copy(up, (size - 1 - y) * size, px, y * size, size);
             }
