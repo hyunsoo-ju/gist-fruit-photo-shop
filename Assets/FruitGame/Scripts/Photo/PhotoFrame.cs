@@ -8,7 +8,8 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Composes the souvenir print (Docs/DESIGN.md §14) in the pixel style: a cream card with the pixel title on top,
+    /// Composes the souvenir print (Docs/DESIGN.md §14) in the pixel style: a picnic-check card (PhotoDecor: the check,
+    /// plates behind the title and logos, fruit stickers, the date) with the pixel title on top,
     /// an orange pixel frame holding the four-cut grid (2 × 2 uncropped 3:4 cuts: the action shots from the round, then
     /// the final shot, which gets a darker outline), and along the bottom the event logo · the score ("68점") · school logo. No best score: a souvenir
     /// shouldn't rank one visitor against the others.
@@ -45,8 +46,11 @@ namespace FruitGame
         [SerializeField] Vector2Int size = new Vector2Int(1200, 1800);
         [Tooltip("Share of the vertical crop taken from the bottom (0 = keep the bottom edge, 0.5 = centred).")]
         [SerializeField, Range(0f, 0.5f)] float cropFromBottom = 0.35f;
+        [Tooltip("Draws the fruit stickers (Hidden/FruitGame/Sticker; referenced here so builds include it).")]
+        [SerializeField] Shader stickerShader;
 
         RenderTexture target;
+        PhotoDecor decor;
 
         void Awake()
         {
@@ -63,6 +67,7 @@ namespace FruitGame
         {
             if (frameCamera != null) frameCamera.targetTexture = null;
             if (target != null) { target.Release(); Destroy(target); }
+            decor?.Destroy();
         }
 
         /// <param name="shots">The cuts in order; the last one is the final shot (it goes in the last slot).</param>
@@ -91,6 +96,14 @@ namespace FruitGame
             PlaceScore();
             SetLogo(eventLogo, eventLogoImage, eventPlaceholder);
             SetLogo(schoolLogo, schoolLogoImage, schoolPlaceholder);
+
+            // The picnic decoration, placed from the final layout.
+            Canvas.ForceUpdateCanvases();
+            decor ??= new PhotoDecor((RectTransform)canvasRoot.transform, stickerShader);
+            decor.Apply(titleImage != null && titleImage.gameObject.activeSelf ? titleImage.rectTransform : caption.rectTransform,
+                cuts[cuts.Length - 1].rectTransform, score.rectTransform, points.rectTransform,
+                eventLogoImage.gameObject.activeSelf ? eventLogoImage.rectTransform : null,
+                schoolLogoImage.gameObject.activeSelf ? schoolLogoImage.rectTransform : null, points.font);
 
             Canvas.ForceUpdateCanvases();
             frameCamera.Render();

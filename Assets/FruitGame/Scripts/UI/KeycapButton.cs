@@ -36,7 +36,8 @@ namespace FruitGame
         Mesh borderMesh, capMesh;
         Color32 colour;
         string builtLabel;
-        bool builtLive, builtContrast;
+        bool builtLive, builtContrast, builtGritty;
+        const float PhysicalGrit = 0.04f;
         Vector2Int builtBlocks;
         Vector2 lastPlace;
         Vector2Int lastPixels;
@@ -110,6 +111,7 @@ namespace FruitGame
 
         void OnDisable()
         {
+            OnDisableScene();
             hover = pressed = false;
             Apply();
         }
@@ -154,6 +156,7 @@ namespace FruitGame
         void LateUpdate()
         {
             if (!voxel || VoxelButtons.Instance == null) return;
+            if (UpdatePhysical()) return;
             // Redraw when anything that shows has changed: state, label (language), size or place on screen.
             var vb = VoxelButtons.Instance;
             var place = vb.FromMiddle((RectTransform)transform);
@@ -170,18 +173,18 @@ namespace FruitGame
             return new Vector2Int(Mathf.Max(8, Mathf.RoundToInt(size.x)), Mathf.Max(8, Mathf.RoundToInt(size.y)));
         }
 
-        /// <summary>Called by VoxelButtons: rebuilds what changed and renders the blocks into this button's image.</summary>
-        public void RenderVoxels(Camera cam)
+        /// <summary>Rebuilds the border and cap meshes if the size, label, state or contrast changed; returns the size in blocks.</summary>
+        Vector2Int BuildMeshes()
         {
-            var vb = VoxelButtons.Instance;
             var rect = ((RectTransform)transform).rect;
             float block = Block;
             var blocks = new Vector2Int(Mathf.Max(12, Mathf.RoundToInt(rect.width / block)), Mathf.Max(10, Mathf.RoundToInt(rect.height / block)));
             string text = label != null ? label.text : "";
 
-            if (blocks != builtBlocks || text != builtLabel || Live != builtLive || HighContrast.On != builtContrast)
+            if (blocks != builtBlocks || text != builtLabel || Live != builtLive || HighContrast.On != builtContrast || physical != builtGritty)
             {
                 builtContrast = HighContrast.On;
+                builtGritty = physical;
                 builtLive = Live;
                 builtBlocks = blocks;
                 builtLabel = text;
@@ -189,13 +192,28 @@ namespace FruitGame
                 if (capMesh != null) Destroy(capMesh);
                 int capInner = blocks.x - VoxelButtonKit.BorderWidth * 2 - VoxelButtonKit.RidgeInset * 2 - 4;
                 int capTall = blocks.y - VoxelButtonKit.BorderWidth * 2 - VoxelButtonKit.RidgeInset * 2 - 2;
-                var bits = VoxelButtonKit.Label(label != null ? label.font : null, text, capInner, capTall >= 34 ? 2 : 1);
-                borderMesh = VoxelButtonKit.Border(blocks.x, blocks.y);
+                // The pause button's label is "II": drawn as a proper pause icon (two solid bars), not two letters.
+                var bits = text == "II" ? VoxelButtonKit.PauseIcon(capInner, capTall)
+                    : VoxelButtonKit.Label(label != null ? label.font : null, text, capInner, capTall >= 34 ? 2 : 1);
+                // Standing in the scene, the blocks get grit so they read as a textured material (PhysicalUI).
+                float grit = physical ? PhysicalGrit : 0f;
+                borderMesh = VoxelButtonKit.Border(blocks.x, blocks.y, grit);
                 var capColour = HighContrast.On ? new Color32(0, 0, 0, 0xFF) : Live ? colour : VoxelButtonKit.Shade(colour, 0.6f);
-                capMesh = VoxelButtonKit.Cap(blocks.x, blocks.y, capColour, bits);
+                capMesh = VoxelButtonKit.Cap(blocks.x, blocks.y, capColour, bits, grit);
                 borderT.GetComponent<MeshFilter>().sharedMesh = borderMesh;
                 capT.GetComponent<MeshFilter>().sharedMesh = capMesh;
             }
+            return blocks;
+        }
+
+        /// <summary>Called by VoxelButtons: rebuilds what changed and renders the blocks into this button's image.</summary>
+        public void RenderVoxels(Camera cam)
+        {
+            if (physical) return; // standing in the scene instead (PhysicalUI)
+            var vb = VoxelButtons.Instance;
+            var rect = ((RectTransform)transform).rect;
+            float block = Block;
+            var blocks = BuildMeshes();
 
             // Hover lifts the cap a block, pressing sinks it flush with the border (toward the camera is −z).
             int state = State;
@@ -230,6 +248,88 @@ namespace FruitGame
             pivot.gameObject.SetActive(false);
             cam.targetTexture = null;
         }
+
+        // ---- Standing in the scene (PhysicalUI, realistic look) ----------------------------------------------------------
+
+        bool physical;
+
+        /// <summary>
+        /// In the realistic look (high contrast off) the button's blocks stand in the 3D scene where the button sits on
+        /// screen, lit like the rest of it; the image view is hidden and the invisible button still takes the taps.
+        /// Returns true while that's so.
+        /// </summary>
+        bool UpdatePhysical()
+        {
+            var ui = PhysicalUI.Instance;
+            bool want = PhysicalUI.On && ui.SceneMaterial != null && !PhysicalUI.KeptFlat(transform);
+            if (!want)
+            {
+                if (physical) LeaveScene();
+                return false;
+            }
+            if (!physical) EnterScene(ui);
+            BuildMeshes();
+            float block = Block;
+            int state = State;
+            lastState = state;
+            float lift = state == 1 ? -VoxelButtonKit.HoverLift : state == 2 ? VoxelButtonKit.CapHeight - VoxelButtonKit.BorderHeight : 0f;
+            capT.localPosition = new Vector3(0f, 0f, lift * block);
+            bool show = isActiveAndEnabled && PhysicalUI.GroupAlpha(transform) > 0.4f;
+            pivot.gameObject.SetActive(show);
+            if (show)
+            {
+                // The same turn as on the flat UI: further out, the outer edge swings toward the viewer. Turned, the
+                // inner edge swings back by up to half the button's size times the turn's sine, so the button comes that
+                // much closer (keeping its size on screen), or it would sink into a sign behind it.
+                var vb = VoxelButtons.Instance;
+                var rt = (RectTransform)transform;
+                var turn = vb.ViewTurn(vb.FromMiddle(rt));
+                float angle = Quaternion.Angle(Quaternion.identity, turn) * Mathf.Deg2Rad;
+                float halfSize = Mathf.Max(rt.rect.width, rt.rect.height) * 0.5f * ui.MetresPerCanvasUnit(rt, PhysicalUI.Distance);
+                float clearance = halfSize * Mathf.Sin(angle) + 0.02f;
+                if (ui.Place(pivot, rt, PhysicalUI.Distance - clearance)) pivot.rotation *= turn;
+            }
+            return true;
+        }
+
+        void EnterScene(PhysicalUI ui)
+        {
+            physical = true;
+            if (view != null) view.enabled = false;
+            foreach (var r in pivot.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                r.gameObject.layer = ui.Layer;
+                r.sharedMaterial = ui.SceneMaterial;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                r.receiveShadows = true;
+            }
+            pivot.gameObject.layer = ui.Layer;
+            float block = Block;
+            borderT.localScale = capT.localScale = Vector3.one * block;
+        }
+
+        void LeaveScene()
+        {
+            physical = false;
+            if (view != null) view.enabled = true;
+            var vb = VoxelButtons.Instance;
+            foreach (var r in pivot.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                r.gameObject.layer = vb.Layer;
+                r.sharedMaterial = vb.BlockMaterial;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+            }
+            pivot.gameObject.layer = vb.Layer;
+            borderT.localScale = capT.localScale = Vector3.one;
+            pivot.localScale = Vector3.one;
+            pivot.position = vb.StagePosition;
+            pivot.gameObject.SetActive(false);
+            lastState = -1;
+            vb.MarkDirty(this);
+        }
+
+        void OnDisableScene() { if (physical && pivot != null) pivot.gameObject.SetActive(false); }
 
         // ---- Edit-mode preview (IEditPreview) -------------------------------------------------------------------------
 

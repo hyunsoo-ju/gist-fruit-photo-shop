@@ -47,6 +47,7 @@ namespace FruitGame
             if (layer < 0) layer = 0;
             blockMaterial = new Material(material);
             if (blockMaterial.HasProperty("_SweepStrength")) blockMaterial.SetFloat("_SweepStrength", 0f);
+            if (blockMaterial.HasProperty("_StageLit")) blockMaterial.SetFloat("_StageLit", 1f); // SceneLighting decides when
 
             cam = new GameObject("Voxel Button Camera", typeof(Camera)).GetComponent<Camera>();
             cam.transform.SetParent(transform, false);

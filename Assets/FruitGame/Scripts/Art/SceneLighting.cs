@@ -32,6 +32,8 @@ namespace FruitGame
         [SerializeField] Shader sunFluxShader;
         [SerializeField] ComputeShader bounceCompute;
         [SerializeField] Shader skyDepthShader;
+        [Tooltip("The dimmer behind the physical UI's signs (PhysicalUI).")]
+        [SerializeField] Shader veilShader;
 
         [Header("Sky shadows and bounce light")]
         [Tooltip("Where the sky's light comes from (pitch, yaw): overhead, so whatever is under a crown or an overhang is in sky shadow (tilted toward the camera, the faces we see all looked out from under the trees).")]
@@ -143,6 +145,8 @@ namespace FruitGame
         static readonly int GlowTint = Shader.PropertyToID("_VoxelGlowTint");
         static readonly int GlowDepth = Shader.PropertyToID("_VoxelGlowDepth");
         static readonly int UILightDir = Shader.PropertyToID("_UILightDir");
+        static readonly int UIStageLight = Shader.PropertyToID("_UIStageLight");
+        static readonly int UIGlowTint = Shader.PropertyToID("_UIGlowTint");
         static readonly int UILightColor = Shader.PropertyToID("_UILightColor");
         static readonly int UISky = Shader.PropertyToID("_UIAmbientSky");
         static readonly int UIEquator = Shader.PropertyToID("_UIAmbientEquator");
@@ -154,6 +158,27 @@ namespace FruitGame
         LightingStyle Wanted => config != null ? config.lightingStyle : LightingStyle.Classic;
 
         void Awake() => Capture();
+
+        void OnEnable() => HighContrast.Changed += ShowButtonLight;
+        void OnDisable() => HighContrast.Changed -= ShowButtonLight;
+
+        // Realistic look: the buttons take the scene's sun and sky plus a glow of their own; with high contrast on (or
+        // in the classic look) they keep their own fixed light, as before.
+        bool stageLitButtons;
+        [Header("Buttons in the realistic look")]
+        [Tooltip("Buttons' own glow, and how much of the sun and the sky's light they take (high contrast turns all this off).")]
+        [SerializeField] float buttonGlow = 0.12f;
+        [Tooltip("Colour of the buttons' own glow (warm).")]
+        [SerializeField] Color buttonGlowTint = new Color(1f, 0.72f, 0.45f);
+        [SerializeField] float buttonSun = 0.18f;
+        [SerializeField] float buttonSky = 0.35f;
+
+        void ShowButtonLight()
+        {
+            Shader.SetGlobalVector(UIStageLight, stageLitButtons && !HighContrast.On ? new Vector4(1f, buttonGlow, buttonSun, buttonSky) : Vector4.zero);
+            Shader.SetGlobalColor(UIGlowTint, buttonGlowTint.linear);
+            PhysicalUI.ButtonGlow = buttonGlowTint.linear * buttonGlow;
+        }
 
         void Capture()
         {
@@ -293,6 +318,10 @@ namespace FruitGame
             // The title, buttons and digits keep the classic light.
             var classicDir = -(classicRotation * Vector3.forward);
             Shader.SetGlobalVector(UILightDir, new Vector4(classicDir.x, classicDir.y, classicDir.z, 1f));
+            stageLitButtons = true;
+            ShowButtonLight();
+            PhysicalUI.VeilShader = veilShader;
+            PhysicalUI.SetRealistic(true);
             Shader.SetGlobalColor(UILightColor, classicColour * classicIntensity);
             Shader.SetGlobalColor(UISky, classicSky);
             Shader.SetGlobalColor(UIEquator, classicEquator);
@@ -350,8 +379,13 @@ namespace FruitGame
             Shader.SetGlobalVector(HazeColour, Vector4.zero);
             Shader.SetGlobalVector(UnderLight, Vector4.zero);
             Shader.SetGlobalVector(UILightDir, Vector4.zero);
+            stageLitButtons = false;
+            ShowButtonLight();
+            PhysicalUI.SetRealistic(false);
             Shader.SetGlobalFloat(PlayerRim, 0f);
             if (beams != null) beams.SetActive(false);
+            // The canopy only casts shadows: left on, it shaded the whole classic scene flat and dark after a switch back.
+            if (canopy != null) canopy.SetActive(false);
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
             Shader.SetGlobalVector(SkyParams, Vector4.zero);
             if (probeObject != null) probeObject.SetActive(false);
@@ -942,6 +976,9 @@ namespace FruitGame
             Shader.SetGlobalVector(HazeColour, Vector4.zero);
             Shader.SetGlobalVector(UnderLight, Vector4.zero);
             Shader.SetGlobalVector(UILightDir, Vector4.zero);
+            stageLitButtons = false;
+            ShowButtonLight();
+            PhysicalUI.SetRealistic(false);
             Shader.SetGlobalFloat(PlayerRim, 0f);
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
             Free(fluxColour); Free(fluxPosition); Free(fluxNormal); Free(fluxDepth); if (bounceVolumes != null) foreach (var v in bounceVolumes) Free(v);

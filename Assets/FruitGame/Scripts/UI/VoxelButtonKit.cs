@@ -34,7 +34,7 @@ namespace FruitGame
         public static readonly Color32 Edge = new Color32(0x1E, 0x22, 0x33, 0xFF);
 
         /// <summary>Inside a w × h rounded rectangle (corner radius r)?</summary>
-        static bool Inside(int x, int y, int w, int h, int r)
+        public static bool Inside(int x, int y, int w, int h, int r)
         {
             if (x < 0 || y < 0 || x >= w || y >= h) return false;
             int cx = x < r ? r - 1 : x >= w - r ? w - r : x;
@@ -45,7 +45,7 @@ namespace FruitGame
         }
 
         /// <summary>The border ring: the whole button's rounded rectangle minus the cap's hole, BorderHeight tall.</summary>
-        public static Mesh Border(int w, int h)
+        public static Mesh Border(int w, int h, float grit = 0f)
         {
             int capW = w - BorderWidth * 2, capH = h - BorderWidth * 2;
             var size = new Vector3Int(w, h, BorderHeight);
@@ -53,7 +53,7 @@ namespace FruitGame
             {
                 if (!Inside(x, y, w, h, CornerRadius)) return default;
                 if (Inside(x - BorderWidth, y - BorderWidth, capW, capH, CornerRadius - 1)) return default;
-                return z == 0 ? Cream : Shade(Cream, 0.82f); // z = 0 is the top layer; lower blocks shade the sides
+                return Grit(z == 0 ? Cream : Shade(Cream, 0.82f), x, y, z, grit); // z = 0 is the top layer; lower blocks shade the sides
             }, size, 1f, Origin(w, h, BorderHeight), "Button Border");
         }
 
@@ -61,7 +61,7 @@ namespace FruitGame
         /// The cap with its ridge and label, sized to sit in the border's hole. Its base is at height 0 like the border's,
         /// so moving it along z by whole blocks lifts (hover) or sinks (press) it.
         /// </summary>
-        public static Mesh Cap(int w, int h, Color32 colour, bool[,] label)
+        public static Mesh Cap(int w, int h, Color32 colour, bool[,] label, float grit = 0f)
         {
             int capW = w - BorderWidth * 2, capH = h - BorderWidth * 2;
             var ridge = Shade(colour, 0.72f);
@@ -83,7 +83,9 @@ namespace FruitGame
 
             int heights = CapHeight + LabelRaise;
             var size = new Vector3Int(capW, capH, heights);
-            return BlockMesh.Build((x, y, z) =>
+            return BlockMesh.Build((x, y, z) => Grit(CapBlock(x, y, z), x, y, z, grit), size, 1f, Origin(capW, capH, heights), "Button Cap");
+
+            Color32 CapBlock(int x, int y, int z)
             {
                 int level = heights - 1 - z; // z = 0 is the top, toward the camera
                 if (!Inside(x, y, capW, capH, CornerRadius - 1)) return default;
@@ -95,14 +97,44 @@ namespace FruitGame
                 if (Ink(x, y) && level < CapHeight + LabelRaise) return level == CapHeight + LabelRaise - 1 ? LabelCream : Shade(LabelCream, 0.78f);
                 if (EdgeAt(x, y) && level < CapHeight + EdgeHeight) return Edge;
                 return default;
-            }, size, 1f, Origin(capW, capH, heights), "Button Cap");
+            }
+        }
+
+        /// <summary>A pause icon for a cap with room w × h blocks: two upright bars, a bar's width apart.</summary>
+        public static bool[,] PauseIcon(int w, int h)
+        {
+            int bar = Mathf.Max(2, Mathf.RoundToInt(Mathf.Min(w, h) * 0.2f));
+            int tall = Mathf.Max(4, Mathf.RoundToInt(h * 0.62f));
+            int width = bar * 3;
+            var bits = new bool[width, tall];
+            for (int y = 0; y < tall; y++)
+                for (int x = 0; x < bar; x++)
+                {
+                    bits[x, y] = true;
+                    bits[width - 1 - x, y] = true;
+                }
+            return bits;
+        }
+
+        /// <summary>
+        /// Grit: each block a little lighter or darker than its neighbours (a fixed pattern from its position), so a
+        /// face reads as a textured material rather than flat paint. `amount` 0 leaves the colour as it is.
+        /// </summary>
+        public static Color32 Grit(Color32 c, int x, int y, int z, float amount)
+        {
+            if (amount <= 0f || c.a == 0) return c;
+            uint h = (uint)(x * 73856093) ^ (uint)(y * 19349663) ^ (uint)(z * 83492791);
+            h ^= h >> 13; h *= 0x5bd1e995; h ^= h >> 15;
+            float n = (h & 0xFFFF) / 65535f;               // 0..1
+            float k = 1f + (n - 0.6f) * 2f * amount;      // mostly a little darker, now and then lighter
+            return Shade(c, Mathf.Clamp(k, 0f, 1.3f));
         }
 
         /// <summary>Centred on x and y, with height 0 at z = 0 and higher blocks toward −z.</summary>
         static Vector3 Origin(int w, int h, int heights) => new Vector3(-w * 0.5f, -h * 0.5f, -heights);
 
         public static Color32 Shade(Color32 c, float k) =>
-            new Color32((byte)(c.r * k), (byte)(c.g * k), (byte)(c.b * k), c.a);
+            new Color32((byte)Mathf.Min(255f, c.r * k), (byte)Mathf.Min(255f, c.g * k), (byte)Mathf.Min(255f, c.b * k), c.a);
 
         // ---- Glyphs from the pixel font's atlas -------------------------------------------------------------------------
 

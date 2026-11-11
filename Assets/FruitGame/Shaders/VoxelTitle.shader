@@ -7,8 +7,11 @@ Shader "FruitGame/Voxel Title"
         _SweepX("Sweep Position (world x)", Float) = -100
         _SweepWidth("Sweep Width", Float) = 0.35
         _SweepStrength("Sweep Strength", Range(0, 1)) = 0.45
+        [Toggle] _StageLit("Buttons: lit by the scene's sun and sky in the realistic look, with a glow of their own (off with high contrast)", Float) = 0
+        _SelfGlow("Own glow (physical buttons: colour x strength; 0 = none)", Color) = (0, 0, 0, 0)
         [Toggle] _SceneLit("Lit by the scene (butterflies, flames); off = the title and buttons' own fixed light", Float) = 0
         _Transmission("Light Through (scene-lit only)", Range(0, 2)) = 0
+        _FillBalance("Fill light colour (scene-lit: rgb, a = how much; physical buttons take the classic UI light's warmth)", Vector) = (1, 1, 1, 0)
     }
 
     SubShader
@@ -38,13 +41,19 @@ Shader "FruitGame/Voxel Title"
             float4 _UILightDir;     // xyz toward the light, w = 1 when set
             half4 _UILightColor;
             half4 _UIAmbientSky, _UIAmbientEquator, _UIAmbientGround;
+            half4 _UIGlowTint;      // the buttons' own glow colour (warm)
+            half4 _UIStageLight;    // x: 1 when buttons take the stage light (realistic, no high contrast), y: their own glow,
+                                    // z: how much of the sun, w: how much of the sky
 
             CBUFFER_START(UnityPerMaterial)
                 float _SweepX;
                 float _SweepWidth;
                 half _SweepStrength;
                 half _SceneLit;
+                half _StageLit;
+                half4 _SelfGlow;
                 half _Transmission;
+                half4 _FillBalance;
             CBUFFER_END
 
             struct Attributes
@@ -78,8 +87,29 @@ Shader "FruitGame/Voxel Title"
             {
                 float3 n = normalize(input.normalWS);
                 half3 color;
-                if (_SceneLit > 0.5h || _UILightDir.w < 0.5)
-                    color = VoxelLight(input.color.rgb, n, input.positionWS, _SceneLit > 0.5h ? _Transmission : 0.0h, 1.0h, GetNormalizedScreenSpaceUV(input.positionCS));
+                if (_StageLit > 0.5h && _UIStageLight.x > 0.5h)
+                {
+                    // Glossy plastic like the scenery blocks (URP's PBR at the scenery's smoothness: highlights and
+                    // sky reflections), in the scene's sun and sky (their colours and directions; the buttons sit on
+                    // their own stage, so no shadows), plus a little glow of their own so the labels stay readable.
+                    half3 albedo = input.color.rgb;
+                    BRDFData brdf;
+                    half alpha = 1.0h;
+                    InitializeBRDFData(albedo, 0.0h, half3(0, 0, 0), _VoxelSmoothness, alpha, brdf);
+                    half3 v = GetWorldSpaceNormalizeViewDir(input.positionWS);
+                    Light sun = GetMainLight();
+                    sun.color *= _UIStageLight.z;
+                    sun.shadowAttenuation = 1.0h;
+                    sun.distanceAttenuation = 1.0h;
+                    color = GlobalIllumination(brdf, SampleSH(n) * _UIStageLight.w, 1.0h, input.positionWS, n, v)
+                          + LightingPhysicallyBased(brdf, sun, n, v)
+                          + albedo * _UIStageLight.y * _UIGlowTint.rgb;
+                }
+                else if (_SceneLit > 0.5h || _UILightDir.w < 0.5)
+                {
+                    color = VoxelLightBalanced(input.color.rgb, n, input.positionWS, _SceneLit > 0.5h ? _Transmission : 0.0h, 1.0h, GetNormalizedScreenSpaceUV(input.positionCS), 1.0h, 1.0h, _FillBalance);
+                    color += input.color.rgb * _SelfGlow.rgb; // physical buttons: a little warm glow of their own
+                }
                 else
                 {
                     half ndl = saturate(dot(n, _UILightDir.xyz));

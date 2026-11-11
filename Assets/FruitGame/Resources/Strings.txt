@@ -47,6 +47,10 @@ calib.left	◀ 머리를 왼쪽으로\n<size=64>편한 만큼만 움직여요</s
 calib.right	머리를 오른쪽으로 ▶\n<size=64>편한 만큼만 움직여요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
 calib.leftTurn	◀ 고개를 왼쪽으로 돌려요\n<size=64>편한 만큼만 돌려요</size>	◀ Turn your head left\n<size=64>as far as is comfortable</size>
 calib.rightTurn	고개를 오른쪽으로 돌려요 ▶\n<size=64>편한 만큼만 돌려요</size>	Turn your head right ▶\n<size=64>as far as is comfortable</size>
+calib.moreLeft	조금만 더 왼쪽으로 움직여요	A little further left
+calib.moreRight	조금만 더 오른쪽으로 움직여요	A little further right
+calib.moreLeftTurn	조금만 더 왼쪽으로 돌려요	Turn a little further left
+calib.moreRightTurn	조금만 더 오른쪽으로 돌려요	Turn a little further right
 calib.ready	{0}초 뒤에 시작해요	Starting in {0} s
 calib.try	해 봐요!\n<size=64>머리를 움직여서 바구니를 옮겨 봐요</size>	Try it!\n<size=64>Move your head to steer the basket</size>
 calib.looking	얼굴을 찾고 있어요…	Looking for your face…

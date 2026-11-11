@@ -8663,7 +8663,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 45, y: 80}
+  m_AnchoredPosition: {x: 65, y: 80}
   m_SizeDelta: {x: 363, y: 160}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &425293554
@@ -11150,7 +11150,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 6}
-  m_LocalScale: {x: 17.146666, y: 9.6449995, z: 1}
+  m_LocalScale: {x: 7.2337494, y: 9.6449995, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 454640458}
@@ -17585,7 +17585,7 @@ MonoBehaviour:
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 2560, y: 1440}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -19143,7 +19143,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
-  m_AnchoredPosition: {x: -45, y: 80}
+  m_AnchoredPosition: {x: -65, y: 80}
   m_SizeDelta: {x: 363, y: 160}
   m_Pivot: {x: 1, y: 0}
 --- !u!1 &903597912
@@ -21339,6 +21339,7 @@ MonoBehaviour:
   schoolPlaceholder: {fileID: 828518659}
   size: {x: 1200, y: 1800}
   cropFromBottom: 0.35
+  stickerShader: {fileID: 4800000, guid: 5918ef027cccb495092657dea81bb2eb, type: 3}
 --- !u!4 &1018350260
 Transform:
   m_ObjectHideFlags: 0
@@ -24043,6 +24044,7 @@ MonoBehaviour:
   sunFluxShader: {fileID: 4800000, guid: 90bb4e28c8b3246eaaa0da64a20ac859, type: 3}
   bounceCompute: {fileID: 7200000, guid: d8c10b507dbd34c89b12e9d44fb6132a, type: 3}
   skyDepthShader: {fileID: 4800000, guid: 1143ab83da2aa441faa05b1a24a1e382, type: 3}
+  veilShader: {fileID: 4800000, guid: 4358b8d5f54cb41979cd765f506eef63, type: 3}
   skyAngles: {x: 89, y: 0}
   skyShadowSoftness: 1.5
   skyShadowFloor: 0
@@ -24075,6 +24077,10 @@ MonoBehaviour:
   backgroundBlurStart: 13
   backgroundBlurEnd: 22
   backgroundBlur: 1.2
+  buttonGlow: 0.45
+  buttonGlowTint: {r: 1, g: 0.72, b: 0.45, a: 1}
+  buttonSun: 0.18
+  buttonSky: 0.35
 --- !u!1 &1156753506
 GameObject:
   m_ObjectHideFlags: 0
@@ -27533,8 +27539,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.013464622}
-  m_AnchorMax: {x: 1, y: 0.9865354}
+  m_AnchorMin: {x: 0.49012345, y: 0}
+  m_AnchorMax: {x: 0.50987655, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -44693,7 +44699,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 13.336295, y: 7.501666, z: 1}
+  m_LocalScale: {x: 5.6262493, y: 7.501666, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 126919822}
@@ -44883,10 +44889,10 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
-    y: 0.013464622
-    width: 1
-    height: 0.97307074
+    x: 0.49012345
+    y: 0
+    width: 0.019753087
+    height: 1
   near clip plane: 0.3
   far clip plane: 50
   field of view: 29.996521

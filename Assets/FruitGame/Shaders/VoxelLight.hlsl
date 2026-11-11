@@ -119,7 +119,14 @@ half3 VoxelGlow(half3 albedo, float3 n, float3 positionWS, half transmission, ha
 
 /// `glossScale` scales the blocks' smoothness for one material and `skyScale` how much of the sky's light and
 /// reflections it takes (regular fruit get less of both than the rest, so they don't look wet or chalky).
-half3 VoxelLightGloss(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV, half glossScale, half skyScale)
+// Recolours a fill light to its own brightness in `balance.rgb`, by `balance.a` (0 = as it is). The physical buttons use
+// it to take the sky and the cool underlight at their strength but in the classic UI light's warmer colour.
+half3 BalanceFill(half3 light, half4 balance)
+{
+    return lerp(light, Luminance(light) * balance.rgb, balance.a);
+}
+
+half3 VoxelLightBalanced(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV, half glossScale, half skyScale, half4 fillBalance)
 {
     if (_VoxelBacklight < 0.5h)
     {
@@ -133,7 +140,7 @@ half3 VoxelLightGloss(half3 albedo, float3 n, float3 positionWS, half transmissi
     input.normalWS = n;
     input.viewDirectionWS = GetWorldSpaceNormalizeViewDir(positionWS);
     input.shadowCoord = TransformWorldToShadowCoord(positionWS);
-    input.bakedGI = SampleSH(n);
+    input.bakedGI = BalanceFill(SampleSH(n), fillBalance);
     input.shadowMask = half4(1, 1, 1, 1);
     input.normalizedScreenSpaceUV = screenUV; // screen-space ambient occlusion
 
@@ -159,8 +166,13 @@ half3 VoxelLightGloss(half3 albedo, float3 n, float3 positionWS, half transmissi
     // Cool light from below, as if reflected off the ground: strongest on faces pointing down (the undersides of the
     // crowns), wrapping well onto the sides (so the trunks are lit), only a trace on tops. No shadows: a soft fill.
     half under = saturate(-n.y * 0.45h + 0.6h);
-    color += albedo * _VoxelUnderLight.rgb * under * fill;
+    color += albedo * BalanceFill(_VoxelUnderLight.rgb, fillBalance) * under * fill;
     return color;
+}
+
+half3 VoxelLightGloss(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV, half glossScale, half skyScale)
+{
+    return VoxelLightBalanced(albedo, n, positionWS, transmission, cookieStrength, screenUV, glossScale, skyScale, half4(1, 1, 1, 0));
 }
 
 half3 VoxelLight(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV)

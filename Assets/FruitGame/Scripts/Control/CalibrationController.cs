@@ -220,11 +220,11 @@ namespace FruitGame
                     if (Hold(steady, Strings.Get("calib.holdStill"))) { working.centre = held; Enter(Step.Left); }
                     break;
                 case Step.Left:
-                    if (u > working.centre - minRange) { Prompt(Turning ? "calib_more_left_turn" : "calib_more_left"); Hold(false, "A little further left"); break; }
+                    if (u > working.centre - minRange) { Prompt(Turning ? "calib_more_left_turn" : "calib_more_left"); Hold(false, Strings.Get(Turning ? "calib.moreLeftTurn" : "calib.moreLeft")); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.left = held; Enter(Step.Right); }
                     break;
                 case Step.Right:
-                    if (u < working.centre + minRange) { Prompt(Turning ? "calib_more_right_turn" : "calib_more_right"); Hold(false, "A little further right"); break; }
+                    if (u < working.centre + minRange) { Prompt(Turning ? "calib_more_right_turn" : "calib_more_right"); Hold(false, Strings.Get(Turning ? "calib.moreRightTurn" : "calib.moreRight")); break; }
                     if (Hold(steady, Strings.Get("calib.holdThere"))) { working.right = held; Enter(Step.Try); }
                     break;
             }

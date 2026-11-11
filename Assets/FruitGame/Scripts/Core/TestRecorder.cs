@@ -36,9 +36,11 @@ namespace FruitGame
                 next += 1f / fps;
                 var full = ScreenCapture.CaptureScreenshotAsTexture();
                 var small = new RenderTexture(full.width / 2, full.height / 2, 0);
+                // Blit leaves its target active: note what was active before it, and put that back before releasing
+                // (releasing the active texture left a dead one active for the next run).
+                var prev = RenderTexture.active;
                 Graphics.Blit(full, small);
                 var tex = new Texture2D(small.width, small.height, TextureFormat.RGB24, false);
-                var prev = RenderTexture.active;
                 RenderTexture.active = small;
                 tex.ReadPixels(new Rect(0, 0, small.width, small.height), 0, 0);
                 RenderTexture.active = prev;

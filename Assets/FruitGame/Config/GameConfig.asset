@@ -124,6 +124,9 @@ MonoBehaviour:
   blushCoolness: 0.5
   lipStrength: 0.22
   lipCoolness: 0.5
+  shareOverInternet: 1
+  cloudflaredPath: 
+  lightingStyle: 0
   fruitBlockSize: 0.044
   worldBlockSize: 0.063
   farBlockSize: 0.09
@@ -134,10 +137,12 @@ MonoBehaviour:
   uiPixelScale: 3
   renderScale: 0.5
   pileDither: 0.5
+  pileFruitOpacity: 0.5
   farDither: 0.55
   playerOutline: 0
   playerOutlineColor: {r: 0.11764706, g: 0.13333334, b: 0.2, a: 1}
   language: 0
+  staffLanguage: 0
   screens: 0
   staffMirrorRate: 30
   preferredCameraName: Symplectomorphism
@@ -146,7 +151,4 @@ MonoBehaviour:
   printMedia: Postcard.Fullbleed
   printCopies: 1
   printSeconds: 40
-  trayCapacity: 18
-  inkCapacity: 36
-  printWarnAt: 3
   keyboardBasketSpeed: 7
