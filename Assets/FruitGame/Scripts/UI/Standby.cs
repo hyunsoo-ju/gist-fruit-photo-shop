@@ -111,7 +111,7 @@ namespace FruitGame
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.targetDisplay = 0;
+            canvas.targetDisplay = GuestDisplay.Index;
             canvas.sortingOrder = 29500; // over the game and its fades, under the one-screen staff panel (30000)
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -271,7 +271,7 @@ namespace FruitGame
                     standIn.orthographic = main.orthographic;
                     standIn.orthographicSize = main.orthographicSize;
                 }
-                standIn.targetDisplay = 0;
+                standIn.targetDisplay = GuestDisplay.Index;
                 standIn.cullingMask = 0;
                 standIn.clearFlags = CameraClearFlags.SolidColor;
                 standIn.backgroundColor = Back;
@@ -280,7 +280,7 @@ namespace FruitGame
                 stopped.Clear();
                 foreach (var c in FindObjectsByType<Camera>(FindObjectsSortMode.None))
                 {
-                    if (c == standIn || !c.enabled || (c.targetDisplay != 0 && c.targetTexture == null)) continue;
+                    if (c == standIn || !c.enabled || (c.targetDisplay != GuestDisplay.Index && c.targetTexture == null)) continue;
                     c.enabled = false;
                     stopped.Add(c);
                 }

@@ -3,13 +3,39 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// The guest screen's size and picture (Docs/DESIGN.md §15). In a build that's the main display: `Screen` always
-    /// means it, even with a staff display connected. In the Editor, `Screen` means whichever Game view is being
+    /// The guest screen's size and picture (Docs/DESIGN.md §15). In a two-screen build it's Unity's display `Index`: by
+    /// default 1, the second window on the extended display, with the staff screen in the main window on the main
+    /// display (GameConfig.staffOnMainDisplay); otherwise 0, the main window, which `Screen` always means. In the Editor, `Screen` means whichever Game view is being
     /// drawn or has focus, so with a second Game view open for the staff screen the guest layout would follow the
     /// wrong window; here the Game view set to Display 1 is found and used instead.
     /// </summary>
     public static class GuestDisplay
     {
+        /// <summary>
+        /// Which of Unity's displays the guest screen is drawn on: 0, the main window (the computer's main display), or,
+        /// in a two-screen build with the staff screen on the main display, 1. Set by StaffScreen before anything else
+        /// builds its view. The staff screen is on the other one.
+        /// </summary>
+        public static int Index { get; set; }
+        public static int StaffIndex => Index == 0 ? 1 : 0;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlay() => Index = 0;
+
+        /// <summary>
+        /// A pointer position (Input System, measured from the main window) on the guest screen, in its pixels; false
+        /// when the pointer is on another display.
+        /// </summary>
+        public static bool PointerOnGuest(Vector2 position, out Vector2 onGuest)
+        {
+            onGuest = position;
+            if (Index == 0 || Application.isEditor) return true;
+            var rel = Display.RelativeMouseAt(new Vector3(position.x, position.y, 0f));
+            if (rel == Vector3.zero || Mathf.RoundToInt(rel.z) != Index) return false;
+            onGuest = new Vector2(rel.x, rel.y);
+            return true;
+        }
+
         public static int Width => Size.x;
         public static int Height => Size.y;
 
@@ -24,6 +50,9 @@ namespace FruitGame
                 // guest size rather than taking the staff view's shape.
                 if (lastEditorSize.x > 0) return lastEditorSize;
 #endif
+                // On a second display, its own size (Screen is always the main window).
+                if (Index > 0 && Index < Display.displays.Length)
+                    return new Vector2Int(Display.displays[Index].renderingWidth, Display.displays[Index].renderingHeight);
                 return new Vector2Int(Screen.width, Screen.height);
             }
         }

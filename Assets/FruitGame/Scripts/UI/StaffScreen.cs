@@ -36,7 +36,7 @@ namespace FruitGame
         /// <summary>True when the staff screen is on its own display.</summary>
         public static bool TwoScreens { get; private set; }
         /// <summary>The display staff windows (camera menu, settings) should open on.</summary>
-        public static int StaffDisplay => TwoScreens ? 1 : 0;
+        public static int StaffDisplay => TwoScreens ? GuestDisplay.StaffIndex : 0;
 
         const float RefW = 1920f, RefH = 1080f, Column = 560f, Gap = 24f;
         /// <summary>The performance meter's height, under the mirror (a 16:9 guest mirror is 724 tall, leaving this).</summary>
@@ -58,14 +58,19 @@ namespace FruitGame
                        || (config.screens == ScreenMode.Auto && (Application.isEditor ? EditorHasStaffView : Display.displays.Length > 1));
             if (two && !Application.isEditor)
             {
-                // The game runs in Unity's main window, on the computer's main display; the staff screen opens on the
-                // other. (Drawing the game in the second window instead glitched on this Mac: the main window's
-                // picture leaked into it every other frame; and Unity's second window can't be put on the main display.)
+                // Unity's main window sits on the computer's main display and its second window (Display 2) on the other.
                 if (Display.displays.Length > 1) Display.displays[1].Activate();
                 else two = false; // asked for two, but only one is connected: fall back to one screen
             }
-            if (!Application.isEditor) StartCoroutine(KeepGameWindowHome());
             TwoScreens = two;
+            // Builds: by default the staff screen in the main window and the guests in the second, on the extended
+            // display, so the touch display needn't be made the main display (staff panel: Display). The Editor keeps
+            // Display 1 for the guests: its Game views can sit on either monitor anyway. (This swap once flickered, the
+            // main window's picture leaking into the guest screen every other frame: Unity bug UUM-103506, which the
+            // unswapped arrangement hit too, fixed by Metal display link.)
+            GuestDisplay.Index = two && !Application.isEditor && config.staffOnMainDisplay ? 1 : 0;
+            if (GuestDisplay.Index != 0) MoveGuestScreen(GuestDisplay.Index);
+            if (!Application.isEditor) StartCoroutine(KeepGameWindowHome());
 
             Build(two);
             BuildAlert(two);
@@ -89,7 +94,7 @@ namespace FruitGame
             var canvasGo = new GameObject("Staff Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.targetDisplay = two ? 1 : 0;
+            canvas.targetDisplay = two ? GuestDisplay.StaffIndex : 0;
             canvas.sortingOrder = two ? 0 : 30000; // one screen: over the game, under the camera menu and blind cover
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -184,7 +189,20 @@ namespace FruitGame
         }
 
         /// <summary>
-        /// Builds: the game's window full screen on the main display, whatever Unity remembered from the last run (it
+        /// Puts everything the scene draws on the main window (the game's cameras and screen-space canvases) on `display`
+        /// instead. Runs first (StaffScreen is early), so whatever is made later copies or asks GuestDisplay.Index.
+        /// </summary>
+        static void MoveGuestScreen(int display)
+        {
+            foreach (var c in FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.targetTexture == null && c.targetDisplay == 0) c.targetDisplay = display;
+            foreach (var c in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.isRootCanvas && c.renderMode == RenderMode.ScreenSpaceOverlay && c.targetDisplay == 0) c.targetDisplay = display;
+            Debug.Log($"[FruitGame] Screens: staff screen on the main display, guest screen on display {display + 1}");
+        }
+
+        /// <summary>
+        /// Builds: the main window full screen on the main display, whatever Unity remembered from the last run (it
         /// stores the window's monitor and mode, and a window left on the other monitor sat under the staff window).
         /// </summary>
         IEnumerator KeepGameWindowHome()
@@ -220,10 +238,17 @@ namespace FruitGame
             int w = d.width > 0 ? d.width : Screen.width, h = d.height > 0 ? d.height : Screen.height;
             // Unity remembers the window's last resolution: undo a smaller one (an earlier build shrank it).
             if (Screen.width != w || Screen.height != h) Screen.SetResolution(w, h, FullScreenMode.FullScreenWindow);
+            // The guest screen in the second window: its display decides (the staff screen draws no 3D).
+            string name = d.name;
+            if (GuestDisplay.Index > 0 && GuestDisplay.Index < Display.displays.Length)
+            {
+                var g = Display.displays[GuestDisplay.Index];
+                w = g.renderingWidth; h = g.renderingHeight; name = $"display {GuestDisplay.Index + 1}";
+            }
             float k = Mathf.Min(1f, Mathf.Min((float)MaxLongSide / Mathf.Max(w, h), (float)MaxShortSide / Mathf.Min(w, h)));
             if (UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline is UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset urp)
                 urp.renderScale = Mathf.Max(0.1f, k);
-            Debug.Log($"[FruitGame] Screens: '{d.name}' is {w}x{h}; the 3D view draws at {Mathf.RoundToInt(w * k)}x{Mathf.RoundToInt(h * k)} (render scale {k:0.###}), scaled up to fill it");
+            Debug.Log($"[FruitGame] Screens: guest screen '{name}' is {w}x{h}; the 3D view draws at {Mathf.RoundToInt(w * k)}x{Mathf.RoundToInt(h * k)} (render scale {k:0.###}), scaled up to fill it");
         }
 
         /// <summary>In the Editor, Auto uses two screens when a Game view is set to Display 2.</summary>
@@ -366,13 +391,13 @@ namespace FruitGame
         {
             if (!captureDue || mirror == null) return;
             bool guest = false;
-            foreach (var c in cameras) if (c != null && c.targetTexture == null && c.targetDisplay == 0) guest = true;
+            foreach (var c in cameras) if (c != null && c.targetTexture == null && c.targetDisplay == GuestDisplay.Index) guest = true;
             if (!guest) return;
             captureDue = false;
             // The guest display's picture once this frame's cameras (and the overlay UI) have drawn it.
             copyGuest ??= new UnityEngine.Rendering.CommandBuffer { name = "Guest Mirror" };
             copyGuest.Clear();
-            copyGuest.Blit(Display.displays[0].colorBuffer, mirror);
+            copyGuest.Blit(Display.displays[GuestDisplay.Index].colorBuffer, mirror);
             Graphics.ExecuteCommandBuffer(copyGuest);
             if (!mirrorLogged) { mirrorLogged = true; Debug.Log($"[FruitGame] Staff mirror: copying the guest display's picture after {cameras.Count} cameras ({mirror.width}x{mirror.height})"); }
         }

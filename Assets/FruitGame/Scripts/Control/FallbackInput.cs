@@ -45,8 +45,9 @@ namespace FruitGame
             var mouse = Mouse.current;
             if (mouse != null && worldCamera != null)
             {
-                var pos = mouse.position.ReadValue();
-                bool inFrame = worldCamera.pixelRect.Contains(pos);
+                // Measured from the main window: when the guest screen is in the second window, find it there.
+                bool onGuest = GuestDisplay.PointerOnGuest(mouse.position.ReadValue(), out var pos);
+                bool inFrame = onGuest && worldCamera.pixelRect.Contains(pos);
                 if (!inFrame) mouseActive = false;
                 else if (mouse.delta.ReadValue().sqrMagnitude > 0.5f) mouseActive = true;
                 if (mouseActive) targetX = ScreenXToWorldX(pos);
