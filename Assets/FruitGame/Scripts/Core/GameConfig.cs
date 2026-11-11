@@ -285,8 +285,6 @@ namespace FruitGame
         [Tooltip("Auto: the guest screen on the main display and the staff screen on a second one when it's connected. " +
                  "In the Editor, Auto uses two when a Game view is set to Display 2.")]
         public ScreenMode screens = ScreenMode.Auto;
-        [Tooltip("Two screens, builds: the staff screen goes on the computer's main display (the one with the menu bar) and the guest screen on the other, so the touch display needn't be made the main display. Off: the guest screen on the main display. Staff panel: Display (after restart).")]
-        public bool staffOnMainDisplay = true;
         [Tooltip("Staff screen mirror refreshes per second (a copy of the guest screen).")]
         public float staffMirrorRate = 30f;
 

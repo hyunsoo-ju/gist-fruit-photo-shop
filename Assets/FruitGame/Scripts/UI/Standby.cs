@@ -89,6 +89,10 @@ namespace FruitGame
             AudioListener.volume = 0f;
             group.alpha = 1f;
             ShowLoading(1f);
+            // The camera stays closed until the booth opens: opening it only to close it again for the standby card
+            // flashed the camera's prompts (an iPhone's Continuity Camera asked, then cancelled).
+            var source = FindAnyObjectByType<WebcamSource>();
+            if (source != null) source.Suspend(true);
             routine = StartCoroutine(Startup());
         }
 
@@ -107,7 +111,7 @@ namespace FruitGame
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.targetDisplay = GuestDisplay.Index;
+            canvas.targetDisplay = 0;
             canvas.sortingOrder = 29500; // over the game and its fades, under the one-screen staff panel (30000)
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -155,6 +159,8 @@ namespace FruitGame
             yield return Crossfade(toLoading: false);
             GoIdle(true);
             routine = null;
+            // `-openbooth` on the command line: open the booth by itself once loaded (for trying a build).
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-openbooth") >= 0) Set(false);
         }
 
         IEnumerator Enter()
@@ -193,7 +199,7 @@ namespace FruitGame
             while (Time.unscaledTime - start < MaxLoading)
             {
                 smooth = Time.unscaledDeltaTime < 0.05f ? smooth + 1 : 0;
-                bool camera = source == null || source.HasFrames || source.Failed || source.Off;
+                bool camera = source == null || source.HasFrames || source.Failed || source.Idle;
                 if (Time.unscaledTime - start >= MinLoading && camera && smooth >= 10) break;
                 yield return null;
             }
@@ -265,7 +271,7 @@ namespace FruitGame
                     standIn.orthographic = main.orthographic;
                     standIn.orthographicSize = main.orthographicSize;
                 }
-                standIn.targetDisplay = GuestDisplay.Index;
+                standIn.targetDisplay = 0;
                 standIn.cullingMask = 0;
                 standIn.clearFlags = CameraClearFlags.SolidColor;
                 standIn.backgroundColor = Back;
@@ -274,23 +280,39 @@ namespace FruitGame
                 stopped.Clear();
                 foreach (var c in FindObjectsByType<Camera>(FindObjectsSortMode.None))
                 {
-                    if (c == standIn || !c.enabled || (c.targetDisplay != GuestDisplay.Index && c.targetTexture == null)) continue;
+                    if (c == standIn || !c.enabled || (c.targetDisplay != 0 && c.targetTexture == null)) continue;
                     c.enabled = false;
                     stopped.Add(c);
                 }
                 standIn.tag = "MainCamera";
-                savedFrameRate = Application.targetFrameRate;
-                savedVSync = QualitySettings.vSyncCount;
-                QualitySettings.vSyncCount = 0;
-                Application.targetFrameRate = IdleFrameRate;
+                // Drawn at about 20 fps. Builds skip drawing on the screen refreshes in between (OnDemandRendering) rather
+                // than capping the frame rate: with Metal display link, a capped frame rate sleeps inside the display's
+                // refresh callback and macOS can't hand the app any clicks meanwhile, so the staff panel stopped
+                // answering. The Editor isn't paced by the display, so there it's still a frame-rate cap.
+                if (Application.isEditor)
+                {
+                    savedFrameRate = Application.targetFrameRate;
+                    savedVSync = QualitySettings.vSyncCount;
+                    QualitySettings.vSyncCount = 0;
+                    Application.targetFrameRate = IdleFrameRate;
+                }
+                else
+                {
+                    double hz = Screen.currentResolution.refreshRateRatio.value;
+                    UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = Mathf.Max(1, Mathf.RoundToInt((float)(hz > 1.0 ? hz : 60.0) / IdleFrameRate));
+                }
             }
             else
             {
                 if (standIn != null) { standIn.enabled = false; Destroy(standIn.gameObject); standIn = null; }
                 foreach (var c in stopped) if (c != null) c.enabled = true;
                 stopped.Clear();
-                QualitySettings.vSyncCount = savedVSync;
-                Application.targetFrameRate = savedFrameRate;
+                if (Application.isEditor)
+                {
+                    QualitySettings.vSyncCount = savedVSync;
+                    Application.targetFrameRate = savedFrameRate;
+                }
+                else UnityEngine.Rendering.OnDemandRendering.renderFrameInterval = 1;
             }
         }
 

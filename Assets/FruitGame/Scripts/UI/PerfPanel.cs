@@ -46,7 +46,7 @@ namespace FruitGame
         FaceMesh mesh;
         TMP_Text style;
 
-        float frameMs, cpuMs, gpuMs, lowFps;
+        float frameMs, cpuMs, gpuMs, lowFps, nextLog = 15f;
         bool hasTiming;
         int lastCamFrames;
         float camRate, camWindowStart, nextText, nextLow, nextSample;
@@ -181,6 +181,13 @@ namespace FruitGame
             recent[recentHead] = Time.unscaledDeltaTime;
             recentHead = (recentHead + 1) % LowWindow;
             recentCount = Mathf.Min(recentCount + 1, LowWindow);
+            // Builds: a line in Player.log every 10 s, so a slow booth can be looked into afterwards.
+            if (!Application.isEditor && Time.unscaledTime >= nextLog)
+            {
+                nextLog = Time.unscaledTime + 10f;
+                Debug.Log($"[FruitGame] Perf: {1000f / Mathf.Max(0.1f, frameMs):0} fps, 1% low {lowFps:0}, frame {frameMs:0.0} ms, main thread {cpuMs:0.0} ms, GPU {gpuMs:0.0} ms, " +
+                          $"screen {Screen.width}x{Screen.height}, standby {Standby.Active}, target fps {Application.targetFrameRate}, drawing every {UnityEngine.Rendering.OnDemandRendering.renderFrameInterval} frame(s), vsync {QualitySettings.vSyncCount}, refresh {Screen.currentResolution.refreshRateRatio.value:0}");
+            }
             sampleFrames++;
             sampleTime += Time.unscaledDeltaTime;
 

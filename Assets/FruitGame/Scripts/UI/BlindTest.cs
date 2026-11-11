@@ -19,7 +19,6 @@ namespace FruitGame
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 32000;
-            canvas.targetDisplay = GuestDisplay.Index;
             var image = new GameObject("Black", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
             image.transform.SetParent(canvasGo.transform, false);
             image.color = Color.black;

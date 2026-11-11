@@ -38,7 +38,7 @@ Written so the booth can be run from this section alone when the project lead is
 | USB numpad (optional) | Controls for voice-assist visitors | USB. Without one, the number row on the laptop keyboard does the same |
 | Internet | Getting the photo on a phone | The laptop needs internet (venue Wi-Fi, or a phone's hotspot). Visitors open the link on their own mobile data, so they don't join any Wi-Fi. Needs `cloudflared` on the laptop ([First-time setup](#first-time-setup) step 4) |
 
-**Display arrangement (macOS):** leave the laptop as the main display (the one with the menu bar). The staff screen appears on the laptop and the guest screen on the touch display. (To have the guest screen on the main display instead: staff panel ▸ Display ▸ **Main display shows** ▸ Guest screen, then restart the app.) With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
+**Display arrangement (macOS):** in System Settings ▸ Displays ▸ Arrange, drag the white menu bar **onto the touch display** to make it the main display. The guest screen then appears on the touch display and the staff screen on the laptop. With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
 
 ### Starting up
 
@@ -137,7 +137,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 | Nothing prints | Check the printer's power, the USB-C cable, paper and ink. Choose the printer on the panel's Printing page. Meanwhile, offer the phone download. |
 | The QR link won't open on a phone | Look at staff panel ▸ Printing ▸ **Phone link**. If it's red, the laptop has no internet or `cloudflared` is missing: connect the laptop to the internet (a phone's hotspot works); the link comes back by itself within a minute. Meanwhile links use the local Wi-Fi, so phones must be on the laptop's Wi-Fi. If **Phone link** says `Local Wi-Fi`, that was chosen on purpose: phones join the laptop's Wi-Fi. |
 | The panel's letter keys don't respond | Press **`** (or fn+F1) first to turn the panel keys on; its header changes to "keys on". In the Editor, click a Game view once first. |
-| The guest and staff screens are swapped | Staff panel ▸ Display ▸ **Main display shows**: pick the other screen and restart the app (or check which display has the menu bar in Displays ▸ Arrange). |
+| The guest and staff screens are swapped | Make the touch display the main display (Displays ▸ Arrange) and restart the app. |
 | The guest screen is black | Press **F5** once (the blank-screen test is on). |
 | No sound | Check the headphones and the macOS sound output. In voice assist, press **Louder** or **8** on the keypad. |
 | The game stutters in the Realistic look | Turn **Ray tracing** off on the panel's Display page (or switch the look to Classic). |

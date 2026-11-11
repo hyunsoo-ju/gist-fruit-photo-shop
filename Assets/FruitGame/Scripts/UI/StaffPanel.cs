@@ -147,7 +147,6 @@ namespace FruitGame
             F("rayTracing", () => config.rayTracing ? 1 : 0, v => config.rayTracing = v > 0.5f);
             F("staffLanguage", () => (int)config.staffLanguage, v => config.staffLanguage = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
-            F("staffOnMainDisplay", () => config.staffOnMainDisplay ? 1 : 0, v => config.staffOnMainDisplay = v > 0.5f);
             F("printCopies", () => config.printCopies, v => config.printCopies = Mathf.RoundToInt(v));
             F("skinSmoothing", () => config.skinSmoothing, v => config.skinSmoothing = v);
             F("skinSmoothWidth", () => config.skinSmoothWidth, v => config.skinSmoothWidth = v);
@@ -313,8 +312,6 @@ namespace FruitGame
                 Setting("Ray tracing (Realistic)", () => OnOff(config.rayTracing), d => config.rayTracing = d > 0),
                 Setting("Screens (after restart)", () => T(config.screens.ToString()),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
-                Setting("Main display shows (after restart)", () => T(config.staffOnMainDisplay ? "Staff screen" : "Guest screen"),
-                    d => config.staffOnMainDisplay = !config.staffOnMainDisplay),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),
             }, null));
             pages.Add(("Printing", new List<Row>

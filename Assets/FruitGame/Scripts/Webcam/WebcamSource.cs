@@ -153,6 +153,8 @@ namespace FruitGame
 
         IEnumerator Open()
         {
+            // A frame's wait, so standby (made after the scene loads) can keep the camera closed from the start.
+            yield return null;
             if (Off || Suspended) yield break;
             if (TestMode.TestFrames)
             {

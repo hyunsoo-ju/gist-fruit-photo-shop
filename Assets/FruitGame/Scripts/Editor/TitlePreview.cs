@@ -14,8 +14,10 @@ namespace FruitGame.EditorTools
     /// the 3D title, the crate walls, hills, scenery bands, the crate platform, the living scenery's colours, shrubs,
     /// butterflies and clouds, and the pixel render. Each of those is built at runtime; here every IEditPreview in the
     /// open scene builds its own preview. Everything the preview creates is hidden and never saved, and it's all taken
-    /// down (with what it changed put back) before every save, before Play and before scripts reload, then built
-    /// again afterwards. Nothing moves until Play: the preview is a still of the title screen.
+    /// down (with what it changed put back) before every save, before Play, before scripts reload and before a player
+    /// build, then built again afterwards. (A build left up wiped this class's record of the preview without undoing
+    /// it: the main camera kept the pixel layers' mask and renderers kept materials the build destroyed, so after a few
+    /// builds Play's realistic look drew nothing and the leaves drew magenta.) Nothing moves until Play: the preview is a still of the title screen.
     /// FruitGame > Title Preview turns it on or off, and Refresh rebuilds it after an edit.
     /// </summary>
     [InitializeOnLoad]
@@ -70,6 +72,8 @@ namespace FruitGame.EditorTools
         }
 
         static bool pending;
+        /// <summary>A player build took the preview down: keep trying to build it until the scene is back.</summary>
+        static bool afterBuild;
 
         /// <summary>Builds at the next Editor update when Unity is idle (it may be compiling, importing or changing mode).</summary>
         static void Schedule()
@@ -98,7 +102,13 @@ namespace FruitGame.EditorTools
                 .Cast<IEditPreview>()
                 .OrderBy(p => p.PreviewOrder)
                 .ToList();
-            if (targets.Count == 0) return;
+            if (targets.Count == 0)
+            {
+                // Mid-build the scene is swapped out: try again until it's back.
+                if (afterBuild) Schedule();
+                return;
+            }
+            afterBuild = false;
 
             var before = new HashSet<GameObject>(Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None));
             active = true;
@@ -126,7 +136,7 @@ namespace FruitGame.EditorTools
 
         static void End()
         {
-            pending = false;
+            if (!afterBuild) pending = false; // a build closes and reopens the scene: the rebuild after it stays due
             if (!active) return;
             active = false;
             for (int i = built.Count - 1; i >= 0; i--)
@@ -160,6 +170,18 @@ namespace FruitGame.EditorTools
             }
             made.Clear();
             UnityEditorInternal.InternalEditorUtility.RepaintAllViews();
+        }
+
+        /// <summary>Takes the preview down before a player build; it's built again once the build is over (TryBuild waits).</summary>
+        sealed class BeforeBuild : UnityEditor.Build.IPreprocessBuildWithReport
+        {
+            public int callbackOrder => -1000;
+            public void OnPreprocessBuild(UnityEditor.Build.Reporting.BuildReport report)
+            {
+                End();
+                afterBuild = true;
+                Schedule();
+            }
         }
     }
 }

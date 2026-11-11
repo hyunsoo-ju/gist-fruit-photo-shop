@@ -54,12 +54,16 @@ namespace FruitGame
         void Awake()
         {
             main = GetComponent<Camera>();
-            originalMask = main.cullingMask;
-            if (!pixelRender) return;
-
             int back = Mask(BackLayer) | Mask("Pile");
             int person = Mask(PersonLayer);
             int composite = Mask(CompositeLayer);
+            originalMask = main.cullingMask;
+            // Already wired for the pixel layers (an edit-mode title preview that wasn't undone left it so): the camera's
+            // own mask is the scene's, everything but UI. Taking the wired one as the original made the realistic look,
+            // which restores it, draw nothing but the person.
+            if (originalMask == (person | composite)) originalMask = ~Mask("UI");
+            if (!pixelRender) return;
+
             int ui = Mask("UI") | Mask("HUD3D");
             backCam = MakeCamera("Pixel Back Camera", back, main.backgroundColor);
             frontCam = MakeCamera("Pixel Front Camera", originalMask & ~(back | person | composite | ui), Color.clear);
