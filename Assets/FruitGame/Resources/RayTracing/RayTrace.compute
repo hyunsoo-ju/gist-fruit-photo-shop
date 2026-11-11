@@ -1,0 +1,475 @@
+// Ray tracing for the realistic look (Docs/DESIGN.md §4, "Ray tracing"; SceneLighting.RayTracing.cs). Unity offers no
+// hardware ray tracing on this Mac, so rays are traced in software through a 3D grid of the scene's blocks (5 cm cells,
+// kept current every frame by Hidden/FruitGame/Voxelize), the way voxel games do it: a two-level grid walk (4×4×4-cell bricks
+// first, so empty space is crossed in big steps, then cell by cell inside the bricks that hold something).
+//  - Clear / Rebuild / Restore: empty a grid; copy the still scenery's grid (or just the bricks something moving was
+//    drawn into) into the live one, marking which bricks hold anything.
+//  - Bounce: the bounce-light grid (BounceVolume.compute's 0.5 m grid) by tracing rays from every cell: what each ray
+//    hits, if the sun lights it, sends its colour back. Unlike the old sum over sunlit patches, light no longer goes
+//    through walls, crates and crowns.
+//  - Reflect: one mirror ray per pixel (half resolution) from the depth and normals URP draws before the scene; the
+//    blocks it hits are lit by the sun (a shadow ray), the sky, the bounce and the underlight. Blur and Temporal then
+//    smooth it. The scene's shaders blend it in place of the reflection probe where the ray hit something
+//    (VoxelLight.hlsl).
+#pragma kernel Clear
+#pragma kernel Rebuild
+#pragma kernel Restore
+#pragma kernel EraseBox
+#pragma kernel Bounce
+#pragma kernel Reflect
+#pragma kernel Blur
+#pragma kernel Temporal
+
+#define PI 3.14159265
+#define BRICK 4
+
+// ---- The block grid ------------------------------------------------------------------------------------------------
+
+Texture3D<float4> _Vox;          // rgb: colour (linear), a: (facing + 1) / 255, 0 = empty
+Texture3D<uint> _Bricks;         // 0: empty, 1: holds something, 2: something moving was drawn into it this frame
+RWTexture3D<float4> _VoxClear;
+Texture3D<float4> _VoxStill;     // the still scenery's grid
+RWTexture3D<float4> _VoxLiveOut;
+RWTexture3D<uint> _BricksOut;
+float4 _VoxMin;                  // xyz: lowest corner, w: cell size (m)
+float4 _VoxDims;                 // xyz: cells
+
+struct Hit { float3 pos; float3 n; float3 albedo; float t; };
+
+float3 Facing(float a)
+{
+    uint dir = (uint)round(a * 255.0) - 1;
+    return normalize(float3((int)(dir / 9) - 1, (int)((dir / 3) % 3) - 1, (int)(dir % 3) - 1));
+}
+
+/// Walks the grid along a ray from `from` to `to` metres. Surfaces facing away from the ray are passed
+/// through (a ray that starts inside something gets out instead of stopping at its inside).
+bool Trace(float3 originWS, float3 dir, float from, float to, out Hit h)
+{
+    h = (Hit)0;
+    int3 dims = (int3)_VoxDims.xyz;
+    int3 bdims = (int3)((uint3)dims / BRICK);
+    float3 o = (originWS - _VoxMin.xyz) / _VoxMin.w;
+    float3 d = dir;
+    d = float3(abs(d.x) < 1e-6 ? 1e-6 : d.x, abs(d.y) < 1e-6 ? 1e-6 : d.y, abs(d.z) < 1e-6 ? 1e-6 : d.z);
+    float3 inv = 1.0 / d;
+    float3 t0 = -o * inv, t1 = ((float3)dims - o) * inv;
+    float3 tl = min(t0, t1), th = max(t0, t1);
+    float t = max(from / _VoxMin.w, max(max(tl.x, tl.y), tl.z));
+    float tMax = min(to / _VoxMin.w, min(min(th.x, th.y), th.z));
+    if (t >= tMax) return false;
+    int3 stp = int3(d.x > 0 ? 1 : -1, d.y > 0 ? 1 : -1, d.z > 0 ? 1 : -1);
+    float3 up = float3(stp > 0);
+    float3 adv = abs(inv);
+
+    int3 b = clamp((int3)floor((o + d * (t + 1e-3)) / BRICK), 0, bdims - 1);
+    float3 nextB = ((b + up) * BRICK - o) * inv;
+    [loop] for (int i = 0; i < 160; i++)
+    {
+        float tB = min(min(nextB.x, nextB.y), nextB.z);
+        if (_Bricks[b] != 0)
+        {
+            float tEnd = min(tB, tMax);
+            int3 v = clamp((int3)floor(o + d * (t + 1e-4)), b * BRICK, b * BRICK + BRICK - 1);
+            float3 nextV = ((v + up) - o) * inv;
+            float tv = t;
+            [loop] for (int j = 0; j < 14; j++)
+            {
+                float4 vox = _Vox[v];
+                if (vox.a > 0)
+                {
+                    float3 n = Facing(vox.a);
+                    if (dot(n, d) <= 0.05)
+                    {
+                        h.pos = _VoxMin.xyz + (o + d * tv) * _VoxMin.w;
+                        h.n = n;
+                        h.albedo = vox.rgb;
+                        h.t = tv * _VoxMin.w;
+                        return true;
+                    }
+                }
+                float tn = min(min(nextV.x, nextV.y), nextV.z);
+                if (tn >= tEnd) break;
+                if (nextV.x == tn) { v.x += stp.x; nextV.x += adv.x; }
+                else if (nextV.y == tn) { v.y += stp.y; nextV.y += adv.y; }
+                else { v.z += stp.z; nextV.z += adv.z; }
+                tv = tn;
+            }
+        }
+        if (tB >= tMax) break;
+        t = tB;
+        if (nextB.x == tB) { b.x += stp.x; nextB.x += adv.x * BRICK; }
+        else if (nextB.y == tB) { b.y += stp.y; nextB.y += adv.y * BRICK; }
+        else { b.z += stp.z; nextB.z += adv.z * BRICK; }
+        if (any(b < 0) || any(b >= bdims)) break;
+    }
+    return false;
+}
+
+[numthreads(8, 8, 8)]
+void Clear(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= (uint3)_VoxDims.xyz)) return;
+    _VoxClear[id] = 0;
+}
+
+/// Copies one brick from the still grid into the live one and marks whether it holds anything.
+void CopyBrick(uint3 b)
+{
+    uint filled = 0;
+    uint3 base = b * BRICK;
+    for (uint z = 0; z < BRICK; z++)
+        for (uint y = 0; y < BRICK; y++)
+            for (uint x = 0; x < BRICK; x++)
+            {
+                float4 v = _VoxStill[base + uint3(x, y, z)];
+                _VoxLiveOut[base + uint3(x, y, z)] = v;
+                filled |= v.a > 0 ? 1u : 0u;
+            }
+    _BricksOut[b] = filled;
+}
+
+// Something still moved or went: empty its box in the still grid and mark the bricks, so Restore copies them over.
+float4 _BoxMin, _BoxSize;        // in cells
+
+[numthreads(8, 8, 8)]
+void EraseBox(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= (uint3)_BoxSize.xyz)) return;
+    uint3 v = id + (uint3)_BoxMin.xyz;
+    _VoxClear[v] = 0;
+    _BricksOut[v / BRICK] = 2;
+}
+
+// After the still grid is redrawn: the whole live grid and every brick.
+[numthreads(4, 4, 4)]
+void Rebuild(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= (uint3)_VoxDims.xyz / BRICK)) return;
+    CopyBrick(id);
+}
+
+// Every frame: only the bricks something was drawn into (by the moving things last frame, or newly settled ones).
+[numthreads(4, 4, 4)]
+void Restore(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id >= (uint3)_VoxDims.xyz / BRICK)) return;
+    if (_BricksOut[id] < 2) return;
+    CopyBrick(id);
+}
+
+// ---- Lighting what a ray hits ----------------------------------------------------------------------------------------
+
+SamplerState sampler_point_clamp;
+SamplerState sampler_linear_clamp;
+
+// The sun's-eye map (Hidden/FruitGame/Sun Flux): the first surface the sun meets in each texel, canopy included.
+Texture2D<float4> _Flux;
+Texture2D<float4> _FluxPosition;
+Texture2D<float4> _FluxNormal;
+float4x4 _FluxMatrix;            // world -> the sun view's clip space (orthographic)
+float4 _ToSun;                   // xyz: toward the sun
+float4 _SunLight;                // rgb: sunlight (colour × intensity)
+
+/// Sunlight on a hit, as URP's diffuse would give it (albedo × light × cos), 0 where something nearer the sun covers it.
+float3 SunOn(Hit h)
+{
+    float4 c = mul(_FluxMatrix, float4(h.pos, 1));
+    float2 uv = c.xy * 0.5 + 0.5;
+    if (any(uv < 0) || any(uv > 1)) return 0;
+    if (_Flux.SampleLevel(sampler_point_clamp, uv, 0).a < 0.5) return 0;
+    float3 fp = _FluxPosition.SampleLevel(sampler_point_clamp, uv, 0).xyz;
+    // Further from the sun than the first surface it meets there: in its shadow.
+    if (dot(h.pos - fp, _ToSun.xyz) < -0.35) return 0;
+    float3 fn = _FluxNormal.SampleLevel(sampler_point_clamp, uv, 0).xyz;
+    float3 n = distance(h.pos, fp) < 0.4 && dot(fn, h.n) > 0 ? fn : h.n;
+    return h.albedo * _SunLight.rgb * saturate(dot(n, _ToSun.xyz));
+}
+
+// ---- Bounce ----------------------------------------------------------------------------------------------------------
+
+RWTexture3D<float4> _Volume;     // depth = 6 slabs of _Dims.z, one per direction (as BounceVolume.compute)
+float4 _Dims;                    // xyz: cells, w: rays per cell
+float4 _Min;                     // xyz: lowest corner, w: cell size (m)
+float4 _Shape;                   // x: reach (m), y: layers to build, w: first layer
+
+uint Hash(uint x)
+{
+    x ^= x >> 16; x *= 0x7feb352d; x ^= x >> 15; x *= 0x846ca68b; x ^= x >> 16;
+    return x;
+}
+
+float Rand(inout uint s) { s = Hash(s); return (s & 0xffffff) / 16777216.0; }
+
+/// A random rotation per cell (fixed: the same every rebuild, so the light never shimmers).
+float3x3 CellRotation(uint3 id)
+{
+    uint s = Hash(id.x * 73856093u ^ id.y * 19349663u ^ id.z * 83492791u);
+    float u1 = Rand(s), u2 = Rand(s), u3 = Rand(s);
+    float4 q = float4(sqrt(1 - u1) * sin(2 * PI * u2), sqrt(1 - u1) * cos(2 * PI * u2), sqrt(u1) * sin(2 * PI * u3), sqrt(u1) * cos(2 * PI * u3));
+    float x = q.x, y = q.y, z = q.z, w = q.w;
+    return float3x3(
+        1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w),
+        2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w),
+        2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y));
+}
+
+// Eight threads share a cell, each tracing every eighth ray, then add up: a couple of layers is only ~2000 cells, too
+// few threads to keep the GPU busy with one cell each.
+#define LANES 8
+#define CELLS_PER_GROUP 4
+groupshared float3 laneLight[CELLS_PER_GROUP * LANES][6];
+
+[numthreads(CELLS_PER_GROUP * LANES, 1, 1)]
+void Bounce(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID)
+{
+    uint lane = gtid.x % LANES, slot = gtid.x / LANES;
+    uint3 dims = (uint3)_Dims.xyz;
+    uint index = gid.x * CELLS_PER_GROUP + slot;
+    uint3 id = uint3(index % dims.x, (index / dims.x) % dims.y, index / (dims.x * dims.y) + (uint)_Shape.w);
+    bool valid = id.z < dims.z && id.z < (uint)(_Shape.w + _Shape.y);
+    float3 e[6] = { (float3)0, (float3)0, (float3)0, (float3)0, (float3)0, (float3)0 };
+    if (valid)
+    {
+        float3 x = _Min.xyz + (id + 0.5) * _Min.w;
+        float3x3 rot = CellRotation(id);
+        uint rays = (uint)_Dims.w;
+        float w = 4 * PI / rays;
+        for (uint r = lane; r < rays; r += LANES)
+        {
+            // Evenly spread directions (a Fibonacci sphere), turned by the cell's rotation.
+            float z = 1 - (2 * r + 1.0) / rays;
+            float s = sqrt(saturate(1 - z * z));
+            float phi = r * 2.39996323;
+            float3 dir = mul(rot, float3(s * cos(phi), s * sin(phi), z));
+            Hit h;
+            if (!Trace(x, dir, 0.15, _Shape.x, h)) continue;
+            // A lit diffuse surface sends albedo × light × cos / π per unit solid angle.
+            float3 E = SunOn(h) * (w / PI);
+            e[0] += E * saturate(dir.x);  e[1] += E * saturate(-dir.x);
+            e[2] += E * saturate(dir.y);  e[3] += E * saturate(-dir.y);
+            e[4] += E * saturate(dir.z);  e[5] += E * saturate(-dir.z);
+        }
+    }
+    [unroll] for (uint k = 0; k < 6; k++) laneLight[gtid.x][k] = e[k];
+    GroupMemoryBarrierWithGroupSync();
+    if (!valid || lane != 0) return;
+    [unroll] for (uint k2 = 0; k2 < 6; k2++)
+    {
+        float3 sum = 0;
+        for (uint l = 0; l < LANES; l++) sum += laneLight[gtid.x + l][k2];
+        _Volume[uint3(id.xy, id.z + k2 * dims.z)] = float4(sum, 1);
+    }
+}
+
+// ---- Reflections -----------------------------------------------------------------------------------------------------
+
+Texture2D<float> _Depth;
+Texture2D<float4> _Normals;
+RWTexture2D<half4> _ReflOut;
+float4 _ReflSize;                // xy: output size, zw: depth texture size
+float4 _RayOrigin;               // camera position
+float4 _RayX, _RayY, _RayZ;      // view ray = Z + ndc.x X + ndc.y Y (per metre of view depth)
+float4 _ZParams;                 // x: near, y: far, z: 1 = reversed depth
+float4 _ReflShape;               // x: reach (m), y: fade from (m), z: farthest surface that gets one (m), w: 1 = write positions instead (tests)
+
+// The sky's light (ambient cube from the sky probe: +x −x +y −y +z −z), the sky shadow map, the bounce grid and the
+// cool underlight, as VoxelLight.hlsl applies them.
+float4 _Ambient[6];
+Texture2D<float> _SkyMap;
+float4x4 _SkyMatrix;
+float4 _SkyOrigin, _SkyForward, _SkyParams;
+Texture3D<float4> _BounceTex;
+float4 _BounceMin, _BounceDims;
+float4 _UnderLight;
+
+float3 AmbientCube(float3 n)
+{
+    float3 n2 = n * n;
+    return n2.x * _Ambient[n.x >= 0 ? 0 : 1].rgb + n2.y * _Ambient[n.y >= 0 ? 2 : 3].rgb + n2.z * _Ambient[n.z >= 0 ? 4 : 5].rgb;
+}
+
+float SkySeen(float3 p)
+{
+    if (_SkyParams.x < 0.5) return 1;
+    float4 c = mul(_SkyMatrix, float4(p, 1));
+    float2 uv = c.xy / c.w * 0.5 + 0.5;
+    if (any(uv < 0) || any(uv > 1)) return 1;
+    float t = dot(p - _SkyOrigin.xyz, _SkyForward.xyz) * _SkyForward.w;
+    float r = _SkyParams.y * 0.5, seen = 0;
+    seen += t <= _SkyMap.SampleLevel(sampler_linear_clamp, uv + float2(r, r), 0) + _SkyParams.z;
+    seen += t <= _SkyMap.SampleLevel(sampler_linear_clamp, uv + float2(-r, r), 0) + _SkyParams.z;
+    seen += t <= _SkyMap.SampleLevel(sampler_linear_clamp, uv + float2(r, -r), 0) + _SkyParams.z;
+    seen += t <= _SkyMap.SampleLevel(sampler_linear_clamp, uv + float2(-r, -r), 0) + _SkyParams.z;
+    return lerp(_SkyParams.w, 1, seen * 0.25);
+}
+
+float3 BounceAt(float3 p, float3 n)
+{
+    if (_BounceDims.w <= 0) return 0;
+    float3 c = (p + n * 0.25 - _BounceMin.xyz) * _BounceMin.w;
+    if (any(c < 0) || any(c > _BounceDims.xyz)) return 0;
+    float D = _BounceDims.z;
+    float z = clamp(c.z, 0.5, D - 0.5);
+    float3 n2 = n * n;
+    float3 face = float3(n.x >= 0 ? 0 : 1, n.y >= 0 ? 2 : 3, n.z >= 0 ? 4 : 5);
+    float3 e = 0;
+    [unroll] for (int a = 0; a < 3; a++)
+        e += n2[a] * _BounceTex.SampleLevel(sampler_linear_clamp, float3(c.xy / _BounceDims.xy, (z + face[a] * D) / (6 * D)), 0).rgb;
+    return e * _BounceDims.w;
+}
+
+/// Sunlight on a reflected hit, up to date: a shadow ray toward the sun through the block grid (the sun's-eye map is
+/// redrawn only every couple of seconds, so a falling fruit flickered in and out of the sun with it); the map still
+/// decides what's outside the grid, the canopy above all, whose sway is slow.
+float3 SunOnTraced(Hit h)
+{
+    float ndl = saturate(dot(h.n, _ToSun.xyz));
+    if (ndl <= 0) return 0;
+    float4 c = mul(_FluxMatrix, float4(h.pos, 1));
+    float2 uv = c.xy * 0.5 + 0.5;
+    if (all(uv >= 0) && all(uv <= 1) && _Flux.SampleLevel(sampler_point_clamp, uv, 0).a > 0.5)
+    {
+        float3 fp = _FluxPosition.SampleLevel(sampler_point_clamp, uv, 0).xyz;
+        float3 g = (fp - _VoxMin.xyz) / _VoxMin.w;
+        bool outside = any(g < 0) || any(g > _VoxDims.xyz);
+        float lag = dot(h.pos - fp, _ToSun.xyz);
+        if (outside && lag < -0.35) return 0;
+        // Well under something (a crown, a crate stack): no need to trace. Only the near calls, where something that
+        // moves may have changed since the map was drawn, take the ray.
+        if (lag < -1.0) return 0;
+    }
+    Hit s;
+    if (Trace(h.pos + h.n * max(0.06, 1.5 * _VoxMin.w), _ToSun.xyz, 0.0, 6.0, s)) return 0;
+    return h.albedo * _SunLight.rgb * ndl;
+}
+
+float3 Shade(Hit h)
+{
+    float sky = SkySeen(h.pos + h.n * 0.06);
+    float3 c = SunOnTraced(h);
+    c += h.albedo * AmbientCube(h.n) * sky;
+    float fill = lerp(_SkyParams.x > 0.5 ? 0.4 : 1.0, 1.0, sky);
+    c += h.albedo * BounceAt(h.pos, h.n) * fill;
+    c += h.albedo * _UnderLight.rgb * saturate(-h.n.y * 0.45 + 0.6) * fill;
+    return c;
+}
+
+/// The surface seen through a pixel of the (half-size) reflection target: its full-size pixel, view depth and
+/// position. False where it's the sky.
+bool Surface(int2 id, out int2 px, out float eye, out float3 p)
+{
+    float2 uv = (id + 0.5) / _ReflSize.xy;
+    px = min((int2)(uv * _ReflSize.zw), (int2)_ReflSize.zw - 1);
+    float raw = _Depth.Load(int3(px, 0));
+    eye = 0; p = 0;
+    if (_ZParams.z > 0.5 ? raw <= 1e-6 : raw >= 1 - 1e-6) return false;
+    float n0 = _ZParams.x, f0 = _ZParams.y;
+    eye = _ZParams.z > 0.5 ? n0 * f0 / (n0 + raw * (f0 - n0)) : n0 * f0 / (f0 - raw * (f0 - n0));
+    float2 ndc = uv * 2 - 1;
+    p = _RayOrigin.xyz + (_RayZ.xyz + ndc.x * _RayX.xyz + ndc.y * _RayY.xyz) * eye;
+    return true;
+}
+
+[numthreads(8, 8, 1)]
+void Reflect(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_ReflSize.xy)) return;
+    int2 px; float eye; float3 p;
+    if (!Surface(id.xy, px, eye, p)) { _ReflOut[id.xy] = 0; return; }
+    if (_ReflShape.w > 0.5) { _ReflOut[id.xy] = half4(p, 1); return; } // test sessions: the rebuilt position
+    // Rays that couldn't show aren't traced: past the background blur (and the fog) the probe's reflection does.
+    float far = 1 - smoothstep(_ReflShape.z * 0.75, _ReflShape.z, eye);
+    if (far <= 0) { _ReflOut[id.xy] = 0; return; }
+    float3 n = _Normals.Load(int3(px, 0)).xyz;
+    if (dot(n, n) < 0.25) { _ReflOut[id.xy] = 0; return; }
+    n = normalize(n);
+    // Nor on rounded things built of small cubes (fruit, the pile, leaves: neighbouring faces turned different ways),
+    // where Blur would fade the reflection out anyway.
+    int2 size = (int2)_ReflSize.zw;
+    uint agree = 0;
+    [unroll] for (int k = 0; k < 4; k++)
+    {
+        int2 o = k == 0 ? int2(4, 0) : k == 1 ? int2(-4, 0) : k == 2 ? int2(0, 4) : int2(0, -4);
+        float3 qn = _Normals.Load(int3(clamp(px + o, 0, size - 1), 0)).xyz;
+        agree += dot(qn, n) > 0.9 * length(qn) ? 1u : 0u;
+    }
+    if (agree < 2) { _ReflOut[id.xy] = 0; return; }
+    float3 r = reflect(normalize(p - _RayOrigin.xyz), n);
+    Hit h;
+    if (!Trace(p + n * max(0.06, 1.5 * _VoxMin.w), r, 0.0, _ReflShape.x, h)) { _ReflOut[id.xy] = 0; return; }
+    float fade = (1 - smoothstep(_ReflShape.y, _ReflShape.x, h.t)) * far;
+    _ReflOut[id.xy] = half4(Shade(h) * fade, fade);
+}
+
+// ---- Smoothing -------------------------------------------------------------------------------------------------------
+
+// The blocks are glossy plastic, not mirrors, and the grid's 10 cm cells made sharp mirror reflections blocky: the
+// reflections are blurred (9 taps each way, Gaussian), only across the same surface (similar depth and normal), so they
+// don't bleed over edges; then blended over frames (TAA-style: the last result, moved to where that surface was, clamped
+// to the colours around it now so moving things leave no trails), so the cells a falling fruit fills, which change every
+// frame, no longer flicker.
+Texture2D<half4> _SmoothIn;
+Texture2D<half4> _History;
+RWTexture2D<half4> _SmoothOut;
+float4 _BlurStep;                // xy: one tap's step in pixels
+float4x4 _PrevViewProj;          // world -> last frame's clip space (Unity's convention)
+float4 _Temporal;                // x: share of the new frame, y: 1 = history valid, z: 1 = rows start at the top
+
+static const float BlurWeights[5] = { 0.2270, 0.1945, 0.1216, 0.0540, 0.0162 };
+
+[numthreads(8, 8, 1)]
+void Blur(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_ReflSize.xy)) return;
+    int2 px; float eye; float3 p;
+    if (!Surface(id.xy, px, eye, p)) { _SmoothOut[id.xy] = 0; return; }
+    float3 n = normalize(_Normals.Load(int3(px, 0)).xyz + 1e-5);
+    half4 sum = _SmoothIn[id.xy] * BlurWeights[0];
+    float wsum = BlurWeights[0], total = BlurWeights[0];
+    int2 size = (int2)_ReflSize.xy;
+    [unroll] for (int i = 1; i < 5; i++)
+    {
+        [unroll] for (int side = -1; side <= 1; side += 2)
+        {
+            int2 q = clamp((int2)id.xy + (int2)(_BlurStep.xy * i * side), 0, size - 1);
+            int2 qpx; float qe; float3 qp;
+            if (!Surface(q, qpx, qe, qp)) continue;
+            float3 qn = normalize(_Normals.Load(int3(qpx, 0)).xyz + 1e-5);
+            // Neighbours on the same surface: about as far and facing the same way.
+            float near = exp(-abs(qe - eye) / (0.02 * eye));
+            float w = BlurWeights[i] * near * pow(saturate(dot(n, qn)), 16);
+            sum += _SmoothIn[q] * w;
+            wsum += w;
+            total += BlurWeights[i] * near;
+        }
+    }
+    // A rounded thing built of small cubes (fruit, the pile, leaves) has neighbouring faces turned every which way: each
+    // face's mirror ray lands somewhere else, so its reflection came out as stripes that flickered as it turned. Where
+    // the faces around disagree, the traced reflection fades out and the reflection probe's soft one stays.
+    float flat = smoothstep(0.55, 0.85, wsum / total);
+    _SmoothOut[id.xy] = sum / wsum * flat;
+}
+
+[numthreads(8, 8, 1)]
+void Temporal(uint3 id : SV_DispatchThreadID)
+{
+    if (any(id.xy >= (uint2)_ReflSize.xy)) return;
+    half4 now = _SmoothIn[id.xy];
+    int2 px; float eye; float3 p;
+    if (_Temporal.y < 0.5 || !Surface(id.xy, px, eye, p)) { _SmoothOut[id.xy] = now; return; }
+    int2 size = (int2)_ReflSize.xy;
+    half4 lo = now, hi = now;
+    [unroll] for (int y = -1; y <= 1; y++)
+        [unroll] for (int x = -1; x <= 1; x++)
+        {
+            half4 c = _SmoothIn[clamp((int2)id.xy + int2(x, y), 0, size - 1)];
+            lo = min(lo, c); hi = max(hi, c);
+        }
+    float4 c = mul(_PrevViewProj, float4(p, 1));
+    float2 uv = c.xy / c.w * 0.5 + 0.5;
+    if (_Temporal.z > 0.5) uv.y = 1 - uv.y;
+    if (any(uv < 0) || any(uv > 1)) { _SmoothOut[id.xy] = now; return; }
+    half4 last = clamp(_History.SampleLevel(sampler_linear_clamp, uv, 0), lo, hi);
+    _SmoothOut[id.xy] = lerp(last, now, (half)_Temporal.x);
+}

@@ -48,6 +48,32 @@ half _BounceBlend;
 float4 _BounceVolumeMin;    // xyz: the grid's lowest corner, w: 1 / cell size
 float4 _BounceVolumeDims;   // xyz: cells, w: strength (0 = off)
 
+// Realistic look: ray traced reflections (SceneLighting.RayTracing.cs, RayTrace.compute). Traced before the scene is
+// drawn, one mirror ray per pixel through a 3D grid of the scene's blocks, then blurred along each surface and blended
+// over frames: rgb = what the ray saw, lit, times a = how much it counts (0 where it hit nothing, so the reflection
+// probe stays). Premultiplied, so it filters cleanly. _RtReflectionParams.x is 1 only while the main camera draws the scene.
+TEXTURE2D(_RtReflections);
+float4 _RtReflectionParams;
+
+// Swaps the probe's reflection for the traced one where the ray found something, through the same specular term URP
+// gives the probe (Fresnel and roughness), so it's exactly as strong as the reflection it replaces.
+half3 RayTracedReflection(InputData input, SurfaceData surface, half skyScale)
+{
+    if (_RtReflectionParams.x < 0.5) return 0;
+    half4 rt = SAMPLE_TEXTURE2D_LOD(_RtReflections, sampler_LinearClamp, input.normalizedScreenSpaceUV, 0);
+    // Only glossy surfaces take it: on rough ones (regular fruit, 0.12 of the gloss) a sharp reflection is wrong, and the
+    // probe's blurred one stays.
+    rt *= smoothstep(0.45h, 0.7h, surface.smoothness);
+    if (rt.a <= 0.001h) return 0;
+    BRDFData brdf;
+    half alpha = 1;
+    InitializeBRDFData(surface.albedo, surface.metallic, surface.specular, surface.smoothness, alpha, brdf);
+    half3 r = reflect(-input.viewDirectionWS, input.normalWS);
+    half fresnel = Pow4(1.0h - saturate(dot(input.normalWS, input.viewDirectionWS)));
+    half3 probe = GlossyEnvironmentReflection(r, input.positionWS, brdf.perceptualRoughness, 1.0h, input.normalizedScreenSpaceUV);
+    return EnvironmentBRDFSpecular(brdf, fresnel) * (rt.rgb * skyScale - probe * surface.occlusion * rt.a);
+}
+
 half3 BounceLight(float3 positionWS, float3 n)
 {
     if (_BounceVolumeDims.w <= 0) return 0;
@@ -157,6 +183,7 @@ half3 VoxelLightBalanced(half3 albedo, float3 n, float3 positionWS, half transmi
     // Debug (SceneLighting "Show sky visibility"): white = open sky, black = covered.
     if (_SkyOcclusionParams.x > 1.5) return surface.occlusion.xxx;
     half3 color = UniversalFragmentPBR(input, surface).rgb;
+    color += RayTracedReflection(input, surface, skyScale);
     if (transmission > 0.0h) color += VoxelGlow(albedo, n, positionWS, transmission, cookieStrength);
     // Sky shadows also dim the fill lights (bounce, the cool underlight), or they'd light the covered places back up;
     // less so in the distance, so the background stays clear.

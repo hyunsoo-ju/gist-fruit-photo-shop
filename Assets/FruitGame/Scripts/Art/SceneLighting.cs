@@ -19,11 +19,13 @@ namespace FruitGame
     ///    screen-space ambient occlusion, light glowing through leaves, and distance fog;
     ///  - volumetric sun beams marched through the shadow map (VolumetricLight.shader);
     ///  - post-processing: ACES tonemapping, bloom, slight depth of field, grading, and vignette (film grain was dropped: its tiled pattern showed as a grid);
-    ///  - sunlit rims on falling fruit.
+    ///  - sunlit rims on falling fruit;
+    ///  - software ray tracing through a voxel grid of the scene for reflections and the bounce light
+    ///    (SceneLighting.RayTracing.cs).
     /// The title, buttons and digits keep their classic light either way. Everything is put back for Classic.
     /// </summary>
     [DefaultExecutionOrder(-200)]
-    public class SceneLighting : MonoBehaviour, IEditPreview
+    public partial class SceneLighting : MonoBehaviour, IEditPreview
     {
         [SerializeField] GameConfig config;
         [SerializeField] Light sun;
@@ -248,6 +250,7 @@ namespace FruitGame
             using (PerfMeter.Measure(PerfMeter.Part.Lighting))
             {
                 RenderSkyOcclusion();
+                VoxelizeScene();
                 TickBounce();
                 FitBeams();
             }
@@ -342,6 +345,7 @@ namespace FruitGame
             MakeBeams();
             MakeBounce();
             MakeSkyOcclusion();
+            MakeRayTracing();
         }
 
         SoftShadowQuality classicSoftQuality = SoftShadowQuality.UsePipelineSettings;
@@ -430,6 +434,7 @@ namespace FruitGame
             if (canopy != null) canopy.SetActive(false);
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
             Shader.SetGlobalVector(SkyParams, Vector4.zero);
+            StopRayTracing();
             if (probeObject != null) probeObject.SetActive(false);
             if (volumeObject != null) volumeObject.SetActive(false);
         }
@@ -555,6 +560,7 @@ namespace FruitGame
             public Matrix4x4 matrix;   // where it was when the still map was drawn
             public bool shown;
             public bool moves;         // drawn every frame rather than into the still map
+            public VoxSurface[] surfaces; // its look in the ray tracing grid (SceneLighting.RayTracing.cs)
         }
 
         readonly List<SkyCaster> skyCasters = new List<SkyCaster>();
@@ -778,6 +784,7 @@ namespace FruitGame
             var rot = Quaternion.LookRotation(-toSun, Vector3.up);
             var view = Matrix4x4.TRS(centre + toSun * (FluxDepthRange * 0.5f), rot, new Vector3(1f, 1f, -1f)).inverse;
             var proj = Matrix4x4.Ortho(-FluxHalfSize, FluxHalfSize, -FluxHalfSize, FluxHalfSize, 0.1f, FluxDepthRange);
+            fluxMatrix = proj * view;
 
             int skip = 0;
             foreach (var l in new[] { "UI", "HUD3D", PixelRenderer.PersonLayer, PixelRenderer.CompositeLayer, "Ignore Raycast" })
@@ -857,6 +864,7 @@ namespace FruitGame
         /// <summary>Fills layers [first, first + count) of a grid from the current patch list.</summary>
         void Gather(RenderTexture volume, int first, int count)
         {
+            if (TraceBounce(volume, first, count)) return;
             if (patches == null) return;
             int k = bounceCompute.FindKernel("Gather");
             bounceCompute.SetBuffer(k, "_Patches", patches);
@@ -1075,6 +1083,7 @@ namespace FruitGame
             PhysicalUI.SetRealistic(false);
             Shader.SetGlobalFloat(PlayerRim, 0f);
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
+            FreeRayTracing();
             Free(fluxColour); Free(fluxPosition); Free(fluxNormal); Free(fluxDepth); if (bounceVolumes != null) foreach (var v in bounceVolumes) Free(v);
             Free(sunFluxMaterial); bounceVolumes = null; buildLayer = -1;
             patches?.Release(); patchCount?.Release(); patches = patchCount = null;
