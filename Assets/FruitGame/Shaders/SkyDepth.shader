@@ -8,9 +8,13 @@ Shader "Hidden/FruitGame/Sky Depth"
         Tags { "RenderPipeline" = "UniversalPipeline" }
         Pass
         {
-            ZWrite On
-            ZTest LEqual
+            // Keeps the smallest distance whatever the drawing order (the same as a depth test, nearest the sky wins), so
+            // SceneLighting can lay the cached still scenery down first and draw only what moves over it each frame.
+            ZWrite Off
+            ZTest Always
             Cull Off
+            BlendOp Min
+            Blend One One
 
             HLSLPROGRAM
             #pragma vertex vert

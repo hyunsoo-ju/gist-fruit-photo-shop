@@ -9,7 +9,7 @@ namespace FruitGame
     /// WebcamSource.Output's UVs (Docs/DESIGN.md §13). Everything stays on the GPU.
     /// Preferred: Robust Video Matting (RVM), a video matting model that carries four recurrent state tensors
     /// from frame to frame, so hair and clothing edges stay stable; runs on the whole frame and outputs a soft alpha
-    /// matte at that resolution (rounded up to RVM-friendly sizes, e.g. 1024×640), once for every new camera frame
+    /// matte at that resolution (rounded to RVM-friendly sizes, e.g. 896×512), once for every new camera frame
     /// (StepRvm). Fallback: MediaPipe Selfie Segmentation at 256×256.
     /// Three options can be switched live for comparison (M6 2.2; F7 while the F1 debug view is open): RVM ResNet-50,
     /// the lighter RVM MobileNetV3 and MediaPipe. Model costs on this computer: FruitGame > ML > Benchmark Models.
@@ -316,13 +316,16 @@ namespace FruitGame
 
         /// <summary>
         /// RVM's encoder/decoder concatenates features at 1/2 … 1/16 of the downsampled size, so each side times
-        /// the downsample ratio must be a multiple of 32. Round the input up (e.g. 540×720 at 0.5 → 576×768);
-        /// the matte is stretched back over the same frame, so UVs still line up.
+        /// the downsample ratio must be a multiple of 32 (128 px at 0.25). Round each side down when that keeps at least
+        /// 90 % of it, else up: a 960 × 540 frame goes in at 896 × 512, shrunk evenly by about 6 % (rounding up gave
+        /// 1024 × 640, stretched 7 % one way and 19 % the other, and a run took 22 % longer). The matte is stretched
+        /// back over the same frame, so UVs still line up.
         /// </summary>
         int RvmSize(int frameSide)
         {
             int unit = Mathf.Max(1, Mathf.RoundToInt(32f / downsample));
-            return Mathf.CeilToInt(frameSide / (float)unit) * unit;
+            int down = Mathf.Max(1, frameSide / unit) * unit;
+            return down >= frameSide * 0.9f ? down : Mathf.CeilToInt(frameSide / (float)unit) * unit;
         }
 
         void EnsureBuffers(int w, int h)

@@ -204,7 +204,7 @@ namespace FruitGame
             classicFogColour = RenderSettings.fogColor;
             classicFogDensity = RenderSettings.fogDensity;
             sunData = sun.GetComponent<UniversalAdditionalLightData>();
-            if (sunData != null) { classicCookieSize = sunData.lightCookieSize; classicCookieOffset = sunData.lightCookieOffset; }
+            if (sunData != null) { classicCookieSize = sunData.lightCookieSize; classicCookieOffset = sunData.lightCookieOffset; classicSoftQuality = sunData.softShadowQuality; }
             cam = Camera.main;
             if (cam != null)
             {
@@ -280,6 +280,11 @@ namespace FruitGame
             sun.intensity = sunIntensity;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = 1f;
+            // Cheaper soft-shadow filtering (0.45 ms a frame less than High, the same softness to the eye) and
+            // half-resolution SSAO (0.6 ms less; it's a faint, blurred darkening anyway). Realistic only: the classic
+            // look keeps the pipeline's own settings.
+            if (sunData != null) sunData.softShadowQuality = SoftShadowQuality.Medium;
+            SetSsaoDownsample(true);
             MakeCanopy();
 
             // Sky: lights the scene and is reflected in it.
@@ -339,6 +344,39 @@ namespace FruitGame
             MakeSkyOcclusion();
         }
 
+        SoftShadowQuality classicSoftQuality = SoftShadowQuality.UsePipelineSettings;
+        bool? classicSsaoDownsample;
+
+        /// <summary>
+        /// Switches the renderer's SSAO between full and half resolution (the URP feature's own Downsample setting, which
+        /// has no public setter), remembering the original so the classic look gets it back exactly.
+        /// </summary>
+        void SetSsaoDownsample(bool realistic)
+        {
+            var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+            if (asset == null) return;
+            const System.Reflection.BindingFlags Any = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+            var list = typeof(UniversalRenderPipelineAsset).GetField("m_RendererDataList", Any)?.GetValue(asset) as ScriptableRendererData[];
+            if (list == null) return;
+            foreach (var data in list)
+            {
+                if (data == null) continue;
+                foreach (var feature in data.rendererFeatures)
+                {
+                    if (feature == null || feature.GetType().Name != "ScreenSpaceAmbientOcclusion") continue;
+                    var settings = feature.GetType().GetField("m_Settings", Any)?.GetValue(feature);
+                    var field = settings?.GetType().GetField("Downsample", Any);
+                    if (field == null) continue;
+                    if (realistic)
+                    {
+                        classicSsaoDownsample ??= (bool)field.GetValue(settings);
+                        field.SetValue(settings, true);
+                    }
+                    else if (classicSsaoDownsample.HasValue) field.SetValue(settings, classicSsaoDownsample.Value);
+                }
+            }
+        }
+
         void Restore()
         {
             if (!captured || sun == null) return;
@@ -361,7 +399,8 @@ namespace FruitGame
             sun.shadows = classicShadows;
             sun.shadowStrength = classicShadowStrength;
             sun.cookie = null;
-            if (sunData != null) { sunData.lightCookieSize = classicCookieSize; sunData.lightCookieOffset = classicCookieOffset; }
+            if (sunData != null) { sunData.lightCookieSize = classicCookieSize; sunData.lightCookieOffset = classicCookieOffset; sunData.softShadowQuality = classicSoftQuality; }
+            SetSsaoDownsample(false);
             RenderSettings.skybox = classicSkybox;
             RenderSettings.sun = classicSun;
             RenderSettings.ambientMode = classicMode;
@@ -481,7 +520,7 @@ namespace FruitGame
         /// <summary>
         /// The sky shadow map: every scenery renderer drawn from the sky's direction (orthographic, over the play area
         /// and the orchard) with Hidden/FruitGame/Sky Depth, by a command buffer, so it doesn't depend on URP's camera
-        /// path (a URP camera rendering into a texture doesn't keep its depth). Redrawn every 2 s with the probe.
+        /// path (a URP camera rendering into a texture doesn't keep its depth). Still scenery is cached; see RenderSkyOcclusion.
         /// </summary>
         void MakeSkyOcclusion()
         {
@@ -493,6 +532,8 @@ namespace FruitGame
                     name = "Sky Shadow Depth", hideFlags = HideFlags.DontSave, filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp,
                 };
                 skyDepth.Create();
+                skyStatic = new RenderTexture(skyDepth.descriptor) { name = "Sky Shadow Depth (still)", hideFlags = HideFlags.DontSave, filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Clamp };
+                skyStatic.Create();
                 skyDepthMaterial = new Material(skyDepthShader) { name = "Sky Depth", hideFlags = HideFlags.DontSave };
             }
             var rot = Quaternion.Euler(skyAngles.x, skyAngles.y, 0f);
@@ -507,7 +548,23 @@ namespace FruitGame
         // What the sky map draws, gathered every 2 s (the pile grows); the map itself is redrawn every frame from it, so
         // anything that moves (fruit, swaying plants) moves its sky shadow smoothly. Redrawn only every 2 s, the
         // shadows on the greenery jumped at each redraw.
-        readonly List<(Renderer renderer, int submeshes)> skyCasters = new List<(Renderer, int)>();
+        sealed class SkyCaster
+        {
+            public Renderer renderer;
+            public int submeshes;
+            public Matrix4x4 matrix;   // where it was when the still map was drawn
+            public bool shown;
+            public bool moves;         // drawn every frame rather than into the still map
+        }
+
+        readonly List<SkyCaster> skyCasters = new List<SkyCaster>();
+        /// <summary>Renderers seen moving: from then on they're drawn every frame instead of into the still map.</summary>
+        readonly HashSet<Renderer> skyMovers = new HashSet<Renderer>();
+        /// <summary>The still scenery's part of the sky map, redrawn only when something in it changes.</summary>
+        RenderTexture skyStatic;
+        bool skyStaticDirty = true;
+
+        static bool Shown(Renderer r) => r != null && r.enabled && r.gameObject.activeInHierarchy;
 
         void GatherSkyCasters()
         {
@@ -531,8 +588,13 @@ namespace FruitGame
                 if (!(r is MeshRenderer) || r.shadowCastingMode == ShadowCastingMode.ShadowsOnly) continue;
                 var mf = r.GetComponent<MeshFilter>();
                 if (mf == null || mf.sharedMesh == null) continue;
-                skyCasters.Add((r, mf.sharedMesh.subMeshCount));
+                skyCasters.Add(new SkyCaster
+                {
+                    renderer = r, submeshes = mf.sharedMesh.subMeshCount, matrix = r.localToWorldMatrix,
+                    shown = Shown(r), moves = skyMovers.Contains(r),
+                });
             }
+            skyStaticDirty = true;
         }
 
         CommandBuffer skyBuffer;
@@ -543,15 +605,44 @@ namespace FruitGame
             if (skyCasters.Count == 0) GatherSkyCasters();
             Shader.SetGlobalVector(SkyOriginId, skyOrigin);
             Shader.SetGlobalVector(SkyForwardId, new Vector4(skyForward.x, skyForward.y, skyForward.z, 1f / SkyDepthRange));
+            // Of the ~600 things in the map, ~350 never move but hold nearly all of its 1.6 million vertices; redrawing
+            // them all every frame cost about 1.1 ms. So the still ones go into a cached map, redrawn only when one of them
+            // moves (it then joins the moving ones), appears or disappears, and when the list is gathered again (every 2 s);
+            // each frame the cache is copied in and only the moving ones are drawn over it.
+            foreach (var c in skyCasters)
+            {
+                if (c.moves) continue;
+                bool shown = Shown(c.renderer);
+                if (shown != c.shown) { c.shown = shown; skyStaticDirty = true; }
+                if (shown && c.renderer.localToWorldMatrix != c.matrix)
+                {
+                    c.moves = true;
+                    skyMovers.Add(c.renderer);
+                    skyStaticDirty = true;
+                }
+            }
             var cb = skyBuffer ??= new CommandBuffer { name = "Sky Shadow Map" };
             cb.Clear();
-            cb.SetRenderTarget(skyDepth);
-            cb.ClearRenderTarget(true, true, Color.white); // 1 = nothing in the way
-            cb.SetViewProjectionMatrices(skyView, skyProj);
-            foreach (var (r, subs) in skyCasters)
+            if (skyStaticDirty)
             {
-                if (r == null || !r.enabled || !r.gameObject.activeInHierarchy) continue;
-                for (int s = 0; s < subs; s++) cb.DrawRenderer(r, skyDepthMaterial, s, 0);
+                cb.SetRenderTarget(skyStatic);
+                cb.ClearRenderTarget(false, true, Color.white); // 1 = nothing in the way
+                cb.SetViewProjectionMatrices(skyView, skyProj);
+                foreach (var c in skyCasters)
+                {
+                    if (c.moves || !c.shown || c.renderer == null) continue;
+                    c.matrix = c.renderer.localToWorldMatrix;
+                    for (int s = 0; s < c.submeshes; s++) cb.DrawRenderer(c.renderer, skyDepthMaterial, s, 0);
+                }
+                skyStaticDirty = false;
+            }
+            cb.CopyTexture(skyStatic, skyDepth);
+            cb.SetRenderTarget(skyDepth);
+            cb.SetViewProjectionMatrices(skyView, skyProj);
+            foreach (var c in skyCasters)
+            {
+                if (!c.moves || !Shown(c.renderer)) continue;
+                for (int s = 0; s < c.submeshes; s++) cb.DrawRenderer(c.renderer, skyDepthMaterial, s, 0);
             }
             Graphics.ExecuteCommandBuffer(cb);
             Shader.SetGlobalTexture(SkyMap, skyDepth);
@@ -988,9 +1079,9 @@ namespace FruitGame
             Free(sunFluxMaterial); bounceVolumes = null; buildLayer = -1;
             patches?.Release(); patchCount?.Release(); patches = patchCount = null;
             fluxColour = fluxPosition = fluxNormal = fluxDepth = null; sunFluxMaterial = null;
-            skyBuffer?.Release(); skyBuffer = null; skyCasters.Clear();
-            Free(skyDepth); Free(skyDepthMaterial);
-            skyDepth = null; skyDepthMaterial = null;
+            skyBuffer?.Release(); skyBuffer = null; skyCasters.Clear(); skyMovers.Clear(); skyStaticDirty = true;
+            Free(skyDepth); Free(skyStatic); Free(skyDepthMaterial);
+            skyDepth = null; skyStatic = null; skyDepthMaterial = null;
             Shader.SetGlobalVector(SkyParams, Vector4.zero);
             Free(beams); Free(beamsMaterial); Free(skybox); Free(probeObject); Free(volumeObject); Free(profile);
             Free(canopy); Free(canopyMaterial);
