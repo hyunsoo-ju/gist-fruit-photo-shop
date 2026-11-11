@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: My project
+  companyName: GIST
+  productName: GIST Fruit Photo Shop
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -113,7 +113,7 @@ PlayerSettings:
   xboxEnableFitness: 0
   visibleInBackground: 1
   allowFullscreenSwitch: 1
-  fullscreenMode: 3
+  fullscreenMode: 1
   xboxSpeechDB: 0
   xboxEnableHeadOrientation: 0
   xboxEnableGuest: 0
@@ -171,7 +171,7 @@ PlayerSettings:
   androidMinAspectRatio: 1
   applicationIdentifier:
     Android: com.UnityTechnologies.com.unity.template.urpblank
-    Standalone: com.Unity-Technologies.com.unity.template.urp-blank
+    Standalone: kr.ac.gist.fruitphotoshop
     iPhone: com.Unity-Technologies.com.unity.template.urp-blank
     tvOS: com.Unity-Technologies.com.unity.template.urp-blank
   buildNumber:
@@ -535,7 +535,7 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: 
+  cameraUsageDescription: "\uCE74\uBA54\uB77C\uB85C \uAC8C\uC784 \uD654\uBA74\uACFC \uB124\uCEF7 \uC0AC\uC9C4\uC744 \uB9CC\uB4E4\uC5B4\uC694. \uC601\uC0C1\uC740 \uC774 \uCEF4\uD4E8\uD130 \uBC16\uC73C\uB85C \uB098\uAC00\uC9C0 \uC54A\uC544\uC694. (The camera makes the game and the photos; video never leaves this computer.)"
   locationUsageDescription: 
   microphoneUsageDescription: 
   bluetoothUsageDescription: 

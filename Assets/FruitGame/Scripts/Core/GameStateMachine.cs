@@ -389,7 +389,8 @@ namespace FruitGame
         void Update()
         {
             var kb = Keyboard.current;
-            if (kb != null)
+            // In standby (or loading in or out of it) the guest screen is covered: guests' keys do nothing.
+            if (kb != null && !Standby.Active)
             {
                 // While the staff panel's keys are on (F1), keys are the panel's, except P to pause.
                 bool staff = StaffPanel.KeysActive || StaffPanel.HandledFrame == Time.frameCount;

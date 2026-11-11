@@ -241,6 +241,8 @@ namespace FruitGame
         [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
         [Tooltip("Classic: the pixel-art look. Realistic: full-resolution, physically based glossy blocks, a low sun from behind, sky lighting and reflections, volumetric beams, fog and cinematic post-processing (SceneLighting). Staff panel: Display.")]
         public LightingStyle lightingStyle = LightingStyle.Classic;
+        [Tooltip("Realistic look: ray traced reflections and bounce light (software, through a voxel grid of the scene; about 1.7 ms a frame and 215 MB of graphics memory). Off: the reflection probe and the summed bounce. Staff panel: Display.")]
+        public bool rayTracing = true;
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]
         public float fruitBlockSize = 0.044f;
         [Tooltip("Block size in metres for the play layers: basket, foreground trees and plants.")]
@@ -283,6 +285,8 @@ namespace FruitGame
         [Tooltip("Auto: the guest screen on the main display and the staff screen on a second one when it's connected. " +
                  "In the Editor, Auto uses two when a Game view is set to Display 2.")]
         public ScreenMode screens = ScreenMode.Auto;
+        [Tooltip("Two screens, builds: the staff screen goes on the computer's main display (the one with the menu bar) and the guest screen on the other, so the touch display needn't be made the main display. Off: the guest screen on the main display. Staff panel: Display (after restart).")]
+        public bool staffOnMainDisplay = true;
         [Tooltip("Staff screen mirror refreshes per second (a copy of the guest screen).")]
         public float staffMirrorRate = 30f;
 

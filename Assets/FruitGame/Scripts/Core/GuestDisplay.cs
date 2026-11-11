@@ -10,6 +10,17 @@ namespace FruitGame
     /// </summary>
     public static class GuestDisplay
     {
+        /// <summary>
+        /// Which of Unity's displays the guest screen is drawn on: 0, the main window (the computer's main display), or,
+        /// in a two-screen build with the staff screen on the main display (GameConfig.staffOnMainDisplay), 1. Set by
+        /// StaffScreen before anything else builds its view. The staff screen is on the other one.
+        /// </summary>
+        public static int Index { get; set; }
+        public static int StaffIndex => Index == 0 ? 1 : 0;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlay() => Index = 0;
+
         public static int Width => Size.x;
         public static int Height => Size.y;
 
@@ -24,6 +35,9 @@ namespace FruitGame
                 // guest size rather than taking the staff view's shape.
                 if (lastEditorSize.x > 0) return lastEditorSize;
 #endif
+                // On a second display, its own size (Screen is always the main window).
+                if (Index > 0 && Index < Display.displays.Length)
+                    return new Vector2Int(Display.displays[Index].renderingWidth, Display.displays[Index].renderingHeight);
                 return new Vector2Int(Screen.width, Screen.height);
             }
         }

@@ -282,7 +282,7 @@ namespace FruitGame
         {
             if (!Active) return;
             var kb = Keyboard.current;
-            if (kb == null || StaffPanel.KeysActive) return;
+            if (kb == null || StaffPanel.KeysActive || Standby.Active) return;
             if (kb.leftArrowKey.wasPressedThisFrame) { highlighted = Mathf.Max(0, highlighted - 1); Refresh(); }
             if (kb.rightArrowKey.wasPressedThisFrame) { highlighted = Mathf.Min(cards.Count - 1, highlighted + 1); Refresh(); }
             if (kb.escapeKey.wasPressedThisFrame) { StaffPanel.Consume(); Back(); }

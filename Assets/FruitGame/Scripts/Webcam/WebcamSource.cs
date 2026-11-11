@@ -33,6 +33,27 @@ namespace FruitGame
         /// <summary>Counts the camera frames copied into Output: a change means a new picture.</summary>
         public int FrameCount { get; private set; }
         public string Status { get; private set; } = "Starting";
+        /// <summary>
+        /// Turned off from the staff panel (Camera page): the camera is closed and Output shows a plain, slowly changing
+        /// colour instead (the one camera-off test sessions use), so the backdrop has something calm behind the scene.
+        /// No frames count as new, so tracking and background removal rest, and the basket follows the mouse or keys.
+        /// </summary>
+        public bool Off { get; private set; }
+        /// <summary>Closed for standby (Standby): like Off, but staff's own Camera setting is left as it was.</summary>
+        public bool Suspended { get; private set; }
+        /// <summary>No camera frames are coming on purpose (turned off, or standby).</summary>
+        public bool Idle => Off || Suspended;
+
+        /// <summary>Closes the camera while the booth is in standby, and opens it again after (unless staff turned it off).</summary>
+        public void Suspend(bool suspend)
+        {
+            if (suspend == Suspended) return;
+            Suspended = suspend;
+            if (Off) return;
+            CloseCamera();
+            if (suspend) Status = "Paused (standby)";
+            else { Status = "Starting"; StartCoroutine(Open()); }
+        }
 
         WebCamTexture cam;
         float startedAt;
@@ -52,6 +73,33 @@ namespace FruitGame
             if (string.IsNullOrEmpty(deviceName)) PlayerPrefs.DeleteKey(ChoiceKey);
             else PlayerPrefs.SetString(ChoiceKey, deviceName);
             PlayerPrefs.Save();
+            Off = false;
+            CloseCamera();
+            Status = "Switching camera";
+            StartCoroutine(Open());
+        }
+
+        /// <summary>Turns the camera off (a plain background instead) or back on.</summary>
+        public void SetOff(bool off)
+        {
+            if (off == Off) return;
+            Off = off;
+            CloseCamera();
+            if (!off && Suspended) { Status = "Paused (standby)"; return; }
+            if (off)
+            {
+                Status = "Camera off (staff panel)";
+                Debug.Log("[FruitGame] Webcam: turned off from the staff panel");
+            }
+            else
+            {
+                Status = "Starting";
+                StartCoroutine(Open());
+            }
+        }
+
+        void CloseCamera()
+        {
             StopAllCoroutines();
             if (cam != null)
             {
@@ -61,11 +109,14 @@ namespace FruitGame
             }
             HasFrames = false;
             Failed = false;
-            Status = "Switching camera";
-            StartCoroutine(Open());
         }
 
-        void OnEnable() => StartCoroutine(Open());
+        void OnEnable()
+        {
+            // `-nocamera` on the command line: start with the camera off (for trying a build without opening the camera).
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-nocamera") >= 0 && !Off) { Off = true; Status = "Camera off (-nocamera)"; }
+            StartCoroutine(Open());
+        }
 
         void OnDisable()
         {
@@ -102,6 +153,7 @@ namespace FruitGame
 
         IEnumerator Open()
         {
+            if (Off || Suspended) yield break;
             if (TestMode.TestFrames)
             {
                 DeviceName = "Test frames";
@@ -163,6 +215,8 @@ namespace FruitGame
 
         void Update()
         {
+            if (Off) { Wash(30f); return; }
+            if (Suspended) return;
             if (TestMode.TestFrames) { TestFrame(); return; }
             if (cam == null || Failed) return;
 
@@ -200,16 +254,26 @@ namespace FruitGame
         /// <summary>Test mode: a 1920 × 1080 camera at 60 fps showing a slowly moving pattern (no camera image).</summary>
         void TestFrame()
         {
-            if (Time.unscaledTime < nextTestFrame) return;
-            nextTestFrame = Mathf.Max(nextTestFrame + 1f / 60f, Time.unscaledTime - 0.05f);
+            if (!Wash(60f)) return;
+            if (!HasFrames) { HasFrames = true; Status = "Live: test frames 1920×1080"; }
+            FrameCount++;
+        }
+
+        /// <summary>
+        /// Fills Output with one plain colour that drifts slowly between soft rose, lilac and sand, at most `rate`
+        /// times a second (the camera's 16:9 shape). False when it isn't time for a new one yet.
+        /// </summary>
+        bool Wash(float rate)
+        {
+            if (Time.unscaledTime < nextTestFrame && Output != null) return false;
+            nextTestFrame = Mathf.Max(nextTestFrame + 1f / rate, Time.unscaledTime - 0.05f);
             MakeOutput(1920, 1080);
             float t = Time.unscaledTime * 0.2f;
             var prev = RenderTexture.active;
             RenderTexture.active = Output;
             GL.Clear(false, true, new Color(0.5f + 0.3f * Mathf.Sin(t), 0.45f, 0.5f + 0.3f * Mathf.Cos(t)));
             RenderTexture.active = prev;
-            if (!HasFrames) { HasFrames = true; Status = "Live: test frames 1920×1080"; }
-            FrameCount++;
+            return true;
         }
 
         void Fail(string reason)

@@ -82,11 +82,13 @@ namespace FruitGame
             }
             displayMaterial.SetVector(MainTexStId, new Vector4(1f, 1f, 0f, 0f));
             displayMaterial.SetFloat(EdgeFadeId, CameraFrame.EdgeFade);
-            bool live = source != null && source.HasFrames && source.Output != null;
+            // With the camera off from the staff panel, the plain colour it shows instead (no player to mask out).
+            bool off = source != null && source.Off;
+            bool live = source != null && (source.HasFrames || off) && source.Output != null;
             displayMaterial.SetFloat(LiveId, live ? 1f : 0f);
             if (!live) return;
 
-            Show(source.Output, segmenter != null && segmenter.HasMask ? segmenter.Mask : null);
+            Show(source.Output, !off && segmenter != null && segmenter.HasMask ? segmenter.Mask : null);
         }
 
         /// <summary>

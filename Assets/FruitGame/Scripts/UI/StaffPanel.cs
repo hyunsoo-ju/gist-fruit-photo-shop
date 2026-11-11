@@ -144,8 +144,10 @@ namespace FruitGame
             F("orientation", () => (int)config.orientation, v => config.orientation = (OrientationSetting)(int)v);
             F("language", () => (int)config.language, v => config.language = (Language)(int)v);
             F("lightingStyle", () => (int)config.lightingStyle, v => config.lightingStyle = (LightingStyle)(int)v);
+            F("rayTracing", () => config.rayTracing ? 1 : 0, v => config.rayTracing = v > 0.5f);
             F("staffLanguage", () => (int)config.staffLanguage, v => config.staffLanguage = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
+            F("staffOnMainDisplay", () => config.staffOnMainDisplay ? 1 : 0, v => config.staffOnMainDisplay = v > 0.5f);
             F("printCopies", () => config.printCopies, v => config.printCopies = Mathf.RoundToInt(v));
             F("skinSmoothing", () => config.skinSmoothing, v => config.skinSmoothing = v);
             F("skinSmoothWidth", () => config.skinSmoothWidth, v => config.skinSmoothWidth = v);
@@ -287,6 +289,9 @@ namespace FruitGame
             pages.Add(("Camera", new List<Row>
             {
                 Action("Change camera", "C", () => source != null ? source.DeviceName ?? T("none") : T("none"), () => CameraMenu.Toggle()),
+                // Not saved: the booth always starts with the camera on.
+                Action("Camera", null, () => source == null ? T("none") : source.Off ? T("Off (plain background)") : T("On"),
+                    () => source?.SetOff(!source.Off)),
                 Setting("Mirror the camera", () => OnOff(config.mirrorCamera), d => config.mirrorCamera = d > 0),
                 Setting("Background removal", () => ModelName(PersonSegmenter.Preferred),
                     d => PersonSegmenter.Preferred = (PersonSegmenter.Option)Mathf.Clamp((int)PersonSegmenter.Preferred + d, 0, 2)),
@@ -305,8 +310,11 @@ namespace FruitGame
                     d => config.staffLanguage = d < 0 ? Language.Korean : Language.English),
                 Setting("Lighting", () => T(config.lightingStyle.ToString()),
                     d => config.lightingStyle = d < 0 ? LightingStyle.Classic : LightingStyle.Realistic),
+                Setting("Ray tracing (Realistic)", () => OnOff(config.rayTracing), d => config.rayTracing = d > 0),
                 Setting("Screens (after restart)", () => T(config.screens.ToString()),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
+                Setting("Main display shows (after restart)", () => T(config.staffOnMainDisplay ? "Staff screen" : "Guest screen"),
+                    d => config.staffOnMainDisplay = !config.staffOnMainDisplay),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),
             }, null));
             pages.Add(("Printing", new List<Row>
@@ -430,13 +438,25 @@ namespace FruitGame
                 pages[p] = (name, rows, pageRect);
             }
 
-            // Footer: reset (two clicks).
+            // Footer: standby (opens or closes the booth) and reset (two clicks), side by side.
+            var standby = Panel("Standby", column, StandbyColour(true), true);
+            standby.anchorMin = new Vector2(0f, 0f); standby.anchorMax = new Vector2(0.5f, 0f); standby.pivot = new Vector2(0f, 0f);
+            standby.anchoredPosition = new Vector2(16f, 14f); standby.sizeDelta = new Vector2(-22f, 44f);
+            standbyLabel = Text("Label", standby, 16f);
+            standbyLabel.alignment = TextAlignmentOptions.Center;
+            Fill(standbyLabel.rectTransform);
+            standbyLabel.enableAutoSizing = true; standbyLabel.fontSizeMin = 11f; standbyLabel.fontSizeMax = 16f;
+            standbyImage = standby.GetComponent<Image>();
+            standby.gameObject.AddComponent<Button>().onClick.AddListener(() => FruitGame.Standby.Set(!FruitGame.Standby.On));
+
             var reset = Panel("Reset", column, new Color(0.45f, 0.2f, 0.22f, 1f), true);
-            reset.anchorMin = new Vector2(0f, 0f); reset.anchorMax = new Vector2(1f, 0f); reset.pivot = new Vector2(0.5f, 0f);
-            reset.anchoredPosition = new Vector2(0f, 14f); reset.sizeDelta = new Vector2(-32f, 44f);
+            reset.anchorMin = new Vector2(0.5f, 0f); reset.anchorMax = new Vector2(1f, 0f); reset.pivot = new Vector2(1f, 0f);
+            reset.anchoredPosition = new Vector2(-16f, 14f); reset.sizeDelta = new Vector2(-22f, 44f);
             var resetLabel = Text("Label", reset, 16f);
             resetLabel.alignment = TextAlignmentOptions.Center;
             Fill(resetLabel.rectTransform);
+            // Half the width now: long labels ("Click again to reset every setting") shrink rather than overflow.
+            resetLabel.enableAutoSizing = true; resetLabel.fontSizeMin = 11f; resetLabel.fontSizeMax = 16f;
             reset.gameObject.AddComponent<Button>().onClick.AddListener(() =>
             {
                 if (resetArmed) { ResetToDefaults(); resetArmed = false; }
@@ -450,7 +470,11 @@ namespace FruitGame
             SetShown(Open);
         }
 
-        TMP_Text resetRow;
+        TMP_Text resetRow, standbyLabel;
+        Image standbyImage;
+
+        /// <summary>Green while the booth is closed (press to open), slate while it's open.</summary>
+        static Color StandbyColour(bool closed) => closed ? new Color(0.2f, 0.45f, 0.3f, 1f) : new Color(0.27f, 0.31f, 0.4f, 1f);
         TMP_Text statusHeading;
         readonly List<TMP_Text> tabLabels = new List<TMP_Text>();
         const float RowStep = 50f;
@@ -579,7 +603,6 @@ namespace FruitGame
             if (KeysActive && kb != null && !CameraMenu.IsOpen) HandleKeys(kb);
             if (resetArmed && Time.unscaledTime > resetArmedUntil) resetArmed = false;
             if (bestArmed && Time.unscaledTime > bestArmedUntil) bestArmed = false;
-            CountFps();
             if (Open) Refresh();
         }
 
@@ -658,29 +681,21 @@ namespace FruitGame
             return false;
         }
 
-        float fpsFrames, fpsTime, fps;
-
-        /// <summary>Frames per second over the last half second, shown in the header.</summary>
-        void CountFps()
-        {
-            fpsFrames++;
-            fpsTime += Time.unscaledDeltaTime;
-            if (fpsTime < 0.5f) return;
-            fps = fpsFrames / fpsTime;
-            fpsFrames = fpsTime = 0f;
-        }
 
         void Refresh()
         {
             header.text = twoScreens
                 ? (KeysActive ? $"{T("Staff panel")} · <color=#7CFC9A>{T("keys on")}</color>  ({T("` or F1 or Esc: off")})" : $"{T("Staff panel")} · {T("keys off")}  ({T("` or F1: on")})")
                 : $"{T("Staff panel")}  ({T("` or F1 or Esc: close")})";
-            // Frame rate on the right of the header: green at 55+, yellow at 30+, red below.
-            string fpsColour = fps >= 55f ? "#7CFC9A" : fps >= 30f ? "#FFC857" : "#FF7A6E";
-            header.text += $"<pos=86%><color={fpsColour}>{fps:0} fps</color>";
             if (printerLine != null && printer != null)
                 printerLine.text = (printer.HasProblem ? "<color=#FF7A6E>" : "") + T("Printer: ") + printer.Summary;
             if (resetRow != null) resetRow.text = T(resetArmed ? "Click again to reset every setting" : "Reset settings to defaults");
+            if (standbyLabel != null)
+            {
+                bool closed = FruitGame.Standby.On;
+                standbyLabel.text = T(FruitGame.Standby.Busy ? (closed ? "Closing..." : "Opening...") : closed ? "Standby: open the booth" : "Standby");
+                standbyImage.color = StandbyColour(closed);
+            }
             if (statusHeading != null) statusHeading.text = T("Status");
             for (int i = 0; i < tabLabels.Count && i < pages.Count; i++) tabLabels[i].text = $"{i + 1} {T(pages[i].name)}";
 

@@ -38,7 +38,7 @@ Written so the booth can be run from this section alone when the project lead is
 | USB numpad (optional) | Controls for voice-assist visitors | USB. Without one, the number row on the laptop keyboard does the same |
 | Internet | Getting the photo on a phone | The laptop needs internet (venue Wi-Fi, or a phone's hotspot). Visitors open the link on their own mobile data, so they don't join any Wi-Fi. Needs `cloudflared` on the laptop ([First-time setup](#first-time-setup) step 4) |
 
-**Display arrangement (macOS):** in System Settings ▸ Displays ▸ Arrange, drag the white menu bar **onto the touch display** to make it the main display. The guest screen then appears on the touch display and the staff screen on the laptop. With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
+**Display arrangement (macOS):** leave the laptop as the main display (the one with the menu bar). The staff screen appears on the laptop and the guest screen on the touch display. (To have the guest screen on the main display instead: staff panel ▸ Display ▸ **Main display shows** ▸ Guest screen, then restart the app.) With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
 
 ### Starting up
 
@@ -60,7 +60,9 @@ Written so the booth can be run from this section alone when the project lead is
 
 ### Before opening
 
-- [ ] The guest screen shows the block-built title and the **Play** button.
+The app starts in **standby**: the guest screen says the booth isn't open yet ("잠시 쉬고 있어요"). Do the checks below on the staff screen, then press **Standby: open the booth** at the bottom of the staff panel; after a short loading screen the title appears. Press it again (**Standby**) for breaks: the camera and the heavy processing rest while it's up.
+
+- [ ] After opening, the guest screen shows the block-built title and the **Play** button.
 - [ ] Standing in front of the camera puts a face box on the staff screen's mirror, and the background behind the person is cleanly removed. If it's the wrong camera, choose one with **C** in the panel.
 - [ ] The printer is on, with paper and ink, and the `Printer:` line in the staff panel's status card shows no problem.
 - [ ] The headphones play sound (press **Voice assist** on the title to check, then press it again to turn it off).
@@ -122,27 +124,29 @@ Turn the staff panel's keys on with **`** (the key left of 1) or **F1** (on a Ma
 
 **Game keys** (panel keys off): **Space/Enter** start or resume, **Esc/P** pause, **C** calibrate, **A** voice assist (title).
 
-The panel's settings (starting mode, assist, sensitivity, calibration, round length, camera mirroring, background removal model, orientation, language, screens, copies, printer) are saved on the laptop and kept for next time; the reset button at the bottom of the panel puts them back.
+The panel's settings (starting mode, assist, sensitivity, calibration, round length, camera mirroring, background removal model, look and ray tracing, orientation, language, screens, copies, printer) are saved on the laptop and kept for next time; the reset button at the bottom of the panel puts them back.
 
 ### Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| No camera picture / the wrong camera | Turn the panel keys on and choose the camera with **C**. On macOS, allow the app (or Unity) in System Settings ▸ Privacy & Security ▸ Camera. |
+| No camera picture / the wrong camera | Check the panel's Camera page: if **Camera** says Off, press it to turn it back on. Otherwise turn the panel keys on and choose the camera with **C**. On macOS, allow the app (or Unity) in System Settings ▸ Privacy & Security ▸ Camera. |
 | It can't find the face and keeps pausing | Check there's enough light on the face and they're not too far or too close. Ask them to take off a hat or mask covering the face. |
 | The basket is too twitchy or too sluggish | Start again from the **title** so they calibrate afresh. If it persists, adjust the sensitivity on the panel's Gameplay page. |
 | The background behind the person isn't removed | Try another background removal model on the panel's Camera page. |
 | Nothing prints | Check the printer's power, the USB-C cable, paper and ink. Choose the printer on the panel's Printing page. Meanwhile, offer the phone download. |
 | The QR link won't open on a phone | Look at staff panel ▸ Printing ▸ **Phone link**. If it's red, the laptop has no internet or `cloudflared` is missing: connect the laptop to the internet (a phone's hotspot works); the link comes back by itself within a minute. Meanwhile links use the local Wi-Fi, so phones must be on the laptop's Wi-Fi. If **Phone link** says `Local Wi-Fi`, that was chosen on purpose: phones join the laptop's Wi-Fi. |
 | The panel's letter keys don't respond | Press **`** (or fn+F1) first to turn the panel keys on; its header changes to "keys on". In the Editor, click a Game view once first. |
-| The guest and staff screens are swapped | Make the touch display the main display (Displays ▸ Arrange) and restart the app. |
+| The guest and staff screens are swapped | Staff panel ▸ Display ▸ **Main display shows**: pick the other screen and restart the app (or check which display has the menu bar in Displays ▸ Arrange). |
 | The guest screen is black | Press **F5** once (the blank-screen test is on). |
 | No sound | Check the headphones and the macOS sound output. In voice assist, press **Louder** or **8** on the keypad. |
+| The game stutters in the Realistic look | Turn **Ray tracing** off on the panel's Display page (or switch the look to Classic). |
+| The camera has to stay off (privacy, a broken camera) | Panel ▸ Camera page ▸ **Camera**: Off. A plain soft colour shows behind the scene and the basket follows the mouse or arrow keys. It's on again after a restart. |
 | The screen is stuck or behaving oddly | Pause (Esc) ▸ **Main menu**. Failing that, quit and restart the app (or Play); settings are kept. |
 
 ### Closing
 
-1. Quit the app from the title (**⌘Q**; in the Editor, press ▶ again).
+1. Put the booth in **Standby** (staff panel, bottom left), then quit the app (**⌘Q**; in the Editor, press ▶ again).
 2. Turn the printer off and take out any paper left.
 3. Photos stay only on the laptop and are deleted after 14 days. To delete them now, empty the `Pictures/FruitGame` folder.
 
@@ -231,6 +235,8 @@ The folder's `README (English).md` has the details and troubleshooting. If you o
 **Check it worked:** fruit, trees and the crates at the sides are all made of blocks, and standing in front of the camera removes the background behind you. If fruit look like grey balls, do step 3 again.
 
 **For phone links:** the booth laptop also needs Cloudflare's `cloudflared`, which gives each photo an internet link so phones can open it without joining the venue Wi-Fi. On a Mac, in Terminal: `brew install cloudflared` (Homebrew: [brew.sh](https://brew.sh)). On Windows: `winget install --id Cloudflare.cloudflared`. No Cloudflare account is needed. Photos pass through Cloudflare on their way to the phone. Without it, phone links fall back to the local Wi-Fi.
+
+**For the performance meter (optional):** the staff screen's meter shows the CPU and GPU temperatures and GPU load through macmon, which reads them without administrator rights. On a Mac, in Terminal: `brew install macmon`. Without it the meter still works, without temperatures.
 
 ### Getting updates
 

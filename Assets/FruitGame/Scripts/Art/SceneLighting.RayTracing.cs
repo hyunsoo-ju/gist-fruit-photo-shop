@@ -74,11 +74,21 @@ namespace FruitGame
         static readonly Vector3[] CubeDirections = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
         readonly int[] kernels = new int[3];
 
-        bool RayTracingOn => rayTracing && !RayTracingPaused && voxLive != null && SystemInfo.supportsComputeShaders;
+        bool RayTracingWanted => rayTracing && (config == null || config.rayTracing) && SystemInfo.supportsComputeShaders;
+        bool RayTracingOn => RayTracingWanted && !RayTracingPaused && voxLive != null;
+
+        /// <summary>Follows the staff panel's switch (Display page): the grids are freed while it's off (215 MB).</summary>
+        void FollowRayTracingSwitch()
+        {
+            bool want = RayTracingWanted;
+            if (want == (voxLive != null)) return;
+            if (want) MakeRayTracing();
+            else FreeRayTracing();
+        }
 
         void MakeRayTracing()
         {
-            if (!rayTracing || !SystemInfo.supportsComputeShaders) return;
+            if (!RayTracingWanted) return;
             rtCompute ??= Resources.Load<ComputeShader>("RayTracing/RayTrace");
             var voxelize = Resources.Load<Shader>("RayTracing/Voxelize");
             if (rtCompute == null || voxelize == null) return;

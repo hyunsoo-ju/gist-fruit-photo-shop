@@ -36,7 +36,7 @@ namespace FruitGame
         /// <summary>True when the staff screen is on its own display.</summary>
         public static bool TwoScreens { get; private set; }
         /// <summary>The display staff windows (camera menu, settings) should open on.</summary>
-        public static int StaffDisplay => TwoScreens ? 1 : 0;
+        public static int StaffDisplay => TwoScreens ? GuestDisplay.StaffIndex : 0;
 
         const float RefW = 1920f, RefH = 1080f, Column = 560f, Gap = 24f;
         /// <summary>The performance meter's height, under the mirror (a 16:9 guest mirror is 724 tall, leaving this).</summary>
@@ -62,6 +62,10 @@ namespace FruitGame
                 else two = false; // asked for two, but only one is connected: fall back to one screen
             }
             TwoScreens = two;
+            // Builds: the staff screen on the main display and the guest screen on the other, unless staff chose otherwise.
+            // (The Editor keeps Display 1 for the guests: its Game views can sit on either monitor anyway.)
+            GuestDisplay.Index = two && !Application.isEditor && config.staffOnMainDisplay ? 1 : 0;
+            if (GuestDisplay.Index != 0) MoveGuestScreen(GuestDisplay.Index);
 
             Build(two);
             BuildAlert(two);
@@ -81,7 +85,7 @@ namespace FruitGame
             var canvasGo = new GameObject("Staff Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.targetDisplay = two ? 1 : 0;
+            canvas.targetDisplay = two ? GuestDisplay.StaffIndex : 0;
             canvas.sortingOrder = two ? 0 : 30000; // one screen: over the game, under the camera menu and blind cover
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -98,7 +102,7 @@ namespace FruitGame
             // A plain camera for the staff display, so it has a background (and the Editor doesn't say "no cameras").
             var bgCam = new GameObject("Staff Background Camera", typeof(Camera)).GetComponent<Camera>();
             bgCam.transform.SetParent(transform, false);
-            bgCam.targetDisplay = 1;
+            bgCam.targetDisplay = GuestDisplay.StaffIndex;
             bgCam.clearFlags = CameraClearFlags.SolidColor;
             bgCam.backgroundColor = Back;
             bgCam.cullingMask = 0;
@@ -169,6 +173,19 @@ namespace FruitGame
             if (two && printerWarning != null) printerWarning.gameObject.SetActive(false);
         }
 
+        /// <summary>
+        /// Puts everything the scene draws on the main window (the game's cameras and screen-space canvases) on `display`
+        /// instead. Runs first (StaffScreen is early), so whatever is made later copies or asks GuestDisplay.Index.
+        /// </summary>
+        static void MoveGuestScreen(int display)
+        {
+            foreach (var c in FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.targetTexture == null && c.targetDisplay == 0) c.targetDisplay = display;
+            foreach (var c in FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (c.isRootCanvas && c.renderMode == RenderMode.ScreenSpaceOverlay && c.targetDisplay == 0) c.targetDisplay = display;
+            Debug.Log($"[FruitGame] Screens: staff on the main display, guests on display {display + 1}");
+        }
+
         /// <summary>In the Editor, Auto uses two screens when a Game view is set to Display 2.</summary>
         static bool EditorHasStaffView
         {
@@ -222,6 +239,7 @@ namespace FruitGame
         void Update()
         {
             UpdateAlert();
+            LayoutStatusCard();
             if (!TwoScreens) return;
             mirrorImage.GetComponent<AspectRatioFitter>().aspectRatio = GuestAspect;
 
@@ -241,7 +259,31 @@ namespace FruitGame
 
         }
 
+        /// <summary>
+        /// The Status card: the status lines at the top, as tall as their text, and the person mask as large as the rest
+        /// of the card allows above the printer line (at the camera frame's shape), so neither runs into the other.
+        /// </summary>
+        void LayoutStatusCard()
+        {
+            if (status == null || maskPreview == null || panel == null || panel.StatusCard == null) return;
+            var card = panel.StatusCard;
+            const float Top = 52f, Bottom = 66f, Side = 20f, Between = 10f;
+            float innerW = card.rect.width - Side * 2f;
+            if (innerW <= 0f) return;
+            float textH = Mathf.Ceil(status.GetPreferredValues(status.text, innerW, 0f).y);
+            var t = status.rectTransform;
+            t.anchorMin = new Vector2(0f, 1f); t.anchorMax = Vector2.one; t.pivot = new Vector2(0.5f, 1f);
+            t.offsetMin = new Vector2(Side, -Top - textH); t.offsetMax = new Vector2(-Side, -Top);
+            float aspect = Mathf.Max(0.1f, CameraFrame.Aspect);
+            float h = Mathf.Max(0f, Mathf.Min(card.rect.height - Top - textH - Between - Bottom, innerW / aspect));
+            var m = maskPreview.rectTransform;
+            m.anchoredPosition = new Vector2(Side, Bottom);
+            m.sizeDelta = new Vector2(h * aspect, h);
+        }
+
         /// <summary>Copies the guest screen (with its UI) into the mirror a set number of times a second.</summary>
+        UnityEngine.Rendering.CommandBuffer mirrorCopy;
+
         IEnumerator Mirror()
         {
             var end = new WaitForEndOfFrame();
@@ -260,7 +302,8 @@ namespace FruitGame
                 mirrorImage.color = view != null ? Color.white : Card;
                 if (noGuestHint != null) noGuestHint.gameObject.SetActive(view == null);
 #else
-                int w = Screen.width, h = Screen.height;
+                var size = GuestDisplay.Size;
+                int w = size.x, h = size.y;
                 if (w <= 0 || h <= 0) continue;
                 if (mirror == null || mirror.width != w || mirror.height != h)
                 {
@@ -269,7 +312,15 @@ namespace FruitGame
                     mirror.Create();
                     mirrorImage.texture = mirror;
                 }
-                ScreenCapture.CaptureScreenshotIntoRenderTexture(mirror);
+                if (GuestDisplay.Index == 0) ScreenCapture.CaptureScreenshotIntoRenderTexture(mirror);
+                else
+                {
+                    // The guests are on the second display: copy its picture (the screenshot only reads the main window).
+                    mirrorCopy ??= new UnityEngine.Rendering.CommandBuffer { name = "Guest Mirror" };
+                    mirrorCopy.Clear();
+                    mirrorCopy.Blit(new UnityEngine.Rendering.RenderTargetIdentifier(Display.displays[GuestDisplay.Index].colorBuffer), mirror);
+                    Graphics.ExecuteCommandBuffer(mirrorCopy);
+                }
                 // The capture comes out upside down where the GPU's texture origin is the top.
                 mirrorImage.uvRect = SystemInfo.graphicsUVStartsAtTop ? new Rect(0f, 1f, 1f, -1f) : new Rect(0f, 0f, 1f, 1f);
 #endif

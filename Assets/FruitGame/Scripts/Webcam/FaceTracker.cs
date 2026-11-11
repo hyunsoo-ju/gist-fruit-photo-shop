@@ -100,6 +100,8 @@ namespace FruitGame
 
         void Update()
         {
+            // Camera turned off from the staff panel: no one's in front of it as far as the game is concerned.
+            if (source != null && source.Idle) { HasFace = false; return; }
             if (workers == null || inFlight >= MaxInFlight || source == null || !source.HasFrames || source.Output == null) return;
             // Nothing new to look at: the same picture would give the same faces.
             if (source.FrameCount == lastFrame) return;

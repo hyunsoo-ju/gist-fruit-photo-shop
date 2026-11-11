@@ -337,7 +337,7 @@ namespace FruitGame
         void UpdateKeys()
         {
             var kb = Keyboard.current;
-            if (kb == null) return;
+            if (kb == null || Standby.Active) return;
             // Voice assist's "press 5 when you've understood": the only way on, and it works with the staff panel's keys on.
             if (Pressed(kb, Key.Numpad5, Key.Digit5) && game.AffirmIfWaiting()) { narrator.Click(); return; }
             if (StaffPanel.KeysActive || StaffPanel.HandledFrame == Time.frameCount) return;

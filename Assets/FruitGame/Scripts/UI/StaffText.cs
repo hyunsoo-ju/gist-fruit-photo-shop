@@ -31,6 +31,10 @@ namespace FruitGame
             ["Printing"] = "인쇄",
             ["Beauty"] = "뷰티",
             ["Click again to reset every setting"] = "한 번 더 누르면 모든 설정 초기화",
+            ["Standby: open the booth"] = "대기 중: 부스 열기",
+            ["Standby"] = "대기 화면",
+            ["Opening..."] = "여는 중...",
+            ["Closing..."] = "닫는 중...",
             ["Reset settings to defaults"] = "설정을 기본값으로 초기화",
 
             // Common values
@@ -67,6 +71,7 @@ namespace FruitGame
 
             // Camera
             ["Change camera"] = "카메라 바꾸기",
+            ["Off (plain background)"] = "꺼짐(단색 배경)",
             ["Mirror the camera"] = "카메라 좌우 반전",
             ["Background removal"] = "배경 제거",
             ["Rotation"] = "회전",
@@ -80,12 +85,16 @@ namespace FruitGame
             ["Game language"] = "게임 언어",
             ["Staff panel language"] = "진행자 패널 언어",
             ["Screens (after restart)"] = "화면 수(다시 켠 뒤)",
+            ["Main display shows (after restart)"] = "주 디스플레이에 띄울 화면(다시 켠 뒤)",
+            ["Staff screen"] = "진행자 화면",
+            ["Guest screen"] = "손님 화면",
             ["One"] = "하나",
             ["Two"] = "둘",
             ["Blank the guest screen"] = "손님 화면 가리기",
             ["Lighting"] = "조명",
             ["Classic"] = "기본",
             ["Realistic"] = "사실적",
+            ["Ray tracing (Realistic)"] = "레이 트레이싱(사실적)",
 
             // Printing
             ["Copies per print"] = "한 번에 인쇄 매수",
@@ -143,6 +152,13 @@ namespace FruitGame
             ["Face"] = "얼굴",
             ["Mesh"] = "메시",
             ["spread"] = "나눠 돌림",
+            ["1% low"] = "하위 1%",
+            ["Rest of the game"] = "게임의 나머지",
+            ["Waiting for the GPU"] = "GPU 기다림",
+            ["Frame cost"] = "프레임 비용",
+            ["last minute"] = "최근 1분",
+            ["this app"] = "이 앱",
+            ["temperatures need macmon (brew install macmon)"] = "온도는 macmon 필요(brew install macmon)",
         };
     }
 }

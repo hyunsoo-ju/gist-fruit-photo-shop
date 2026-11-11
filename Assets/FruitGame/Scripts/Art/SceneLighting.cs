@@ -226,6 +226,9 @@ namespace FruitGame
         void Update()
         {
             if (sun == null) return;
+            // Standby: the guest screen is covered and its cameras are off, so the lighting rests too (a change of look
+            // made meanwhile is applied when the booth opens, behind the loading screen).
+            if (Standby.Idle) return;
             if (applied != Wanted) Apply(Wanted);
             if (applied != LightingStyle.Realistic) return;
             // Each layer of leaves sways on its own, with gusts, so the gaps between them open and close and the
@@ -250,6 +253,7 @@ namespace FruitGame
             using (PerfMeter.Measure(PerfMeter.Part.Lighting))
             {
                 RenderSkyOcclusion();
+                FollowRayTracingSwitch();
                 VoxelizeScene();
                 TickBounce();
                 FitBeams();

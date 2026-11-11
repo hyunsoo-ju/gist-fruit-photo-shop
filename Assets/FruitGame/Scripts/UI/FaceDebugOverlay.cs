@@ -54,12 +54,14 @@ namespace FruitGame
             if (!status.gameObject.activeSelf) status.gameObject.SetActive(true);
             {
                 string cam = source != null ? source.Status : "no camera";
-                string face = tracker != null ? $"{tracker.Status} · {tracker.Rate:0} det/s" : "no tracker";
+                // With two screens the rates (mattes, face finding, mesh) are on the staff screen's performance meter.
+                bool rates = !StaffScreen;
+                string face = tracker != null ? tracker.Status + (rates ? $" · {tracker.Rate:0} det/s" : "") : "no tracker";
                 string centre = tracker != null && tracker.HasFace ? $" · play u={tracker.PlayFaceCenter.x:0.000}" : "";
                 if (mesh != null && mesh.HasMesh) centre += $" · mesh u={mesh.PlayCentre.x:0.000}";
-                string seg = segmenter != null ? $"\nSegmentation: {segmenter.Status} · {segmenter.Rate:0}/s" : "";
+                string seg = segmenter != null ? $"\nSegmentation: {segmenter.Status}" + (rates ? $" · {segmenter.Rate:0}/s" : "") : "";
                 string head = mesh != null && mesh.HasMesh
-                    ? $"\nFace mesh {mesh.Rate:0}/s · head yaw {mesh.Yaw:+0;-0} pitch {mesh.Pitch:+0;-0} roll {mesh.Roll:+0;-0}" : "";
+                    ? "\n" + (rates ? $"Face mesh {mesh.Rate:0}/s · head" : "Head") + $" yaw {mesh.Yaw:+0;-0} pitch {mesh.Pitch:+0;-0} roll {mesh.Roll:+0;-0}" : "";
                 status.text = $"{cam}\n{face}{centre}{seg}{head}";
             }
         }
