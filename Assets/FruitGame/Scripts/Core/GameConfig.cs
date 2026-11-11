@@ -265,6 +265,8 @@ namespace FruitGame
         [Range(0.25f, 1f)] public float renderScale = 0.5f;
         [Tooltip("Dither toward the sky on the background pile (0 = full colour).")]
         [Range(0f, 1f)] public float pileDither = 0.5f;
+        [Tooltip("Opacity of the pile's fruit during play (1 = solid): half see-through, so they never pass for falling fruit.")]
+        [Range(0f, 1f)] public float pileFruitOpacity = 0.5f;
         [Tooltip("Dither toward the sky on the far orchard. Re-run FruitGame > Scene > Build Orchard after changing.")]
         [Range(0f, 1f)] public float farDither = 0.55f;
         [Tooltip("Dark outline around the player, in pixels at 1080 wide (0 = off).")]

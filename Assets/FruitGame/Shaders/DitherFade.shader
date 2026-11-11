@@ -14,6 +14,11 @@ Shader "FruitGame/Dither Fade"
         _WindSpeed("Wind Speed", Float) = 1.6
         _Transmission("Light Through (leaves, grass, petals; 0 = opaque)", Range(0, 2)) = 0
         _CookieStrength("Sun Dapple (0 for clouds)", Range(0, 1)) = 1
+        _Alpha("Opacity (the pile's fruit during play are see-through)", Range(0, 1)) = 1
+        [HideInInspector] _SrcBlend("Src Blend", Float) = 1
+        [HideInInspector] _DstBlend("Dst Blend", Float) = 0
+        [HideInInspector] _ZWrite("ZWrite", Float) = 1
+        _FadeKeep("Keep the full fade in the realistic look (the pile, so it never looks like falling fruit)", Range(0, 1)) = 0
         _SelfLit("Self-lit (clouds: keep their own colour whatever the light)", Range(0, 1)) = 0
     }
 
@@ -21,10 +26,51 @@ Shader "FruitGame/Dither Fade"
     {
         Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline" "Queue" = "Geometry" }
 
+        // See-through materials (_Alpha < 1) first lay down their depth, so only each object's front faces blend and
+        // a voxel fruit reads as one clean see-through shape. Opaque ones skip it (the vertex shader culls them).
+        Pass
+        {
+            Name "DepthPrime"
+            Tags { "LightMode" = "SRPDefaultUnlit" }
+            ZWrite On
+            ColorMask 0
+
+            HLSLPROGRAM
+            #pragma vertex primeVert
+            #pragma fragment primeFrag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                half4 _BaseColor;
+                half4 _FadeColor;
+                half _Fade;
+                half _Levels;
+                float _DitherPixel;
+                float _Wind;
+                float _WindSpeed;
+                half _Transmission;
+                half _CookieStrength;
+                half _FadeKeep;
+                half _Alpha;
+                half _SelfLit;
+            CBUFFER_END
+
+            float4 primeVert(float4 positionOS : POSITION) : SV_POSITION
+            {
+                if (_Alpha >= 0.999) return float4(2, 2, 2, 1); // opaque: nothing to do
+                return TransformObjectToHClip(positionOS.xyz);
+            }
+            half4 primeFrag() : SV_Target { return 0; }
+            ENDHLSL
+        }
+
         Pass
         {
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -53,6 +99,8 @@ Shader "FruitGame/Dither Fade"
                 float _WindSpeed;
                 half _Transmission;
                 half _CookieStrength;
+                half _FadeKeep;
+                half _Alpha;
                 half _SelfLit;
             CBUFFER_END
 
@@ -102,10 +150,10 @@ Shader "FruitGame/Dither Fade"
 
                 // Backlit: less haze, so the distance keeps its light and shade. A smooth fade: the ordered dither
                 // that used to step it left a fine grid over the distant trees.
-                float f = _Fade * (_VoxelFadeScale > 0 ? _VoxelFadeScale : 1);
-                color = lerp(color, _FadeColor.rgb, saturate(f));
+                float f = _Fade * lerp(_VoxelFadeScale > 0 ? _VoxelFadeScale : 1, 1, _FadeKeep);
+                color = lerp(color, _VoxelHazeColor.a > 0.5h ? _VoxelHazeColor.rgb : _FadeColor.rgb, saturate(f));
                 color = MixFog(color, input.fogFactor); // realistic look only (fog is off in the classic)
-                return half4(color, 1);
+                return half4(color, _Alpha);
             }
             ENDHLSL
         }

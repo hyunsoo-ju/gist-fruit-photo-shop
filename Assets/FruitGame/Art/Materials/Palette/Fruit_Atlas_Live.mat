@@ -29,8 +29,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _CookieStrength: 1
+    - _GlossScale: 0.12
+    - _RealisticRim: 0.15
     - _RimPower: 2.5
     - _RimStrength: 0.7
+    - _SkyScale: 0.35
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimColor: {r: 1, g: 0.97999996, b: 0.92, a: 1}

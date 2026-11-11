@@ -10,6 +10,9 @@ Shader "FruitGame/Fruit Rim"
         _RimPower("Rim Power", Range(0.5, 8)) = 2.5
         _RimStrength("Rim Strength", Range(0, 2)) = 0.7
         _CookieStrength("Sun Dapple", Range(0, 1)) = 1
+        _SkyScale("Sky light and reflections (realistic look)", Range(0, 1)) = 1
+        _RealisticRim("Rim in the realistic look (regular fruit far less than golden ones)", Range(0, 1)) = 1
+        _GlossScale("Gloss (realistic look; regular fruit are less glossy than golden ones)", Range(0, 1)) = 1
     }
 
     SubShader
@@ -44,6 +47,9 @@ Shader "FruitGame/Fruit Rim"
                 half _RimPower;
                 half _RimStrength;
                 half _CookieStrength;
+                half _GlossScale;
+                half _SkyScale;
+                half _RealisticRim;
             CBUFFER_END
 
             struct Attributes
@@ -84,7 +90,7 @@ Shader "FruitGame/Fruit Rim"
                 half cookie = VoxelCookie(input.positionWS, _CookieStrength);
                 half3 diffuse = light.color * (ndl * light.shadowAttenuation * light.distanceAttenuation * cookie);
                 // Backlit: glossy like the scenery (VoxelLight.hlsl); classic: flat-lit.
-                half3 color = _VoxelBacklight > 0.5h ? VoxelLight(albedo.rgb, n, input.positionWS, 0.0h, _CookieStrength, GetNormalizedScreenSpaceUV(input.positionCS))
+                half3 color = _VoxelBacklight > 0.5h ? VoxelLightGloss(albedo.rgb, n, input.positionWS, 0.0h, _CookieStrength, GetNormalizedScreenSpaceUV(input.positionCS), _GlossScale, _SkyScale)
                                                      : albedo.rgb * (diffuse + SampleSH(n));
 
                 float3 v = normalize(GetWorldSpaceViewDir(input.positionWS));
@@ -93,7 +99,7 @@ Shader "FruitGame/Fruit Rim"
                 // fruit catch the light from behind; classic: the cream rim all round.
                 half sunSide = saturate(dot(n, light.direction) + 0.35h);
                 half3 rimColor = lerp(_RimColor.rgb, light.color * 1.15h, _VoxelBacklight);
-                rim *= lerp(1.0h, sunSide * 1.6h, _VoxelBacklight);
+                rim *= lerp(1.0h, sunSide * 1.6h * _RealisticRim, _VoxelBacklight);
                 color += rimColor * rim;
 
                 color = MixFog(color, input.fogFactor);

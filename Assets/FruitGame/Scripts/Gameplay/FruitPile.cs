@@ -21,6 +21,7 @@ namespace FruitGame
         [SerializeField] Material hazeMaterial;
         [Tooltip("Full-colour fruit material used while the photo booth is open (the pile shows in full colour).")]
         [SerializeField] Material photoMaterial;
+        Material fruitHaze;
         [SerializeField] float landSoundCooldown = 0.1f;
 
         [Header("Crate heap")]
@@ -62,6 +63,19 @@ namespace FruitGame
             {
                 hazeMaterial = new Material(hazeMaterial);
                 hazeMaterial.SetFloat("_Fade", config.pileDither);
+            }
+            // The pile's fruit are also half see-through during play, so they read as background and never as a
+            // falling fruit (the crate heap stays solid: it keeps hazeMaterial).
+            fruitHaze = hazeMaterial;
+            if (hazeMaterial != null && hazeMaterial.HasProperty("_Alpha") && config.pileFruitOpacity < 0.999f)
+            {
+                fruitHaze = new Material(hazeMaterial) { name = "Pile Fruit (see-through)" };
+                fruitHaze.SetFloat("_Alpha", config.pileFruitOpacity);
+                fruitHaze.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                fruitHaze.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                fruitHaze.SetFloat("_ZWrite", 0f);
+                fruitHaze.SetOverrideTag("RenderType", "Transparent");
+                fruitHaze.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
             }
             layer = LayerMask.NameToLayer(LayerName);
             if (layer >= 0)
@@ -243,7 +257,7 @@ namespace FruitGame
         /// </summary>
         void MakeBackground(GameObject go, FruitType type, bool golden)
         {
-            var haze = golden ? FruitType.Golden(hazeMaterial) : FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
+            var haze = golden ? FruitType.Golden(fruitHaze) : FruitType.WithAtlas(fruitHaze, type != null ? type.atlasFar : null);
             foreach (var r in go.GetComponentsInChildren<Renderer>())
             {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
@@ -276,9 +290,9 @@ namespace FruitGame
             {
                 if (f == null) continue;
                 var type = f.Type;
-                var mat = f.Golden ? FruitType.Golden(on ? photoMaterial : hazeMaterial)
+                var mat = f.Golden ? FruitType.Golden(on ? photoMaterial : fruitHaze)
                     : on ? FruitType.WithAtlas(photoMaterial, type != null ? type.atlas : null)
-                         : FruitType.WithAtlas(hazeMaterial, type != null ? type.atlasFar : null);
+                         : FruitType.WithAtlas(fruitHaze, type != null ? type.atlasFar : null);
                 foreach (var r in f.GetComponentsInChildren<Renderer>())
                 {
                     var mats = r.sharedMaterials;

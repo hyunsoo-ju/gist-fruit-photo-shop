@@ -97,6 +97,11 @@ namespace FruitGame
 
         IEnumerator Open()
         {
+            if (TestMode.CameraOff)
+            {
+                Fail("Camera off (test mode)");
+                yield break;
+            }
             if (!Application.HasUserAuthorization(UserAuthorization.WebCam))
                 yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
             if (!Application.HasUserAuthorization(UserAuthorization.WebCam))

@@ -56,6 +56,9 @@ namespace FruitGame
                 if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", Texture2D.whiteTexture);
                 if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Gold);
                 if (m.HasProperty("_RimColor")) m.SetColor("_RimColor", new Color(1f, 0.95f, 0.7f));
+                if (m.HasProperty("_GlossScale")) m.SetFloat("_GlossScale", 1f); // gold stays fully glossy
+                if (m.HasProperty("_SkyScale")) m.SetFloat("_SkyScale", 1f);
+                if (m.HasProperty("_RealisticRim")) m.SetFloat("_RealisticRim", 1f);
                 golden[mat] = m;
             }
             return m;

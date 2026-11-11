@@ -28,10 +28,10 @@ namespace FruitGame
         [Tooltip("Which model to start with (switchable live with F7 while the F1 debug view is open).")]
         [SerializeField] Option startWith = Option.RvmMobileNet;
         [SerializeField] BackendType backend = BackendType.GPUCompute;
-        [Tooltip("Frame rate the game should keep; RVM gets whatever time is left each frame.")]
-        [SerializeField] float targetFrameRate = 60f;
+        [Tooltip("Frame rate the game should keep (45: the booth trades some fps for a smoother matte); RVM gets whatever time is left each frame.")]
+        [SerializeField] float targetFrameRate = 45f;
         [Tooltip("The fewest mattes per second, whatever the frame time: the budget never shrinks below this. Without it a frame already slower than targetFrameRate (the realistic look) squeezed RVM to 2 layers a frame, about one matte a second.")]
-        [SerializeField] float minMatteRate = 12f;
+        [SerializeField] float minMatteRate = 30f;
 
         const int MediaPipeSize = 256;
 

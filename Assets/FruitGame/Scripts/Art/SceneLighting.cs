@@ -39,6 +39,11 @@ namespace FruitGame
         [Tooltip("How soft the sky shadows are (metres of blur) and how dark fully covered places get (0..1).")]
         [SerializeField] float skyShadowSoftness = 1.5f;
         [SerializeField] float skyShadowFloor = 0f;
+        [Tooltip("How much darker sky shadows get (power on the share of sky a point sees; 1 = linear), and the distance from the camera (metres) over which that eases back, so the far scenery stays clear.")]
+        [SerializeField] float skyShadowDepth = 2.5f;
+        [SerializeField] Vector2 skyShadowDepthFade = new Vector2(18f, 26f);
+        [Tooltip("Share of the fill lights (bounce, the cool underlight) that places fully under sky shadow keep.")]
+        [SerializeField] float skyShadowFill = 0.4f;
         [Tooltip("Sunlight bouncing between objects: strength (1 = physically one bounce; pushed well past that for the look) and how far a sunlit surface's light reaches (metres).")]
         [SerializeField] float bounceStrength = 40f;
         [SerializeField] float bounceRadius = 6f;
@@ -62,10 +67,15 @@ namespace FruitGame
         [SerializeField] float skyExposure = 1.25f;
         [Tooltip("Sky light (the diffuse light, beside the direct sun) on the shaded faces, 1 = as the sky gives it: lower = darker shade.")]
         [SerializeField] float skyLight = 2.0f;
-        [SerializeField] Color fogColour = new Color(0.66f, 0.72f, 0.8f);
+        [SerializeField] Color fogColour = new Color(0.78f, 0.75f, 0.66f);
+        [Tooltip("Colour the fruit pile and its crates fade toward in this look (dark and warm, so they sit back).")]
+        [SerializeField] Color hazeColour = new Color(0.36f, 0.33f, 0.27f);
         [SerializeField] float fogDensity = 0.02f;
         [Tooltip("Volumetric beams: density of the air the sun lights.")]
-        [SerializeField] float beamDensity = 0.055f;
+        [SerializeField] float beamDensity = 0.085f;
+        [Tooltip("Cool diffuse light from below, as if reflected off the ground, on the undersides of the trees: colour and strength.")]
+        [SerializeField] Color underLight = new Color(0.62f, 0.74f, 0.95f);
+        [SerializeField] float underLightIntensity = 3f;
 
         [Header("Canopy the sun comes through")]
         [Tooltip("How far toward the sun the canopy sits from the play area (metres).")]
@@ -79,9 +89,10 @@ namespace FruitGame
         [SerializeField] float canopySway = 0.35f;
 
         [Header("Camera")]
-        [Tooltip("Depth of field: where it's sharpest (the play plane, from the camera) and how soft the rest gets.")]
-        [SerializeField] float focusDistance = 12f;
-        [SerializeField] float aperture = 7f;
+        [Tooltip("Background blur: distance from the camera where it starts and where it's full (the play plane is about 12 m), and how strong.")]
+        [SerializeField] float backgroundBlurStart = 13f;
+        [SerializeField] float backgroundBlurEnd = 22f;
+        [SerializeField] float backgroundBlur = 1.2f;
 
         // The classic look, as saved in the scene.
         bool captured;
@@ -127,6 +138,8 @@ namespace FruitGame
         static readonly int Backlight = Shader.PropertyToID("_VoxelBacklight");
         static readonly int Smoothness = Shader.PropertyToID("_VoxelSmoothness");
         static readonly int FadeScale = Shader.PropertyToID("_VoxelFadeScale");
+        static readonly int HazeColour = Shader.PropertyToID("_VoxelHazeColor");
+        static readonly int UnderLight = Shader.PropertyToID("_VoxelUnderLight");
         static readonly int GlowTint = Shader.PropertyToID("_VoxelGlowTint");
         static readonly int GlowDepth = Shader.PropertyToID("_VoxelGlowDepth");
         static readonly int UILightDir = Shader.PropertyToID("_UILightDir");
@@ -206,7 +219,8 @@ namespace FruitGame
             }
             // The reflections follow the scene (the pile grows) every 2 s: each refresh renders the scene six times.
             probeTimer -= Time.unscaledDeltaTime;
-            if (probe != null && probeTimer <= 0f) { probe.RenderProbe(); RenderSkyOcclusion(); probeTimer = 2f; }
+            if (probe != null && probeTimer <= 0f) { probe.RenderProbe(); GatherSkyCasters(); probeTimer = 2f; }
+            RenderSkyOcclusion();
             TickBounce();
             FitBeams();
         }
@@ -269,7 +283,11 @@ namespace FruitGame
             if (Application.isPlaying) Gloss();
             Shader.SetGlobalFloat(Backlight, 1f);
             Shader.SetGlobalFloat(Smoothness, smoothness);
+            Shader.SetGlobalVector(UnderLight, underLight.linear * underLightIntensity);
             Shader.SetGlobalFloat(FadeScale, 0.0001f); // fog does the distance now
+            // The pile's haze (and any kept fade) takes a dark warm colour, not the classic sky blue, so the pile and its
+            // crates sink back behind the play plane.
+            Shader.SetGlobalVector(HazeColour, new Vector4(hazeColour.linear.r, hazeColour.linear.g, hazeColour.linear.b, 1f));
             Shader.SetGlobalColor(GlowTint, glowTint);
             Shader.SetGlobalFloat(GlowDepth, 0.45f);
             // The title, buttons and digits keep the classic light.
@@ -329,6 +347,8 @@ namespace FruitGame
             Ungloss();
             Shader.SetGlobalFloat(Backlight, 0f);
             Shader.SetGlobalFloat(FadeScale, 0f);
+            Shader.SetGlobalVector(HazeColour, Vector4.zero);
+            Shader.SetGlobalVector(UnderLight, Vector4.zero);
             Shader.SetGlobalVector(UILightDir, Vector4.zero);
             Shader.SetGlobalFloat(PlayerRim, 0f);
             if (beams != null) beams.SetActive(false);
@@ -384,10 +404,13 @@ namespace FruitGame
                 bloom.intensity.value = 0.9f; bloom.threshold.value = 0.95f; bloom.scatter.value = 0.75f;
                 bloom.tint.value = Color.white;
                 var dof = profile.Add<DepthOfField>(true);
-                dof.mode.value = DepthOfFieldMode.Bokeh;
-                dof.focusDistance.value = focusDistance;
-                dof.aperture.value = aperture;
-                dof.focalLength.value = 70f;
+                // Far-only blur: everything behind the play plane softens a little, the player, the falling fruit
+                // and the foreground stay sharp (a Bokeh focus blurred the front too).
+                dof.mode.value = DepthOfFieldMode.Gaussian;
+                dof.gaussianStart.value = backgroundBlurStart;
+                dof.gaussianEnd.value = backgroundBlurEnd;
+                dof.gaussianMaxRadius.value = backgroundBlur;
+                dof.highQualitySampling.value = true;
                 var grade = profile.Add<ColorAdjustments>(true);
                 grade.postExposure.value = 0.15f; grade.contrast.value = 18f; grade.saturation.value = 12f;
                 var wb = profile.Add<WhiteBalance>(true); wb.temperature.value = 0f;
@@ -406,6 +429,7 @@ namespace FruitGame
         static readonly int SkyMap = Shader.PropertyToID("_SkyOcclusionMap");
         static readonly int SkyMatrix = Shader.PropertyToID("_SkyOcclusionMatrix");
         static readonly int SkyParams = Shader.PropertyToID("_SkyOcclusionParams");
+        static readonly int SkyShape = Shader.PropertyToID("_SkyShadowShape");
         static readonly int SkyOriginId = Shader.PropertyToID("_SkyOrigin");
         static readonly int SkyForwardId = Shader.PropertyToID("_SkyForward");
         const float SkySize = 16f, SkyAspect = 1.3f, SkyDepthRange = 80f;
@@ -443,11 +467,14 @@ namespace FruitGame
             RenderSkyOcclusion();
         }
 
-        void RenderSkyOcclusion()
+        // What the sky map draws, gathered every 2 s (the pile grows); the map itself is redrawn every frame from it, so
+        // anything that moves (fruit, swaying plants) moves its sky shadow smoothly. Redrawn only every 2 s, the
+        // shadows on the greenery jumped at each redraw.
+        readonly List<(Renderer renderer, int submeshes)> skyCasters = new List<(Renderer, int)>();
+
+        void GatherSkyCasters()
         {
-            if (skyDepth == null) return;
-            Shader.SetGlobalVector(SkyOriginId, skyOrigin);
-            Shader.SetGlobalVector(SkyForwardId, new Vector4(skyForward.x, skyForward.y, skyForward.z, 1f / SkyDepthRange));
+            skyCasters.Clear();
             int skip = 0;
             // The far orchard is on the Back layer with the camera backdrop: keep the layer, leave out the backdrop.
             foreach (var l in new[] { "UI", "HUD3D", PixelRenderer.PersonLayer, PixelRenderer.CompositeLayer, "Ignore Raycast" })
@@ -456,29 +483,45 @@ namespace FruitGame
                 if (i >= 0) skip |= 1 << i;
             }
             var backdrop = FindAnyObjectByType<BokehBackdrop>();
-            var cb = new CommandBuffer { name = "Sky Shadow Map" };
-            cb.SetRenderTarget(skyDepth);
-            cb.ClearRenderTarget(true, true, Color.white); // 1 = nothing in the way
-            cb.SetViewProjectionMatrices(skyView, skyProj);
             // The canopy band and ground bank (SceneryBands) sit off screen in landscape; the band would roof over the
             // whole play area and put everything equally in sky shadow, so they're left out.
             var bands = FindAnyObjectByType<SceneryBands>();
             foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                if (!r.enabled || !r.gameObject.activeInHierarchy || (skip & (1 << r.gameObject.layer)) != 0) continue;
+                if ((skip & (1 << r.gameObject.layer)) != 0) continue;
                 if (bands != null && r.transform.IsChildOf(bands.transform)) continue;
                 if (backdrop != null && r.transform.IsChildOf(backdrop.transform)) continue;
                 if (!(r is MeshRenderer) || r.shadowCastingMode == ShadowCastingMode.ShadowsOnly) continue;
                 var mf = r.GetComponent<MeshFilter>();
                 if (mf == null || mf.sharedMesh == null) continue;
-                for (int s = 0; s < mf.sharedMesh.subMeshCount; s++) cb.DrawRenderer(r, skyDepthMaterial, s, 0);
+                skyCasters.Add((r, mf.sharedMesh.subMeshCount));
+            }
+        }
+
+        CommandBuffer skyBuffer;
+
+        void RenderSkyOcclusion()
+        {
+            if (skyDepth == null) return;
+            if (skyCasters.Count == 0) GatherSkyCasters();
+            Shader.SetGlobalVector(SkyOriginId, skyOrigin);
+            Shader.SetGlobalVector(SkyForwardId, new Vector4(skyForward.x, skyForward.y, skyForward.z, 1f / SkyDepthRange));
+            var cb = skyBuffer ??= new CommandBuffer { name = "Sky Shadow Map" };
+            cb.Clear();
+            cb.SetRenderTarget(skyDepth);
+            cb.ClearRenderTarget(true, true, Color.white); // 1 = nothing in the way
+            cb.SetViewProjectionMatrices(skyView, skyProj);
+            foreach (var (r, subs) in skyCasters)
+            {
+                if (r == null || !r.enabled || !r.gameObject.activeInHierarchy) continue;
+                for (int s = 0; s < subs; s++) cb.DrawRenderer(r, skyDepthMaterial, s, 0);
             }
             Graphics.ExecuteCommandBuffer(cb);
-            cb.Release();
             Shader.SetGlobalTexture(SkyMap, skyDepth);
             Shader.SetGlobalMatrix(SkyMatrix, skyProj * skyView);
             float blurUv = skyShadowSoftness / (2f * SkySize * SkyAspect);
             Shader.SetGlobalVector(SkyParams, new Vector4(1f, blurUv, 0.08f / SkyDepthRange, skyShadowFloor));
+            Shader.SetGlobalVector(SkyShape, new Vector4(skyShadowDepth, skyShadowDepthFade.x, skyShadowDepthFade.y, skyShadowFill));
         }
 
         // ---- Bounce light ----------------------------------------------------------------------------------------------
@@ -896,6 +939,8 @@ namespace FruitGame
             applied = null;
             Shader.SetGlobalFloat(Backlight, 0f);
             Shader.SetGlobalFloat(FadeScale, 0f);
+            Shader.SetGlobalVector(HazeColour, Vector4.zero);
+            Shader.SetGlobalVector(UnderLight, Vector4.zero);
             Shader.SetGlobalVector(UILightDir, Vector4.zero);
             Shader.SetGlobalFloat(PlayerRim, 0f);
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
@@ -903,6 +948,7 @@ namespace FruitGame
             Free(sunFluxMaterial); bounceVolumes = null; buildLayer = -1;
             patches?.Release(); patchCount?.Release(); patches = patchCount = null;
             fluxColour = fluxPosition = fluxNormal = fluxDepth = null; sunFluxMaterial = null;
+            skyBuffer?.Release(); skyBuffer = null; skyCasters.Clear();
             Free(skyDepth); Free(skyDepthMaterial);
             skyDepth = null; skyDepthMaterial = null;
             Shader.SetGlobalVector(SkyParams, Vector4.zero);

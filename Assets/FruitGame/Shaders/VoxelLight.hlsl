@@ -14,6 +14,8 @@ half _VoxelFadeScale;      // backlit: how much of the distance fade toward the 
 half _VoxelSmoothness;     // backlit: how glossy the blocks are (plastic bricks)
 half4 _VoxelGlowTint;      // colour the glow through leaves takes on
 float _VoxelGlowDepth;     // metres toward the sun at which the glow checks for shadow
+half4 _VoxelUnderLight;    // realistic: cool light reflected up from below (rgb x intensity; 0 = off)
+half4 _VoxelHazeColor;     // realistic: the colour distance fades toward (a = 1 to use it instead of each material's)
 
 // Realistic look: sky shadows. SceneLighting draws each surface's distance along the sky's direction into
 // _SkyOcclusionMap (Hidden/FruitGame/Sky Depth); a point further along than what's stored there is under something,
@@ -24,6 +26,9 @@ SAMPLER(sampler_SkyOcclusionMap);
 float4x4 _SkyOcclusionMatrix;   // world -> the sky view's clip space
 float4 _SkyOrigin;              // xyz: the sky view's position
 float4 _SkyForward;             // xyz: its direction, w: 1 / depth range
+float4 _SkyShadowShape;         // x: how much darker partly covered places get (power, 1 = linear), y/z: from/to (m from
+                                // the camera) both ease off, so the distant scenery keeps its clarity, w: how much of the
+                                // fill lights (bounce, underlight) fully covered places keep
 float4 _SkyOcclusionParams;     // x: on, y: blur radius (uv), z: bias (in stored units), w: darkest it gets
 
 static const float2 SkyTaps[12] =
@@ -81,7 +86,11 @@ half SkyVisibility(float3 positionWS, float3 n)
         float d = SAMPLE_TEXTURE2D_LOD(_SkyOcclusionMap, sampler_SkyOcclusionMap, uv + SkyTaps[i] * _SkyOcclusionParams.y, 0).r;
         seen += t <= d + _SkyOcclusionParams.z ? 1.0h : 0.0h;
     }
-    return lerp((half)_SkyOcclusionParams.w, 1.0h, seen / 12.0h);
+    half v = seen / 12.0h;
+    float dist = distance(positionWS, _WorldSpaceCameraPos);
+    half power = lerp(max(_SkyShadowShape.x, 1.0), 1.0, saturate((dist - _SkyShadowShape.y) / max(_SkyShadowShape.z - _SkyShadowShape.y, 1e-3)));
+    v = pow(v, power);
+    return lerp((half)_SkyOcclusionParams.w, 1.0h, v);
 }
 
 half VoxelCookie(float3 positionWS, half cookieStrength)
@@ -108,7 +117,9 @@ half3 VoxelGlow(half3 albedo, float3 n, float3 positionWS, half transmission, ha
     return albedo * _VoxelGlowTint.rgb * light.color * t;
 }
 
-half3 VoxelLight(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV)
+/// `glossScale` scales the blocks' smoothness for one material and `skyScale` how much of the sky's light and
+/// reflections it takes (regular fruit get less of both than the rest, so they don't look wet or chalky).
+half3 VoxelLightGloss(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV, half glossScale, half skyScale)
 {
     if (_VoxelBacklight < 0.5h)
     {
@@ -131,17 +142,30 @@ half3 VoxelLight(half3 albedo, float3 n, float3 positionWS, half transmission, h
     surface.metallic = 0;
     surface.specular = half3(0, 0, 0);
     // Leaves, grass and petals are a little less glossy than wood and fruit, so their colour survives the sky's sheen.
-    surface.smoothness = transmission > 0.0h ? _VoxelSmoothness * 0.7h : _VoxelSmoothness;
+    surface.smoothness = (transmission > 0.0h ? _VoxelSmoothness * 0.7h : _VoxelSmoothness) * glossScale;
     // Sky shadows darken the sky's light and its reflections (URP applies occlusion to both).
-    surface.occlusion = SkyVisibility(positionWS, n);
+    surface.occlusion = SkyVisibility(positionWS, n) * skyScale;
     surface.alpha = 1;
 
     // Debug (SceneLighting "Show sky visibility"): white = open sky, black = covered.
     if (_SkyOcclusionParams.x > 1.5) return surface.occlusion.xxx;
     half3 color = UniversalFragmentPBR(input, surface).rgb;
     if (transmission > 0.0h) color += VoxelGlow(albedo, n, positionWS, transmission, cookieStrength);
-    color += albedo * BounceLight(positionWS, n);
+    // Sky shadows also dim the fill lights (bounce, the cool underlight), or they'd light the covered places back up;
+    // less so in the distance, so the background stays clear.
+    float farW = saturate((distance(positionWS, _WorldSpaceCameraPos) - _SkyShadowShape.y) / max(_SkyShadowShape.z - _SkyShadowShape.y, 1e-3));
+    half fill = _SkyOcclusionParams.x > 0.5 ? lerp(lerp((half)_SkyShadowShape.w, 1.0h, farW), 1.0h, surface.occlusion / max(skyScale, 1e-3h)) : 1.0h;
+    color += albedo * BounceLight(positionWS, n) * fill;
+    // Cool light from below, as if reflected off the ground: strongest on faces pointing down (the undersides of the
+    // crowns), wrapping well onto the sides (so the trunks are lit), only a trace on tops. No shadows: a soft fill.
+    half under = saturate(-n.y * 0.45h + 0.6h);
+    color += albedo * _VoxelUnderLight.rgb * under * fill;
     return color;
+}
+
+half3 VoxelLight(half3 albedo, float3 n, float3 positionWS, half transmission, half cookieStrength, float2 screenUV)
+{
+    return VoxelLightGloss(albedo, n, positionWS, transmission, cookieStrength, screenUV, 1.0h, 1.0h);
 }
 
 #endif
