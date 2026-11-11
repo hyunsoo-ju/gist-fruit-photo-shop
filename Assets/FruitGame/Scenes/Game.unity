@@ -18124,21 +18124,33 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   sun: {fileID: 1153856502}
   volumetricShader: {fileID: 4800000, guid: 095ad250c7b7b4cf8bfecbc2d28f9f58, type: 3}
+  plasticShader: {fileID: 4800000, guid: b8c38aceb4f1b4401a39686a2aae9927, type: 3}
+  sunFluxShader: {fileID: 4800000, guid: 90bb4e28c8b3246eaaa0da64a20ac859, type: 3}
+  bounceCompute: {fileID: 7200000, guid: d8c10b507dbd34c89b12e9d44fb6132a, type: 3}
+  skyDepthShader: {fileID: 4800000, guid: 1143ab83da2aa441faa05b1a24a1e382, type: 3}
+  skyAngles: {x: 89, y: 0}
+  skyShadowSoftness: 1.5
+  skyShadowFloor: 0
+  bounceStrength: 40
+  bounceRadius: 6
   skyShader: {fileID: 106, guid: 0000000000000000f000000000000000, type: 0}
-  sunAngles: {x: 24, y: 128, z: 0}
-  sunColour: {r: 1, g: 0.8, b: 0.58, a: 1}
+  sunAngles: {x: 38, y: 10, z: 0}
+  sunColour: {r: 1, g: 0.97, b: 0.92, a: 1}
   sunIntensity: 3.6
   smoothness: 0.78
-  glowTint: {r: 1, g: 1, b: 0.4, a: 1}
+  glowTint: {r: 0.85, g: 1, b: 0.55, a: 1}
   playerRim: 0
   skyTint: {r: 0.45, g: 0.55, b: 0.7, a: 1}
   skyExposure: 1.25
-  skyLight: 1.3
+  skyLight: 2
   fogColour: {r: 0.66, g: 0.72, b: 0.8, a: 1}
   fogDensity: 0.008
-  beamDensity: 0.012
-  dappleTile: 7
-  dappleDrift: {x: 0.06, y: 0.02}
+  beamDensity: 0.055
+  canopyDistance: 10
+  canopyOpen: 0.12
+  canopySize: 46
+  leafBlock: 0.12
+  canopySway: 0.35
   focusDistance: 12
   aperture: 7
 --- !u!1 &1156753506
@@ -20538,8 +20550,8 @@ RectTransform:
   - {fileID: 469560736}
   m_Father: {fileID: 805519304}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.49012345, y: 0}
+  m_AnchorMax: {x: 0.50987655, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -34015,9 +34027,9 @@ Camera:
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
-    x: 0
+    x: 0.49012345
     y: 0
-    width: 1
+    width: 0.019753087
     height: 1
   near clip plane: 0.3
   far clip plane: 50

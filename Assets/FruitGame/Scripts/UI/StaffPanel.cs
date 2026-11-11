@@ -579,6 +579,7 @@ namespace FruitGame
             if (KeysActive && kb != null && !CameraMenu.IsOpen) HandleKeys(kb);
             if (resetArmed && Time.unscaledTime > resetArmedUntil) resetArmed = false;
             if (bestArmed && Time.unscaledTime > bestArmedUntil) bestArmed = false;
+            CountFps();
             if (Open) Refresh();
         }
 
@@ -657,11 +658,26 @@ namespace FruitGame
             return false;
         }
 
+        float fpsFrames, fpsTime, fps;
+
+        /// <summary>Frames per second over the last half second, shown in the header.</summary>
+        void CountFps()
+        {
+            fpsFrames++;
+            fpsTime += Time.unscaledDeltaTime;
+            if (fpsTime < 0.5f) return;
+            fps = fpsFrames / fpsTime;
+            fpsFrames = fpsTime = 0f;
+        }
+
         void Refresh()
         {
             header.text = twoScreens
                 ? (KeysActive ? $"{T("Staff panel")} · <color=#7CFC9A>{T("keys on")}</color>  ({T("` or F1 or Esc: off")})" : $"{T("Staff panel")} · {T("keys off")}  ({T("` or F1: on")})")
                 : $"{T("Staff panel")}  ({T("` or F1 or Esc: close")})";
+            // Frame rate on the right of the header: green at 55+, yellow at 30+, red below.
+            string fpsColour = fps >= 55f ? "#7CFC9A" : fps >= 30f ? "#FFC857" : "#FF7A6E";
+            header.text += $"<pos=86%><color={fpsColour}>{fps:0} fps</color>";
             if (printerLine != null && printer != null)
                 printerLine.text = (printer.HasProblem ? "<color=#FF7A6E>" : "") + T("Printer: ") + printer.Summary;
             if (resetRow != null) resetRow.text = T(resetArmed ? "Click again to reset every setting" : "Reset settings to defaults");

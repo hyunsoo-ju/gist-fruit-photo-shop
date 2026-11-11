@@ -1,5 +1,5 @@
-// Distant layers in the pixel style (Docs/DESIGN.md §4): simple lit plus an ordered (Bayer 4x4) dither toward a fade colour.
-// The fade is quantised into _Levels steps and dithered between neighbouring steps on a screen grid of _DitherPixel px.
+// Distant layers in the pixel style (Docs/DESIGN.md §4): simple lit, faded smoothly toward a haze colour.
+// (_Levels and _DitherPixel are left over from an ordered dither, now unused.)
 Shader "FruitGame/Dither Fade"
 {
     Properties
@@ -91,8 +91,6 @@ Shader "FruitGame/Dither Fade"
                 return o;
             }
 
-            static const float bayer[16] = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
-
             half4 frag(Varyings input) : SV_Target
             {
                 // Mip 0 only: the atlases are palettes of small swatches, and lower mips blend neighbouring swatches.
@@ -102,12 +100,10 @@ Shader "FruitGame/Dither Fade"
                 // Clouds keep their own colour in either lighting style (a top face slightly brighter, for shape).
                 color = lerp(color, albedo.rgb * (1.2h + 0.15h * saturate(n.y)), _SelfLit);
 
-                uint2 cellPos = (uint2)floor(input.positionCS.xy / max(_DitherPixel, 1));
-                float threshold = (bayer[(cellPos.y % 4) * 4 + (cellPos.x % 4)] + 0.5) / 16.0;
-                // Backlit: less haze, so the distance keeps its light and shade.
-                float f = _Fade * (_VoxelFadeScale > 0 ? _VoxelFadeScale : 1) * _Levels;
-                float level = floor(f) + step(threshold, frac(f));
-                color = lerp(color, _FadeColor.rgb, saturate(level / _Levels));
+                // Backlit: less haze, so the distance keeps its light and shade. A smooth fade: the ordered dither
+                // that used to step it left a fine grid over the distant trees.
+                float f = _Fade * (_VoxelFadeScale > 0 ? _VoxelFadeScale : 1);
+                color = lerp(color, _FadeColor.rgb, saturate(f));
                 color = MixFog(color, input.fogFactor); // realistic look only (fog is off in the classic)
                 return half4(color, 1);
             }

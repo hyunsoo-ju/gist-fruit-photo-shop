@@ -1,0 +1,70 @@
+// Bounce light for the realistic look (Docs/DESIGN.md §4, SceneLighting). Every texel of the sun's-eye map
+// (Hidden/FruitGame/Sun Flux) is a small sunlit patch that sends light back out. Compact collects the patches that
+// actually send something (most of the map is the black canopy) into a short list; Gather then adds up, for each cell
+// of a coarse grid over the scene, the light all of them send it from six directions (an "ambient cube": +x −x +y −y
+// +z −z), so a surface anywhere in the cell can read what reaches its normal. Deterministic and smooth: no sampling
+// noise. No visibility between patch and cell (it's one smooth wash), so the reach is limited to _Reach metres.
+// Gather runs a few layers of the grid at a time (SceneLighting.TickBounce), so no frame pays for the whole grid.
+#pragma kernel Compact
+#pragma kernel Gather
+
+struct Patch { float3 position; float3 normal; float3 flux; };
+
+Texture2D<float4> _Flux;
+Texture2D<float4> _Position;
+Texture2D<float4> _Normal;
+AppendStructuredBuffer<Patch> _PatchesOut;
+StructuredBuffer<Patch> _Patches;
+StructuredBuffer<uint> _PatchCount; // [0] = how many (copied from the append counter)
+RWTexture3D<float4> _Volume; // depth = 6 slabs of _Dims.z, one per direction
+
+float4 _Dims;      // xyz: cells, w: patches per side (the map is _Dims.w x _Dims.w)
+float4 _Min;       // xyz: the grid's lowest corner, w: cell size (m)
+float4 _Sun;       // rgb: sunlight (colour x intensity), w: one patch's area (m²)
+float4 _Shape;     // x: reach (m), y: closest distance counted (m), z: map texels per patch, w: first layer
+
+[numthreads(8, 8, 1)]
+void Compact(uint3 id : SV_DispatchThreadID)
+{
+    uint side = (uint)_Dims.w;
+    if (id.x >= side || id.y >= side) return;
+    uint2 t = id.xy * (uint)_Shape.z;
+    float4 f = _Flux[t];
+    if (f.a < 0.5 || dot(f.rgb, 1) <= 1e-4) return;
+    Patch p;
+    p.position = _Position[t].xyz;
+    p.normal = _Normal[t].xyz;
+    p.flux = f.rgb * _Sun.rgb * _Sun.w / 3.14159265;
+    _PatchesOut.Append(p);
+}
+
+[numthreads(8, 8, 1)]
+void Gather(uint3 id : SV_DispatchThreadID)
+{
+    id.z += (uint)_Shape.w;
+    if (any(id >= (uint3)_Dims.xyz)) return;
+    float3 x = _Min.xyz + (id + 0.5) * _Min.w;
+    float reach2 = _Shape.x * _Shape.x;
+    float near2 = _Shape.y * _Shape.y;
+    float3 e[6] = { (float3)0, (float3)0, (float3)0, (float3)0, (float3)0, (float3)0 };
+    uint count = _PatchCount[0];
+    for (uint i = 0; i < count; i++)
+    {
+        Patch p = _Patches[i];
+        float3 v = x - p.position;
+        float d2 = dot(v, v);
+        if (d2 > reach2) continue;
+        float3 dir = v * rsqrt(max(d2, 1e-6));
+        float cosS = dot(p.normal, dir);
+        if (cosS <= 0) continue;
+        // Light leaving a diffuse patch toward the cell, per unit of receiving cosine (applied per direction below).
+        float3 E = p.flux * (cosS / max(d2, near2));
+        float3 a = -dir; // where the light arrives from, as seen at the cell
+        e[0] += E * saturate(a.x);  e[1] += E * saturate(-a.x);
+        e[2] += E * saturate(a.y);  e[3] += E * saturate(-a.y);
+        e[4] += E * saturate(a.z);  e[5] += E * saturate(-a.z);
+    }
+    uint D = (uint)_Dims.z;
+    [unroll] for (uint k = 0; k < 6; k++)
+        _Volume[uint3(id.xy, id.z + k * D)] = float4(e[k], 1);
+}
