@@ -245,9 +245,12 @@ namespace FruitGame
             // The reflections follow the scene (the pile grows) every 2 s: each refresh renders the scene six times.
             probeTimer -= Time.unscaledDeltaTime;
             if (probe != null && probeTimer <= 0f) { probe.RenderProbe(); GatherSkyCasters(); probeTimer = 2f; }
-            RenderSkyOcclusion();
-            TickBounce();
-            FitBeams();
+            using (PerfMeter.Measure(PerfMeter.Part.Lighting))
+            {
+                RenderSkyOcclusion();
+                TickBounce();
+                FitBeams();
+            }
         }
 
         void Apply(LightingStyle style)

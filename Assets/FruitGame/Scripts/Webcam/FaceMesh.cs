@@ -165,24 +165,29 @@ namespace FruitGame
         /// </summary>
         async Awaitable<bool> Infer(Texture frame, Rect face, Action<Tensor<float>, Rect> use)
         {
-            // Square crop in pixels, centred on the face box.
-            float side = Mathf.Max(face.width * frame.width, face.height * frame.height) * cropScale;
-            float cw = side / frame.width, ch = side / frame.height;
-            var cropRect = new Rect(face.center.x - cw * 0.5f, face.center.y - ch * 0.5f, cw, ch);
-            Graphics.Blit(frame, crop, new Vector2(cw, ch), new Vector2(cropRect.x, cropRect.y));
+            Rect cropRect;
+            Awaitable<Tensor<float>> landmarksTask, presenceTask;
+            using (PerfMeter.Measure(PerfMeter.Part.FaceMesh))
+            {
+                // Square crop in pixels, centred on the face box.
+                float side = Mathf.Max(face.width * frame.width, face.height * frame.height) * cropScale;
+                float cw = side / frame.width, ch = side / frame.height;
+                cropRect = new Rect(face.center.x - cw * 0.5f, face.center.y - ch * 0.5f, cw, ch);
+                Graphics.Blit(frame, crop, new Vector2(cw, ch), new Vector2(cropRect.x, cropRect.y));
 
-            // Pixels 0..1, NHWC, row 0 = top of the crop.
-            TextureConverter.ToTensor(crop, input, new TextureTransform().SetTensorLayout(TensorLayout.NHWC));
-            worker.Schedule(input);
-            var landmarksTask = (worker.PeekOutput(0) as Tensor<float>).ReadbackAndCloneAsync();
-            var presenceTask = (worker.PeekOutput(1) as Tensor<float>).ReadbackAndCloneAsync();
+                // Pixels 0..1, NHWC, row 0 = top of the crop.
+                TextureConverter.ToTensor(crop, input, new TextureTransform().SetTensorLayout(TensorLayout.NHWC));
+                worker.Schedule(input);
+                landmarksTask = (worker.PeekOutput(0) as Tensor<float>).ReadbackAndCloneAsync();
+                presenceTask = (worker.PeekOutput(1) as Tensor<float>).ReadbackAndCloneAsync();
+            }
             using var landmarks = await landmarksTask;
             using var presence = await presenceTask;
             if (disposed) return false;
 
             float score = 1f / (1f + Mathf.Exp(-presence[0]));
             if (score < 0.5f) return false;
-            use(landmarks, cropRect);
+            using (PerfMeter.Measure(PerfMeter.Part.FaceMesh)) use(landmarks, cropRect);
             return true;
         }
 

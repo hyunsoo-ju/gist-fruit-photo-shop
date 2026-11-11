@@ -32,6 +32,7 @@ namespace FruitGame
         static readonly Color Ink = new Color32(0x1E, 0x22, 0x33, 0xFF);
         const int Cuts = 3;
         const float StripHeight = 1100f;
+        const float TallyHeight = 680f;
 
         GameObject left, right;
         TMP_Text heading, tally;
@@ -42,7 +43,7 @@ namespace FruitGame
         {
             left = Panel("Left Panel", new Vector2(0f, 1f), new Vector2(panelWidth * 0.5f + margin, -panelTop), panelWidth, 840f, panelSprite);
             heading = Text(left.transform, "Heading", new Vector2(0f, -28f), new Vector2(panelWidth - 64f, 64f), 48, TextAlignmentOptions.Top);
-            tally = Text(left.transform, "Tally", new Vector2(0f, -120f), new Vector2(panelWidth - 64f, 680f), 48, TextAlignmentOptions.TopLeft);
+            tally = Text(left.transform, "Tally", new Vector2(0f, -120f), new Vector2(panelWidth - 64f, TallyHeight), 40, TextAlignmentOptions.Top);
 
             // Three 3:4 slots stacked, the strip just wide enough for them.
             float gap = 24f, pad = 32f;
@@ -81,9 +82,14 @@ namespace FruitGame
             if (stats.History.Count != shownHistory)
             {
                 shownHistory = stats.History.Count;
+                // One fruit a line, centred (the signboard centres its carved lines too, and left-aligned the longest
+                // ran under the twig edge), never split from its count, the size shrinking as kinds pile up so all 16 fit the
+                // panel (at the old 48 the list ran off its bottom after about eleven).
                 var sb = new StringBuilder();
-                foreach (var kv in stats.CaughtByType) sb.AppendLine($"{Strings.Fruit(kv.Key)} × {kv.Value}");
-                tally.text = sb.Length == 0 ? Strings.Get("hud.noCatch") : sb.ToString();
+                foreach (var kv in stats.CaughtByType) sb.Append("<nobr>").Append(Strings.Fruit(kv.Key)).Append(" ×").Append(kv.Value).Append("</nobr>\n");
+                int lines = stats.CaughtByType.Count;
+                tally.fontSize = Mathf.Clamp(Mathf.Floor(TallyHeight / Mathf.Max(1, lines) / 1.25f), 30f, 40f);
+                tally.text = sb.Length == 0 ? Strings.Get("hud.noCatch") : sb.ToString().TrimEnd('\n');
             }
             heading.text = Strings.Get("hud.scoreboard");
             int shots = booth != null ? booth.ActionShotCount : 0;

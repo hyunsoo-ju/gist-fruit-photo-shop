@@ -8,7 +8,8 @@ namespace FruitGame
     /// <summary>
     /// The staff screen (Docs/DESIGN.md §15, M6 3.1). With two screens, the guest plays on the main display (the touch
     /// display; make it the main display in macOS) and the laptop shows the staff screen: a live mirror of the guest
-    /// screen on the left with the face box drawn over it, and the staff panel (StaffPanel) on the right. Debug views
+    /// screen on the left with the face box drawn over it, the performance meter (PerfPanel) under it, and the staff
+    /// panel (StaffPanel) on the right. Debug views
     /// never show on the guest screen then. With one screen, the guest view fills it and the staff panel opens over its
     /// right side on F1 (or a 3 s hold on the top-left corner).
     /// Built at runtime: the status line, mask view and printer box under the debug overlay move into the panel.
@@ -38,6 +39,8 @@ namespace FruitGame
         public static int StaffDisplay => TwoScreens ? 1 : 0;
 
         const float RefW = 1920f, RefH = 1080f, Column = 560f, Gap = 24f;
+        /// <summary>The performance meter's height, under the mirror (a 16:9 guest mirror is 724 tall, leaving this).</summary>
+        const float PerfH = 276f;
         static readonly Color Back = new Color(0.06f, 0.07f, 0.1f, 1f);
         static readonly Color Card = new Color(0.12f, 0.13f, 0.18f, 1f);
 
@@ -104,10 +107,14 @@ namespace FruitGame
             var back = Panel("Background", root, Back);
             Stretch(back, Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
 
-            // The mirror: the whole guest screen, fitted into the area left of the column.
+            // The mirror: the whole guest screen, fitted into the area left of the column, above the performance meter.
             var area = new GameObject("Mirror Area", typeof(RectTransform), typeof(AspectRatioFitter)).GetComponent<RectTransform>();
             area.SetParent(root, false);
-            Stretch(area, Vector2.zero, new Vector2(1f, 1f), new Vector2(Gap, Gap), new Vector2(-Column - Gap * 2f, -Gap));
+            Stretch(area, Vector2.zero, new Vector2(1f, 1f), new Vector2(Gap, Gap * 2f + PerfH), new Vector2(-Column - Gap * 2f, -Gap));
+            var perfArea = new GameObject("Performance Area", typeof(RectTransform)).GetComponent<RectTransform>();
+            perfArea.SetParent(root, false);
+            Stretch(perfArea, Vector2.zero, new Vector2(1f, 0f), new Vector2(Gap, Gap), new Vector2(-Column - Gap * 2f, Gap + PerfH));
+            PerfPanel.Build(perfArea, style);
             mirrorImage = new GameObject("Guest Mirror", typeof(RectTransform), typeof(RawImage), typeof(AspectRatioFitter)).GetComponent<RawImage>();
             mirrorImage.transform.SetParent(area, false);
             mirrorImage.raycastTarget = false;

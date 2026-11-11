@@ -114,11 +114,7 @@ namespace FruitGame
             gameOverScore.text = stats.Score.ToString();
             gameOverBest.text = newBest ? Strings.Get("over.newBest") : Strings.Get("over.best", best);
 
-            // The fruit in centred rows, each name staying with its count however the rows wrap.
-            var tally = new StringBuilder();
-            foreach (var kv in stats.CaughtByType)
-                tally.Append("<nobr>").Append(Strings.Fruit(kv.Key)).Append(" ×").Append(kv.Value).Append("</nobr>    ");
-            gameOverTallyLeft.text = tally.Length == 0 ? Strings.Get("over.none") : tally.ToString().TrimEnd();
+            ShowTally(stats);
 
             var extras = new List<string>();
             if (stats.GoldenCaught > 0) extras.Add(Strings.Get("over.golden", stats.GoldenCaught));
@@ -130,6 +126,63 @@ namespace FruitGame
         }
 
         public void HideGameOver() => SetActive(gameOverPanel, false);
+
+        // ---- The catch tally on the game over screen ----------------------------------------------------------------
+
+        const int TallyColumns = 4, TallyRows = 4;
+        const float TallyColumnWidth = 360f, TallyFontSize = 40f;
+        TMP_Text[] tallyColumns;
+
+        /// <summary>
+        /// The fruit caught, in columns: up to four fruit a column, up to four columns (all 16 kinds fit), filled top to
+        /// bottom and then left to right, the columns centred together. Tally Left stays as the area (its AspectLayout
+        /// places it in either layout) and the columns are texts inside it, so the realistic look's signboard carves them
+        /// as columns too. A single paragraph wrapped across the whole width ran off the screen with many kinds.
+        /// </summary>
+        void ShowTally(RoundStats stats)
+        {
+            if (tallyColumns == null)
+            {
+                tallyColumns = new TMP_Text[TallyColumns];
+                for (int i = 0; i < TallyColumns; i++)
+                {
+                    var c = Instantiate(gameOverTallyLeft, gameOverTallyLeft.transform);
+                    var layout = c.GetComponent<AspectLayout>();
+                    if (layout != null) DestroyImmediate(layout);
+                    for (int k = c.transform.childCount - 1; k >= 0; k--) DestroyImmediate(c.transform.GetChild(k).gameObject);
+                    c.name = $"Tally Column {i + 1}";
+                    c.fontSize = TallyFontSize;
+                    c.alignment = TextAlignmentOptions.Top;
+                    var rt = c.rectTransform;
+                    rt.anchorMin = new Vector2(0.5f, 0f);
+                    rt.anchorMax = new Vector2(0.5f, 1f);
+                    rt.pivot = new Vector2(0.5f, 1f);
+                    rt.sizeDelta = new Vector2(TallyColumnWidth, 0f);
+                    tallyColumns[i] = c;
+                }
+            }
+            var items = new List<string>();
+            foreach (var kv in stats.CaughtByType) items.Add($"<nobr>{Strings.Fruit(kv.Key)} ×{kv.Value}</nobr>");
+            gameOverTallyLeft.text = items.Count == 0 ? Strings.Get("over.none") : "";
+
+            int cols = items.Count == 0 ? 0 : Mathf.Min(TallyColumns, Mathf.CeilToInt(items.Count / (float)TallyRows));
+            int rows = cols == 0 ? 0 : Mathf.CeilToInt(items.Count / (float)cols);
+            for (int c = 0; c < TallyColumns; c++)
+            {
+                var t = tallyColumns[c];
+                bool used = c < cols;
+                t.gameObject.SetActive(used);
+                if (!used) continue;
+                var lines = new List<string>();
+                for (int r = 0; r < rows; r++)
+                {
+                    int i = c * rows + r;
+                    if (i < items.Count) lines.Add(items[i]);
+                }
+                t.text = string.Join("\n", lines);
+                t.rectTransform.anchoredPosition = new Vector2((c - (cols - 1) * 0.5f) * TallyColumnWidth, 0f);
+            }
+        }
 
         (RoundStats stats, int best, bool newBest, float duration)? lastGameOver;
 

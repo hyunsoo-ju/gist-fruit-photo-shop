@@ -11150,7 +11150,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 6}
-  m_LocalScale: {x: 7.2337494, y: 9.6449995, z: 1}
+  m_LocalScale: {x: 17.146666, y: 9.6449995, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 454640458}
@@ -41287,7 +41287,7 @@ MonoBehaviour:
   model: {fileID: 5022602860645237092, guid: 7a30288ad6b644f5dad76405ba3391df, type: 3}
   startWith: 1
   backend: 256
-  targetFrameRate: 45
+  frameRateFloor: 40
   minMatteRate: 30
 --- !u!114 &1957496582
 MonoBehaviour:
@@ -44699,7 +44699,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 2}
-  m_LocalScale: {x: 5.6262493, y: 7.501666, z: 1}
+  m_LocalScale: {x: 13.336295, y: 7.501666, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 126919822}

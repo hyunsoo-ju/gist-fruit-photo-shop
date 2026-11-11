@@ -1,5 +1,6 @@
 using Unity.InferenceEngine;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FruitGame
 {
@@ -7,8 +8,9 @@ namespace FruitGame
     /// Keeps a person mask (R = 0 background … 1 person) for the webcam feed in Mask, aligned 1:1 with
     /// WebcamSource.Output's UVs (Docs/DESIGN.md §13). Everything stays on the GPU.
     /// Preferred: Robust Video Matting (RVM), a video matting model that carries four recurrent state tensors
-    /// from frame to frame, so hair and clothing edges stay stable; runs on the full 540×720 frame and outputs a
-    /// soft alpha matte at that resolution (rounded up to RVM-friendly sizes, e.g. 576×768). Fallback: MediaPipe Selfie Segmentation at 256×256.
+    /// from frame to frame, so hair and clothing edges stay stable; runs on the whole frame and outputs a soft alpha
+    /// matte at that resolution (rounded up to RVM-friendly sizes, e.g. 1024×640), once for every new camera frame
+    /// (StepRvm). Fallback: MediaPipe Selfie Segmentation at 256×256.
     /// Three options can be switched live for comparison (M6 2.2; F7 while the F1 debug view is open): RVM ResNet-50,
     /// the lighter RVM MobileNetV3 and MediaPipe. Model costs on this computer: FruitGame > ML > Benchmark Models.
     /// </summary>
@@ -28,9 +30,9 @@ namespace FruitGame
         [Tooltip("Which model to start with (switchable live with F7 while the F1 debug view is open).")]
         [SerializeField] Option startWith = Option.RvmMobileNet;
         [SerializeField] BackendType backend = BackendType.GPUCompute;
-        [Tooltip("Frame rate the game should keep (45: the booth trades some fps for a smoother matte); RVM gets whatever time is left each frame.")]
-        [SerializeField] float targetFrameRate = 45f;
-        [Tooltip("The fewest mattes per second, whatever the frame time: the budget never shrinks below this. Without it a frame already slower than targetFrameRate (the realistic look) squeezed RVM to 2 layers a frame, about one matte a second.")]
+        [Tooltip("The lowest frame rate RVM may bring the game down to. Above it, RVM runs whole on every new camera frame, so there's a fresh matte for every picture; only if that would drop the average frame rate below this is each run spread over a few frames.")]
+        [SerializeField, FormerlySerializedAs("targetFrameRate")] float frameRateFloor = 40f;
+        [Tooltip("The fewest mattes per second, whatever the frame time: the budget never shrinks below this. Without it a frame already slower than the floor (the realistic look) squeezed RVM to 2 layers a frame, about one matte a second.")]
         [SerializeField] float minMatteRate = 30f;
 
         const int MediaPipeSize = 256;
@@ -47,6 +49,8 @@ namespace FruitGame
         /// <summary>True once at least one mask has been produced.</summary>
         public bool HasMask { get; private set; }
         public float Rate { get; private set; }
+        /// <summary>Mattes (or masks) finished since the start, for measuring.</summary>
+        public int MatteCount { get; private set; }
         public string Status { get; private set; } = "Idle";
         public bool UsingRvm { get; private set; }
 
@@ -56,7 +60,9 @@ namespace FruitGame
         readonly Tensor[] rvmInputs = new Tensor[5];
         TextureTransform outputTransform;
         System.Collections.IEnumerator run;
-        float layersPerFrame = 50f;
+        float layersPerFrame = 5000f;
+        float smoothDt;
+        int lastFedFrame = -1;
         bool outputChecked;
         int frames;
         float rateWindowStart;
@@ -103,7 +109,9 @@ namespace FruitGame
             outputTransform = new TextureTransform();
             frames = 0;
             rateWindowStart = Time.unscaledTime;
-            layersPerFrame = 50f;
+            layersPerFrame = 5000f;
+            smoothDt = 0f;
+            lastFedFrame = -1;
             Status = "Waiting for camera";
         }
 
@@ -141,19 +149,27 @@ namespace FruitGame
             // A photo is waiting for its own matte: don't start another live run until it has had its turn.
             if (photoWaiting > 0 && run == null) return;
 
-            if (UsingRvm) StepRvm();
-            else RunMediaPipe();
+            using (PerfMeter.Measure(PerfMeter.Part.Matting))
+            {
+                if (UsingRvm) StepRvm();
+                else RunMediaPipe();
+            }
         }
 
         /// <summary>
-        /// Advances RVM by a slice of layers each frame instead of running it whole, so a heavy model doesn't stall
-        /// the game: the slice size adapts to keep the frame time near targetFrameRate, and the cut-out keeps using
-        /// the last finished matte (the camera colour itself still updates every frame).
+        /// Runs RVM once for every new camera frame, whole within the frame when the game can afford it, so there are as
+        /// many mattes as pictures and each matte belongs to the picture shown with it (no edge trailing a moving
+        /// player). If running whole would bring the average frame rate below frameRateFloor, each run is spread over a
+        /// few frames instead (a slice of layers per frame), and the cut-out keeps the last finished matte meanwhile.
         /// </summary>
         void StepRvm()
         {
+            AdaptBudget();
             if (run == null)
             {
+                // Nothing new to matte: the same picture would give the same matte (and cost a whole run).
+                if (source.FrameCount == lastFedFrame) return;
+                lastFedFrame = source.FrameCount;
                 var frame = source.Output;
                 int w = RvmSize(frame.width), h = RvmSize(frame.height);
                 EnsureBuffers(w, h);
@@ -164,10 +180,11 @@ namespace FruitGame
                 run = worker.ScheduleIterable(rvmInputs);
             }
 
-            AdaptBudget();
             int budget = Mathf.Max(1, Mathf.RoundToInt(layersPerFrame));
             bool finished = false;
-            for (int i = 0; i < budget; i++)
+            // One call more than the layers: the iterator only reports the end on the call after the last layer, and
+            // without it a whole-run budget left that call (and the matte) for the next frame.
+            for (int i = 0; i <= budget; i++)
             {
                 if (!run.MoveNext()) { finished = true; break; }
                 layersThisRun++;
@@ -193,17 +210,30 @@ namespace FruitGame
             Publish(worker.PeekOutput(0) as Tensor<float>);
         }
 
-        /// <summary>Grows the per-frame layer budget while frames are fast and shrinks it when they're slow.</summary>
+        /// <summary>
+        /// Grows the per-frame layer budget up to a whole run while the average frame rate stays above the floor, and
+        /// shrinks it when it falls below. Judged on the frame time averaged over the last ~20 frames: single frames
+        /// vary (a frame with a run in it is slower than one without), and reacting to each one kept cutting runs into
+        /// a large slice and a small leftover, so every matte took two frames even with time to spare.
+        /// </summary>
         void AdaptBudget()
         {
-            float target = 1f / Mathf.Max(10f, targetFrameRate);
-            float dt = Time.unscaledDeltaTime;
-            if (dt > target * 1.1f) layersPerFrame *= 0.85f;
-            else if (dt < target * 0.95f) layersPerFrame *= 1.05f;
-            // Never fewer layers than finish minMatteRate runs a second at the current frame time.
-            float floor = runLayers > 0 ? runLayers * minMatteRate * Mathf.Min(dt, 0.1f) : 2f;
-            layersPerFrame = Mathf.Clamp(layersPerFrame, Mathf.Max(2f, floor), 5000f);
+            float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+            // A plain average over the last ~20 frames (1 / it = the frame rate). Weighting each frame by its own length
+            // counted the slow ones more, and read near the floor while the game actually ran at 60.
+            smoothDt = smoothDt <= 0f ? dt : Mathf.Lerp(smoothDt, dt, 0.05f);
+            float limit = 1f / Mathf.Max(10f, frameRateFloor);
+            if (smoothDt > limit * 1.03f) layersPerFrame *= 0.9f;
+            else if (smoothDt < limit * 0.97f) layersPerFrame *= 1.1f;
+            // Never fewer layers than finish minMatteRate runs a second at the current frame time; never more than a
+            // whole run (so a slowdown is answered at once, not after shrinking from far above it).
+            float least = runLayers > 0 ? runLayers * minMatteRate * smoothDt : 2f;
+            float most = runLayers > 0 ? runLayers : 5000f;
+            layersPerFrame = Mathf.Clamp(layersPerFrame, Mathf.Max(2f, Mathf.Min(least, most)), most);
         }
+
+        /// <summary>True while every run finishes within its frame (a matte for every camera frame).</summary>
+        public bool Whole => runLayers > 0 && layersPerFrame >= runLayers;
 
         int runLayers, layersThisRun;
 
@@ -277,7 +307,10 @@ namespace FruitGame
 
             TextureConverter.RenderToTexture(alpha, Mask, outputTransform);
             HasMask = true;
-            Status = UsingRvm ? $"{Label} matte live ({layersPerFrame:0} layers/frame)" : $"{Label} mask live";
+            MatteCount++;
+            Status = !UsingRvm ? $"{Label} mask live"
+                : Whole ? $"{Label} matte live (every camera frame)"
+                : $"{Label} matte live (spread: {layersPerFrame:0} of {runLayers} layers/frame)";
             CountRate();
         }
 

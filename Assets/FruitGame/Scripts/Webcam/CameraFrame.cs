@@ -4,8 +4,10 @@ namespace FruitGame
 {
     /// <summary>
     /// Where the camera image sits (Docs/DESIGN.md §13). WebcamSource keeps the whole camera frame at its own aspect; on
-    /// screen it's fitted to the view's height and centred, so a frame wider than the view is cropped at the sides and a
-    /// narrower one (a 3:4 camera in landscape) fills only the middle, fading out at its left and right edges.
+    /// screen it's fitted to the height of the 3:4 play canvas and centred: the view's whole height in landscape, the
+    /// 3:4 band across the middle in portrait (the dirt and leaves cover the rest; fitted to the whole 9:16 height the
+    /// player looked bigger than in landscape). A frame wider than the view is cropped at the sides and a narrower one
+    /// (a 3:4 camera in landscape) fills only the middle, fading out at its left and right edges.
     /// Face tracking reports positions in this whole-frame uv; calibration and the basket use them relative to the
     /// 3:4 play area (the middle of the frame the photos show), so the same head movement means the same in either
     /// screen layout.
@@ -19,11 +21,19 @@ namespace FruitGame
         /// <summary>Width / height of the camera frame (3:4 until a camera delivers frames).</summary>
         public static float Aspect { get; set; } = PlayAspect;
 
-        /// <summary>Faded edge width in frame uv: 0 when the frame covers the view's width.</summary>
-        public static float EdgeFade => Aspect < ScreenLayout.Aspect - 0.01f ? FadeWidth : 0f;
+        /// <summary>The share of the view's height the camera frame fills: the 3:4 canvas's height (1 in landscape,
+        /// 0.75 in a 9:16 portrait view).</summary>
+        public static float HeightFit => Mathf.Min(1f, ScreenLayout.Aspect / PlayAspect);
 
-        /// <summary>Frame uv → view (HUD frame) uv: centred, fitted to the view's height.</summary>
-        public static Vector2 ToView(Vector2 uv) => new Vector2(0.5f + (uv.x - 0.5f) * Aspect / ScreenLayout.Aspect, uv.y);
+        /// <summary>Faded edge width in frame uv: 0 when the frame covers the view's width.</summary>
+        public static float EdgeFade => Aspect * HeightFit < ScreenLayout.Aspect - 0.01f ? FadeWidth : 0f;
+
+        /// <summary>Frame uv → view (HUD frame) uv: centred, fitted to the canvas's height.</summary>
+        public static Vector2 ToView(Vector2 uv)
+        {
+            float k = HeightFit;
+            return new Vector2(0.5f + (uv.x - 0.5f) * Aspect * k / ScreenLayout.Aspect, 0.5f + (uv.y - 0.5f) * k);
+        }
 
         public static Rect ToView(Rect r)
         {

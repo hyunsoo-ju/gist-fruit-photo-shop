@@ -131,6 +131,18 @@ namespace FruitGame
             ["{0} (base)"] = "{0} (기본)",
             ["{0} warmer"] = "{0} 따뜻하게",
             ["{0} cooler"] = "{0} 차갑게",
+
+            // Performance meter (staff screen)
+            ["Performance"] = "성능",
+            ["Whole frame"] = "프레임 전체",
+            ["CPU (main thread)"] = "CPU (메인 스레드)",
+            ["Face finding"] = "얼굴 찾기",
+            ["Face mesh"] = "얼굴 메시",
+            ["Cut-out & beauty"] = "컷아웃 · 뷰티",
+            ["Mattes"] = "매트",
+            ["Face"] = "얼굴",
+            ["Mesh"] = "메시",
+            ["spread"] = "나눠 돌림",
         };
     }
 }

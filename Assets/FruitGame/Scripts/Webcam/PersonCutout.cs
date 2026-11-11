@@ -141,6 +141,11 @@ namespace FruitGame
 
         void LateUpdate()
         {
+            using (PerfMeter.Measure(PerfMeter.Part.CutOut)) CutOutAndBeauty();
+        }
+
+        void CutOutAndBeauty()
+        {
             bool live = source != null && source.HasFrames && segmenter != null && segmenter.HasMask;
             if (quad.enabled != live) quad.enabled = live;
             if (!live) { primed = false; return; }
@@ -163,8 +168,8 @@ namespace FruitGame
             quadMaterial.SetFloat(EdgeHighId, edge.y);
             // Pixel-style outline around the player (Docs/DESIGN.md §4); the front layers draw over it where they overlap.
             quadMaterial.SetFloat(OutlineWidthId, config != null ? config.playerOutline : 0f);
-            // The quad spans the view's height: one screen pixel is 1 / reference height of it.
-            float h = ScreenLayout.Reference.y;
+            // The quad spans the canvas's height: one screen pixel is 1 / that many pixels of it.
+            float h = ScreenLayout.Reference.y * CameraFrame.HeightFit;
             quadMaterial.SetVector(OutlineTexelId, new Vector4(1f / (h * CameraFrame.Aspect), 1f / h, 0f, 0f));
             quadMaterial.SetFloat(FrameAspectId, CameraFrame.Aspect);
             quadMaterial.SetFloat(EdgeFadeId, CameraFrame.EdgeFade);

@@ -10,6 +10,9 @@ namespace FruitGame
     /// GameConfig.preferredCameraName if it matches, otherwise the first camera that isn't the laptop's built-in one
     /// (e.g. an iPhone via Continuity Camera, or a USB webcam), otherwise any camera.
     /// </summary>
+    // Before everything that reads the frame (PersonSegmenter is -400), so the matte is made from the same picture that
+    // is shown in this frame, not the one before it.
+    [DefaultExecutionOrder(-500)]
     public class WebcamSource : MonoBehaviour
     {
         [SerializeField] GameConfig config;
@@ -27,6 +30,8 @@ namespace FruitGame
         /// <summary>True once real frames are arriving.</summary>
         public bool HasFrames { get; private set; }
         public bool Failed { get; private set; }
+        /// <summary>Counts the camera frames copied into Output: a change means a new picture.</summary>
+        public int FrameCount { get; private set; }
         public string Status { get; private set; } = "Starting";
 
         WebCamTexture cam;
@@ -97,6 +102,12 @@ namespace FruitGame
 
         IEnumerator Open()
         {
+            if (TestMode.TestFrames)
+            {
+                DeviceName = "Test frames";
+                startedAt = Time.unscaledTime;
+                yield break;
+            }
             if (TestMode.CameraOff)
             {
                 Fail("Camera off (test mode)");
@@ -152,6 +163,7 @@ namespace FruitGame
 
         void Update()
         {
+            if (TestMode.TestFrames) { TestFrame(); return; }
             if (cam == null || Failed) return;
 
             // WebCamTexture reports a 16×16 placeholder until real frames arrive.
@@ -165,6 +177,7 @@ namespace FruitGame
                 }
                 MakeOutput(cam.width, cam.height);
                 Blit();
+                FrameCount++;
             }
             else if (!HasFrames && Time.unscaledTime - startedAt > noFrameTimeout)
             {
@@ -180,6 +193,23 @@ namespace FruitGame
             if (config != null ? config.mirrorCamera : mirror) { scale.x = -1f; offset.x = 1f; }
             if (cam.videoVerticallyMirrored) { scale.y = -1f; offset.y = 1f; }
             Graphics.Blit(cam, Output, scale, offset);
+        }
+
+        float nextTestFrame;
+
+        /// <summary>Test mode: a 1920 × 1080 camera at 60 fps showing a slowly moving pattern (no camera image).</summary>
+        void TestFrame()
+        {
+            if (Time.unscaledTime < nextTestFrame) return;
+            nextTestFrame = Mathf.Max(nextTestFrame + 1f / 60f, Time.unscaledTime - 0.05f);
+            MakeOutput(1920, 1080);
+            float t = Time.unscaledTime * 0.2f;
+            var prev = RenderTexture.active;
+            RenderTexture.active = Output;
+            GL.Clear(false, true, new Color(0.5f + 0.3f * Mathf.Sin(t), 0.45f, 0.5f + 0.3f * Mathf.Cos(t)));
+            RenderTexture.active = prev;
+            if (!HasFrames) { HasFrames = true; Status = "Live: test frames 1920×1080"; }
+            FrameCount++;
         }
 
         void Fail(string reason)

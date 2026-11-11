@@ -13,10 +13,18 @@ namespace FruitGame.EditorTools
         {
             EditorApplication.playModeStateChanged += state =>
             {
-                if (state == PlayModeStateChange.EnteredEditMode) SessionState.EraseBool(TestMode.CameraOffKey);
+                if (state == PlayModeStateChange.EnteredEditMode)
+                {
+                    SessionState.EraseBool(TestMode.CameraOffKey);
+                    SessionState.EraseBool(TestMode.TestFramesKey);
+                }
             };
             // Never left on by a reload in Edit mode.
-            if (!EditorApplication.isPlayingOrWillChangePlaymode) SessionState.EraseBool(TestMode.CameraOffKey);
+            if (!EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                SessionState.EraseBool(TestMode.CameraOffKey);
+                SessionState.EraseBool(TestMode.TestFramesKey);
+            }
         }
 
         [MenuItem("FruitGame/Test/Play Without Camera")]
@@ -24,6 +32,16 @@ namespace FruitGame.EditorTools
         {
             if (EditorApplication.isPlaying) return;
             SessionState.SetBool(TestMode.CameraOffKey, true);
+            EditorApplication.EnterPlaymode();
+        }
+
+        /// <summary>Camera off, but generated frames go through tracking and background removal (to measure their cost).</summary>
+        [MenuItem("FruitGame/Test/Play With Test Frames")]
+        public static void PlayWithTestFrames()
+        {
+            if (EditorApplication.isPlaying) return;
+            SessionState.SetBool(TestMode.CameraOffKey, true);
+            SessionState.SetBool(TestMode.TestFramesKey, true);
             EditorApplication.EnterPlaymode();
         }
     }

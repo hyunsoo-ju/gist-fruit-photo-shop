@@ -7,10 +7,16 @@ namespace FruitGame
 {
     /// <summary>
     /// Runs BlazeFace (short range) on the webcam feed with Unity Inference Engine and tracks one face (Docs/DESIGN.md §13).
-    /// The webcam frame (9:16 or 16:9) is letterboxed into the model's 128×128 input; scores filtering + NMS are baked
-    /// into the graph (as in Unity's BlazeDetectionSample). Results are in the webcam Output's UV space
-    /// (0..1, origin bottom-left, already mirrored), so they line up with what's on screen.
+    /// The webcam frame (9:16 or 16:9) is letterboxed into the model's 128×128 input. The model's raw output (a score
+    /// and a box for each of its 896 anchors, always the same size) is read back without waiting, and the boxes are
+    /// picked on the CPU (score threshold, then non-maximum suppression): with NMS in the graph, its output's size
+    /// wasn't known until the GPU had run, so scheduling stopped the main thread until the GPU had finished everything
+    /// queued before it (4–12 ms a detection behind background removal). Runs once per new camera frame. Results are in
+    /// the webcam Output's UV space (0..1, origin bottom-left, already mirrored), so they line up with what's on screen.
     /// </summary>
+    // Right after the camera copy (WebcamSource, -500) and before background removal (PersonSegmenter, -400): the face
+    // finding goes onto the GPU first, so its result isn't held up behind a whole RVM run.
+    [DefaultExecutionOrder(-450)]
     public class FaceTracker : MonoBehaviour
     {
         [SerializeField] WebcamSource source;
@@ -46,10 +52,16 @@ namespace FruitGame
         public string Status { get; private set; } = "Idle";
 
         float[,] anchors;
-        Worker worker;
-        Tensor<float> input;
+        // One worker (and input) per detection in flight: a worker recycles its output buffers when it's scheduled
+        // again, which broke a readback still waiting on the previous run.
+        Worker[] workers;
+        Tensor<float>[] inputs;
+        bool[] workerBusy;
         RenderTexture letterbox;
-        bool busy;
+        /// <summary>Detections may overlap: one starts on every new camera frame without waiting for the last one's
+        /// result (each takes about three frames to come back), up to this many at once.</summary>
+        const int MaxInFlight = 3;
+        int inFlight, started, latestDone = -1;
         bool disposed;
         int frames;
         float rateWindowStart;
@@ -66,20 +78,20 @@ namespace FruitGame
             anchors = LoadAnchors(anchorsCsv.text);
             var model = ModelLoader.Load(faceModel);
 
-            // Bake input normalisation (0..1 → −1..1), score filtering and NMS into the graph.
+            // Bake the input normalisation (0..1 → −1..1) into the graph; keep the raw outputs (fixed size).
             var graph = new FunctionalGraph();
             var x = graph.AddInput(model, 0);
             var outputs = Functional.Forward(model, 2 * x - 1);
-            var rawBoxes = outputs[0];   // (1, 896, 16)
-            var rawScores = outputs[1];  // (1, 896, 1)
-            var anchorData = new float[NumAnchors * 4];
-            Buffer.BlockCopy(anchors, 0, anchorData, 0, anchorData.Length * sizeof(float));
-            var anchorTensor = Functional.Constant(new TensorShape(NumAnchors, 4), anchorData);
-            var (indices, scores, boxes) = NmsFiltering(rawBoxes, rawScores, anchorTensor, iouThreshold, scoreThreshold);
-            model = graph.Compile(indices, scores, boxes);
+            model = graph.Compile(outputs[0], outputs[1]); // boxes (1, 896, 16), scores (1, 896, 1)
 
-            worker = new Worker(model, backend);
-            input = new Tensor<float>(new TensorShape(1, InputSize, InputSize, 3));
+            workers = new Worker[MaxInFlight];
+            inputs = new Tensor<float>[MaxInFlight];
+            workerBusy = new bool[MaxInFlight];
+            for (int i = 0; i < MaxInFlight; i++)
+            {
+                workers[i] = new Worker(model, backend);
+                inputs[i] = new Tensor<float>(new TensorShape(1, InputSize, InputSize, 3));
+            }
             letterbox = new RenderTexture(InputSize, InputSize, 0, RenderTextureFormat.ARGB32) { name = "Face Input 128" };
             letterbox.Create();
             rateWindowStart = Time.unscaledTime;
@@ -88,32 +100,46 @@ namespace FruitGame
 
         void Update()
         {
-            if (worker == null || busy || source == null || !source.HasFrames || source.Output == null) return;
+            if (workers == null || inFlight >= MaxInFlight || source == null || !source.HasFrames || source.Output == null) return;
+            // Nothing new to look at: the same picture would give the same faces.
+            if (source.FrameCount == lastFrame) return;
+            lastFrame = source.FrameCount;
             DetectAsync();
         }
 
         async void DetectAsync()
         {
-            busy = true;
+            int slot = System.Array.IndexOf(workerBusy, false);
+            if (slot < 0) return;
+            workerBusy[slot] = true;
+            var worker = workers[slot];
+            var input = inputs[slot];
+            inFlight++;
+            int id = started++;
             try
             {
-                Letterbox(source.Output);
-                TextureConverter.ToTensor(letterbox, input, new TextureTransform().SetTensorLayout(TensorLayout.NHWC));
-                worker.Schedule(input);
-
-                var idxTask = (worker.PeekOutput(0) as Tensor<int>).ReadbackAndCloneAsync();
-                var scoreTask = (worker.PeekOutput(1) as Tensor<float>).ReadbackAndCloneAsync();
-                var boxTask = (worker.PeekOutput(2) as Tensor<float>).ReadbackAndCloneAsync();
-                using var idx = await idxTask;
-                using var scores = await scoreTask;
+                Awaitable<Tensor<float>> boxTask, scoreTask;
+                using (PerfMeter.Measure(PerfMeter.Part.FaceFinding))
+                {
+                    Letterbox(source.Output);
+                    TextureConverter.ToTensor(letterbox, input, new TextureTransform().SetTensorLayout(TensorLayout.NHWC));
+                    worker.Schedule(input);
+                    boxTask = (worker.PeekOutput(0) as Tensor<float>).ReadbackAndCloneAsync();
+                    scoreTask = (worker.PeekOutput(1) as Tensor<float>).ReadbackAndCloneAsync();
+                }
                 using var boxes = await boxTask;
-                if (disposed) return;
+                using var scores = await scoreTask;
+                // The GPU finishes them in order, but drop a result older than one already used, just in case.
+                if (disposed || id < latestDone) return;
+                latestDone = id;
 
-                ReadFaces(idx, scores, boxes);
+                using (PerfMeter.Measure(PerfMeter.Part.FaceFinding))
+                {
+                    boxes.DownloadToNativeArray().CopyTo(rawBoxes);
+                    scores.DownloadToNativeArray().CopyTo(rawScores);
+                    ReadFaces();
+                }
                 CountRate();
-
-                // With no faces the readbacks complete synchronously; yield so the main thread keeps running.
-                if (idx.shape.length == 0) await Awaitable.NextFrameAsync();
             }
             catch (Exception e)
             {
@@ -121,7 +147,8 @@ namespace FruitGame
             }
             finally
             {
-                busy = false;
+                inFlight--;
+                workerBusy[slot] = false;
             }
         }
 
@@ -141,32 +168,64 @@ namespace FruitGame
             RenderTexture.active = prev;
         }
 
-        void ReadFaces(Tensor<int> idx, Tensor<float> scores, Tensor<float> boxes)
+        readonly float[] rawBoxes = new float[NumAnchors * 16];
+        readonly float[] rawScores = new float[NumAnchors];
+        readonly System.Collections.Generic.List<int> candidates = new System.Collections.Generic.List<int>();
+        readonly System.Collections.Generic.List<int> kept = new System.Collections.Generic.List<int>();
+        readonly System.Collections.Generic.List<Rect> keptRects = new System.Collections.Generic.List<Rect>();
+        int lastFrame = -1;
+
+        /// <summary>Box of anchor a in model pixels (x right, y down): centre and size.</summary>
+        Rect ModelBox(int a)
         {
-            int n = idx.shape.length;
+            float cx = anchors[a, 0] * InputSize + rawBoxes[a * 16], cy = anchors[a, 1] * InputSize + rawBoxes[a * 16 + 1];
+            float w = rawBoxes[a * 16 + 2], h = rawBoxes[a * 16 + 3];
+            return new Rect(cx - w * 0.5f, cy - h * 0.5f, w, h);
+        }
+
+        /// <summary>
+        /// Picks the faces from the raw output: anchors scoring at least scoreThreshold, best first, dropping any that
+        /// overlap a better one by more than iouThreshold (non-maximum suppression); then the face to follow.
+        /// </summary>
+        void ReadFaces()
+        {
+            candidates.Clear();
+            float minLogit = Mathf.Log(scoreThreshold / (1f - scoreThreshold)); // sigmoid(x) ≥ threshold
+            for (int a = 0; a < NumAnchors; a++)
+                if (rawScores[a] >= minLogit) candidates.Add(a);
+            candidates.Sort((p, q) => rawScores[q].CompareTo(rawScores[p]));
+            kept.Clear();
+            keptRects.Clear();
+            foreach (int a in candidates)
+            {
+                var box = ModelBox(a);
+                bool overlaps = false;
+                foreach (var k in keptRects)
+                    if (Iou(box, k) > iouThreshold) { overlaps = true; break; }
+                if (overlaps) continue;
+                kept.Add(a);
+                keptRects.Add(box);
+            }
+
             Rect best = default;
-            int bestIndex = -1;
+            int bestAnchor = -1;
             float bestScore = 0f, bestArea = 0f, bestOverlap = 0f;
             bool found = false;
 
             float aspect = (float)source.Output.width / source.Output.height;
             float contentW = Mathf.Min(1f, aspect), contentH = Mathf.Min(1f, 1f / aspect);
 
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < kept.Count; i++)
             {
-                int a = idx[i];
-                // Box centre/size in model pixels (x right, y down), relative to its anchor.
-                float cx = anchors[a, 0] * InputSize + boxes[0, i, 0];
-                float cy = anchors[a, 1] * InputSize + boxes[0, i, 1];
-                float bw = boxes[0, i, 2], bh = boxes[0, i, 3];
-
+                int a = kept[i];
+                var m = keptRects[i];
                 // Model pixels → letterbox UV (y up) → webcam-output UV.
-                float u = ((cx / InputSize) - (1f - contentW) * 0.5f) / contentW;
-                float v = ((1f - cy / InputSize) - (1f - contentH) * 0.5f) / contentH;
-                float uw = bw / InputSize / contentW, vh = bh / InputSize / contentH;
+                float u = ((m.center.x / InputSize) - (1f - contentW) * 0.5f) / contentW;
+                float v = ((1f - m.center.y / InputSize) - (1f - contentH) * 0.5f) / contentH;
+                float uw = m.width / InputSize / contentW, vh = m.height / InputSize / contentH;
                 var rect = new Rect(u - uw * 0.5f, v - vh * 0.5f, uw, vh);
 
-                float score = Sigmoid(scores[0, i, 0]);
+                float score = Sigmoid(rawScores[a]);
                 float area = uw * vh;
                 float overlap = HasFace ? Iou(rect, FaceRect) : 0f;
 
@@ -176,7 +235,7 @@ namespace FruitGame
                               || (bestOverlap < stickyIou && overlap < stickyIou && area > bestArea);
                 if (better)
                 {
-                    best = rect; bestIndex = i; bestScore = score; bestArea = area; bestOverlap = overlap; found = true;
+                    best = rect; bestAnchor = a; bestScore = score; bestArea = area; bestOverlap = overlap; found = true;
                 }
             }
 
@@ -185,11 +244,10 @@ namespace FruitGame
             {
                 FaceRect = best;
                 Score = bestScore;
-                int a = idx[bestIndex];
                 for (int k = 0; k < Keypoints.Length; k++)
                 {
-                    float kx = anchors[a, 0] * InputSize + boxes[0, bestIndex, 4 + 2 * k];
-                    float ky = anchors[a, 1] * InputSize + boxes[0, bestIndex, 5 + 2 * k];
+                    float kx = anchors[bestAnchor, 0] * InputSize + rawBoxes[bestAnchor * 16 + 4 + 2 * k];
+                    float ky = anchors[bestAnchor, 1] * InputSize + rawBoxes[bestAnchor * 16 + 5 + 2 * k];
                     Keypoints[k] = new Vector2(((kx / InputSize) - (1f - contentW) * 0.5f) / contentW,
                                                ((1f - ky / InputSize) - (1f - contentH) * 0.5f) / contentH);
                 }
@@ -214,29 +272,13 @@ namespace FruitGame
         void OnDestroy()
         {
             disposed = true;
-            worker?.Dispose();
-            input?.Dispose();
+            if (workers != null) foreach (var w in workers) w?.Dispose();
+            if (inputs != null) foreach (var t in inputs) t?.Dispose();
             if (letterbox != null)
             {
                 letterbox.Release();
                 Destroy(letterbox);
             }
-        }
-
-        /// <summary>Decodes box corners for NMS and keeps the surviving detections (thresholds are baked into the graph).</summary>
-        static (FunctionalTensor, FunctionalTensor, FunctionalTensor) NmsFiltering(FunctionalTensor rawBoxes,
-            FunctionalTensor rawScores, FunctionalTensor anchorTensor, float iou, float minScore)
-        {
-            var xCenter = rawBoxes[0, .., 0] + anchorTensor[.., 0] * InputSize;
-            var yCenter = rawBoxes[0, .., 1] + anchorTensor[.., 1] * InputSize;
-            var halfW = 0.5f * rawBoxes[0, .., 2];
-            var halfH = 0.5f * rawBoxes[0, .., 3];
-            var nmsBoxes = Functional.Stack(new[] { yCenter - halfH, xCenter - halfW, yCenter + halfH, xCenter + halfW }, 1);
-            var nmsScores = Functional.Squeeze(Functional.Sigmoid(Functional.Clamp(rawScores, -100f, 100f)));
-            var selected = Functional.NMS(nmsBoxes, nmsScores, iou, minScore);
-            var boxes = Functional.IndexSelect(rawBoxes, 1, selected).Unsqueeze(0);
-            var scores = Functional.IndexSelect(rawScores, 1, selected).Unsqueeze(0);
-            return (selected, scores, boxes);
         }
 
         static float[,] LoadAnchors(string csv)
