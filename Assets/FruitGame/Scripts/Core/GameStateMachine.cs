@@ -128,6 +128,11 @@ namespace FruitGame
                 case GameState.Setup:
                     setup.ChooseHighlighted();
                     break;
+                // Voice assist's waits: staff answering for a visitor without a keypad (5 works too).
+                case GameState.Gate:
+                case GameState.Calibrate:
+                    if (AffirmIfWaiting() && narrator != null) narrator.Click();
+                    break;
             }
         }
 
@@ -185,12 +190,18 @@ namespace FruitGame
 
         System.Action gateGo;
 
-        /// <summary>Voice assist: says the instructions, and nothing happens until the visitor presses 5.</summary>
+        string gateHint;
+
+        /// <summary>
+        /// Voice assist: says the instructions, and nothing happens until the visitor presses 5 (or, without a keypad,
+        /// tells the staff, who press 5, Enter or Space).
+        /// </summary>
         void Gate(System.Action go, params string[] keys)
         {
             SetState(GameState.Gate);
             gateGo = go;
-            hud.ShowMessage(Strings.Get("voice.pressFive"), null);
+            gateHint = VoiceAssist.ReadyHint;
+            hud.ShowMessage(gateHint, null);
             narrator.Quiet = false;
             narrator.SayNow(keys);
         }
@@ -286,6 +297,7 @@ namespace FruitGame
         void EndVisitSettings()
         {
             if (narrator != null) narrator.ResetVisit();
+            VoiceAssist.ResetVisit();
             if (router != null) router.EndVisit();
             HighContrast.On = false;
             Difficulty.ResetTo(config.defaultMode);
@@ -407,6 +419,11 @@ namespace FruitGame
 
             switch (State)
             {
+                case GameState.Gate:
+                    // Staff may switch the keypad off while the wait is up.
+                    if (gateHint != VoiceAssist.ReadyHint) { gateHint = VoiceAssist.ReadyHint; hud.ShowMessage(gateHint, null); }
+                    break;
+
                 case GameState.Countdown:
                     TickCountdown();
                     break;

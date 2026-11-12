@@ -278,6 +278,10 @@ namespace FruitGame
                 Action("Recalibrate", null, () => OnTitle() ? "" : T("on the title screen"), () => game.StartCalibration(), OnTitle),
                 Action("Visitor's call for help (0)", "H", () => StaffAlert.Active ? F("waiting {0}, clear", StaffAlert.Waiting) : T("none"),
                     StaffAlert.Clear, () => StaffAlert.Active),
+                // Voice assist without the keypad: the narration says "tell the staff" instead of "press 5"; answer with 5,
+                // Enter or Space. Cleared when the visit ends.
+                Action("Visitor has no keypad (voice assist)", "K", () => VoiceAssist.NoKeypad ? T("no keypad: staff answer") : T("has keypad"),
+                    () => VoiceAssist.SetNoKeypad(!VoiceAssist.NoKeypad)),
                 Action("Today's best score", null, () => bestArmed ? T("press again to reset") : F("{0}, reset", SaveData.BestScore),
                     () =>
                     {

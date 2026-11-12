@@ -35,7 +35,7 @@ namespace FruitGame
         [SerializeField] float pointsGap = 10f;
 
         [Header("Logos (leave empty for placeholders)")]
-        [Tooltip("Event logo (열린감각), bottom left.")]
+        [Tooltip("Event logo (2026 장애예술창작페스타 / Disability Arts Festa), bottom left.")]
         [SerializeField, FormerlySerializedAs("labLogo")] Texture2D eventLogo;
         [SerializeField] Texture2D schoolLogo;
         [SerializeField, FormerlySerializedAs("labLogoImage")] RawImage eventLogoImage;

@@ -8,10 +8,11 @@ namespace FruitGame
 {
     /// <summary>
     /// Everything around the voice that isn't the voice (Docs/DESIGN.md M6 item 6): the title's voice assist and high
-    /// contrast buttons, a touch bar of speech controls and the caption strip while voice assist is on, the short
-    /// spoken invitation when someone comes up to the title, and optional **numpad** control. Nothing needs the numpad;
-    /// its keys (or the number row) mirror the touch controls: 7 repeat, 8/2 volume, 9 speed, 3 stop, 4/6 pick a button
-    /// (the steer in the round), 5 press, 1 back, 0 call staff. Added by Narrator at startup.
+    /// contrast buttons, the caption strip while voice assist is on, the short spoken invitation when someone comes up
+    /// to the title, and **numpad** control: 7 repeat, 8/2 volume, 9 speed, 3 stop, 4/6 pick a button (the steer in the
+    /// round), 5 press, 1 back, 0 call staff (the number row works too, so staff can answer from the laptop). A visitor
+    /// may have no keypad: the narration asks them to tell the staff, staff set NoKeypad (staff panel, K), and the
+    /// narration then says "tell the staff" where it would say "press 5". Added by Narrator at startup.
     /// </summary>
     public class VoiceAssist : MonoBehaviour
     {
@@ -22,6 +23,28 @@ namespace FruitGame
 
         public static VoiceAssist Instance { get; private set; }
 
+        /// <summary>This visitor has no keypad: staff answer for them (set from the staff panel; cleared with the visit).</summary>
+        public static bool NoKeypad { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetForPlay() => NoKeypad = false;
+
+        /// <summary>Staff: this visitor has no keypad (or has one after all). Voice assist says so and carries on.</summary>
+        public static void SetNoKeypad(bool none)
+        {
+            if (NoKeypad == none) return;
+            NoKeypad = none;
+            Debug.Log($"[FruitGame] Voice assist: {(none ? "no keypad, staff answer for the visitor" : "keypad")}");
+            var n = Narrator.Instance;
+            if (n != null && Difficulty.Auditory) { n.Quiet = false; n.SayFocus(none ? "keypad_none" : "keypad_back"); }
+        }
+
+        /// <summary>The visit is over: the next visitor is taken to have the keypad until staff say otherwise.</summary>
+        public static void ResetVisit() => NoKeypad = false;
+
+        /// <summary>The on-screen line under a voice assist wait: press 5, or tell the staff.</summary>
+        public static string ReadyHint => Strings.Get(NoKeypad ? "voice.tellStaff" : "voice.pressFive");
+
         Narrator narrator;
         GameStateMachine game;
         FaceTracker tracker;
@@ -29,7 +52,7 @@ namespace FruitGame
         BasketInputRouter router;
         RectTransform frame;
         Canvas guestCanvas;
-        GameObject bar, captionStrip;
+        GameObject captionStrip;
         readonly Dictionary<TMP_Text, RectTransform> plates = new Dictionary<TMP_Text, RectTransform>();
         readonly List<TMP_Text> plateKeys = new List<TMP_Text>();
         float nextPlateScan;
@@ -62,7 +85,6 @@ namespace FruitGame
             var menu = frame.Find("Start Menu");
             var auditory = menu != null ? menu.Find("Auditory Button") : null;
             var calibrate = menu != null ? menu.Find("Calibrate Button") : null;
-            var pause = frame.Find("Pause Menu/Menu Button");
             if (auditory != null)
             {
                 RemoveLayout(auditory.gameObject);
@@ -120,42 +142,6 @@ namespace FruitGame
             captionText.textWrappingMode = TextWrappingModes.Normal;
             captionText.raycastTarget = false;
             captionStrip.SetActive(false);
-
-            // Touch speech controls: a column on the left edge.
-            bar = new GameObject("Voice Bar", typeof(RectTransform), typeof(VerticalLayoutGroup));
-            bar.transform.SetParent(frame, false);
-            var br = (RectTransform)bar.transform;
-            br.anchorMin = br.anchorMax = new Vector2(0f, 0.55f);
-            br.pivot = new Vector2(0f, 0.5f);
-            br.anchoredPosition = new Vector2(12f, 0f);
-            br.sizeDelta = new Vector2(148f, 560f);
-            var layout = bar.GetComponent<VerticalLayoutGroup>();
-            layout.spacing = 12f;
-            layout.childControlWidth = layout.childControlHeight = true;
-            layout.childForceExpandWidth = layout.childForceExpandHeight = true;
-            if (pause != null)
-            {
-                BarButton(pause.gameObject, "voice.repeat", () => narrator.Repeat());
-                BarButton(pause.gameObject, "voice.stop", () => narrator.StopOrMute());
-                BarButton(pause.gameObject, "voice.louder", () => narrator.ChangeVolume(1));
-                BarButton(pause.gameObject, "voice.quieter", () => narrator.ChangeVolume(-1));
-                BarButton(pause.gameObject, "voice.speed", () => narrator.NextSpeed());
-            }
-            bar.SetActive(false);
-        }
-
-        void BarButton(GameObject style, string key, System.Action action)
-        {
-            var b = Instantiate(style, bar.transform).GetComponent<Button>();
-            b.name = key;
-            b.onClick = new Button.ButtonClickedEvent();
-            b.onClick.AddListener(() => action());
-            RemoveLayout(b.gameObject);
-            var label = b.GetComponentInChildren<LocalizedText>(true);
-            if (label != null) label.Key = key;
-            var text = b.GetComponentInChildren<TMP_Text>(true);
-            if (text != null) text.fontSize = 32f;
-            b.gameObject.SetActive(true);
         }
 
         void Edge(Vector2 min, Vector2 max, Vector2 offMin, Vector2 offMax)
@@ -209,7 +195,6 @@ namespace FruitGame
         {
             if (!built || game == null) return;
             bool voice = Difficulty.Auditory;
-            Toggle(bar, voice && !InRound);
             bool showCaption = voice && narrator.Caption.Length > 0;
             Toggle(captionStrip, showCaption);
             if (showCaption)
@@ -443,7 +428,7 @@ namespace FruitGame
             foreach (var b in FindObjectsByType<Button>(FindObjectsInactive.Exclude))
             {
                 if (!b.interactable || b.GetComponentInParent<Canvas>().rootCanvas != guestCanvas) continue;
-                if (b.transform.IsChildOf(bar.transform) || b.name == "Pause Button") continue;
+                if (b.name == "Pause Button") continue;
                 all.Add(b);
                 phone |= b.transform.parent != null && b.GetComponentInParent<RectTransform>().root != null && IsInPhonePanel(b);
             }

@@ -8,7 +8,9 @@ namespace FruitGame
     /// (rendered by Tools/render_narration.py from Resources/NarrationLines.txt), falling back to Resources/Narration/&lt;key&gt;.
     /// One voice path: SayNow cuts whatever is playing, Say adds to the current utterance, and the visitor can stop,
     /// repeat, mute, and change speed and volume; those last for one visit (ResetVisit). A line with no clip yet shows
-    /// its caption for a moment and moves on.
+    /// its caption for a moment and moves on. While the visitor has no keypad (VoiceAssist.NoKeypad), a line that has a
+    /// `<key>_staff` version is spoken as that ("tell the staff" instead of "press 5"), chosen as it's spoken, so a
+    /// repeat or instructions picked up again after a reply follow the current choice.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class Narrator : MonoBehaviour
@@ -204,6 +206,12 @@ namespace FruitGame
             foreach (var r in rest) queue.Enqueue(r);
         }
 
+        /// <summary>The staff version of a line while the visitor has no keypad, if there is one.</summary>
+        string ForVisitor(string key) =>
+            VoiceAssist.NoKeypad && captions.ContainsKey(key + StaffSuffix) ? key + StaffSuffix : key;
+
+        const string StaffSuffix = "_staff";
+
         AudioClip Clip(string key)
         {
             string path = speeds.Count > 0 ? $"Narration/s{speeds[speedIndex]}/{key}" : "Narration/" + key;
@@ -227,6 +235,7 @@ namespace FruitGame
             if (Time.unscaledTime < nextAt) return;
             string key = queue.Dequeue();
             if (key == Buttons) { ExpandButtons(); return; }
+            key = ForVisitor(key);
             Caption = CaptionOf(key);
             var clip = Clip(key);
             if (clip == null)

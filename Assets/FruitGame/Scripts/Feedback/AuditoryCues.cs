@@ -12,6 +12,9 @@ namespace FruitGame
     /// - <b>Pitch</b> rises as the fruit falls closer to the basket.
     /// Golden fruit get a brighter, shimmering timbre. A rising chime plays on a catch (sparklier for golden), a soft
     /// falling note on a miss. Everything ducks while the narrator speaks.
+    /// With no fruit, during calibration's "try it" step, a gentle pulse stands for the basket itself: placed by where it
+    /// is (hard left at the left end of its travel, ahead in the middle), at a fixed low pitch and rate so it can't be
+    /// taken for a fruit, so a visitor who can't see it hears the basket follow their head.
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class AuditoryCues : MonoBehaviour
@@ -29,6 +32,11 @@ namespace FruitGame
         [Tooltip("Pitch (Hz) when the fruit appears, and when it reaches the basket.")]
         [SerializeField] Vector2 pitch = new Vector2(440f, 1245f);
         [SerializeField, Range(0f, 1f)] float duckWhileSpeaking = 0.25f;
+        [Tooltip("Calibration's try-it step: the basket's pulse pitch (Hz) and pulses a second.")]
+        [SerializeField] float tryPitch = 392f;
+        [SerializeField] float tryPulsesPerSecond = 4f;
+
+        CalibrationController calibration;
 
         const float HeadRadius = 0.0875f, SpeedOfSound = 343f;
         const float BeepLength = 0.045f;
@@ -62,6 +70,7 @@ namespace FruitGame
             source.loop = true;
             if (!source.isPlaying) source.Play();
             if (spawner != null) spawner.FruitResolved += OnResolved;
+            calibration = FindAnyObjectByType<CalibrationController>();
         }
 
         void OnDestroy()
@@ -88,7 +97,23 @@ namespace FruitGame
                 foreach (var f in spawner.GetComponentsInChildren<FallingFruit>())
                     if (!f.Resolved && f.FruitKind != FallingFruit.Kind.Bomb && (target == null || f.transform.position.y < target.transform.position.y))
                         target = f;
-            if (target == null) { active = false; return; }
+            if (target == null)
+            {
+                // Calibration's try-it step: the basket's own place, so moving the head is heard.
+                if (Enabled && basket != null && calibration != null && calibration.Trying)
+                {
+                    float x = Mathf.Clamp(basket.X / Mathf.Max(0.01f, config.basketXLimit), -1f, 1f);
+                    azimuth = x * Mathf.PI * 0.5f;
+                    toneHz = tryPitch;
+                    interval = 1f / Mathf.Max(0.5f, tryPulsesPerSecond);
+                    steady = false;
+                    golden = false;
+                    active = true;
+                    return;
+                }
+                active = false;
+                return;
+            }
 
             var p = target.transform.position;
             float dx = p.x - basket.X;

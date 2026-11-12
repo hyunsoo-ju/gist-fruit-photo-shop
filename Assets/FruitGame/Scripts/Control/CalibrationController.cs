@@ -36,6 +36,8 @@ namespace FruitGame
         /// <summary>Raised when calibration ends: (accepted, thenPlay).</summary>
         public event Action<bool, bool> Finished;
         public bool Running => step != Step.Idle;
+        /// <summary>The "try it" step: the visitor moves the basket freely before accepting (AuditoryCues sounds it by ear).</summary>
+        public bool Trying => step == Step.Try;
 
         Step step = Step.Idle;
         bool thenPlay;
@@ -152,10 +154,10 @@ namespace FruitGame
         {
             if (step == Step.Idle || step == Step.Try) return;
 
-            // Voice assist: nothing counts until the visitor has heard the direction and pressed 5.
+            // Voice assist: nothing counts until the visitor has heard the direction and pressed 5 (or staff have for them).
             if (awaitingFive)
             {
-                hint.text = Strings.Get("voice.pressFive");
+                hint.text = VoiceAssist.ReadyHint;
                 ring.gameObject.SetActive(false);
                 history.Clear();
                 steadySince = -1f;

@@ -86,8 +86,9 @@ If a visitor walks away mid-visit, "Still there?" appears after 20 s and the tit
 ### Voice-assist visitors (blind and low-vision)
 
 - Pressing **Voice assist** on the title, or **5** on the keypad, turns it on. Put the headphones on them.
-- Voice assist skips the difficulty step, plays a gentler round and speaks every screen. It's controlled with the touch buttons on the left (Again, Stop, Louder, Softer, Speed) and the keypad below.
-- When "Press 5" is asked, the visitor presses **5** once they've understood, and only then does it move on. Without a keypad, staff press **5** on the laptop keyboard for them.
+- Voice assist skips the difficulty step, plays a gentler round and speaks every screen. It's controlled with the keypad below (repeat, stop, volume, speed).
+- When "Press 5" is asked, the visitor presses **5** once they've understood, and only then does it move on.
+- **No keypad for this visitor:** the intro asks them to tell you. Press **K** in the staff panel (panel keys on, or click its row on the Gameplay page): from then on the narration says "tell the staff when you're ready" instead of "press 5". When they tell you, press **5**, **Enter** or **Space** on the laptop; for a choice, tap the button they name. It's cleared when the visit ends.
 - **High contrast** turns the screen black with yellow outlines, for low-vision visitors.
 - Both turn off by themselves when the visit ends (back on the title).
 
@@ -141,7 +142,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 | The panel's letter keys don't respond | Press **`** (or fn+F1) first to turn the panel keys on; its header changes to "keys on". In the Editor, click a Game view once first. |
 | The guest and staff screens are swapped | Make the laptop the main display (Displays ▸ Arrange), or change staff panel ▸ Display ▸ "Main display shows", then restart the app. |
 | The guest screen is black | Press **F5** once (the blank-screen test is on). |
-| No sound | Check the headphones and the macOS sound output. In voice assist, press **Louder** or **8** on the keypad. |
+| No sound | Check the headphones and the macOS sound output. In voice assist, press **8** on the keypad (or raise the Mac's volume). |
 | The game stutters in the Realistic look | Turn **Ray tracing** off on the panel's Display page (or switch the look to Classic). |
 | The camera has to stay off (privacy, a broken camera) | Panel ▸ Camera page ▸ **Camera**: Off. A plain soft colour shows behind the scene and the basket follows the mouse or arrow keys. It's on again after a restart. |
 | The screen is stuck or behaving oddly | Pause (Esc) ▸ **Main menu**. Failing that, quit and restart the app (or Play); settings are kept. |
@@ -183,6 +184,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 
 - **Beeps:** which side of the basket the fruit is on, heard in the matching ear. They speed up as the basket gets under the fruit and become one long tone right under it.
 - **Clear sounds:** a bright chime for a catch, a low note for a miss, a sparkle for a golden fruit.
+- **Trying the basket** (after calibration): a gentle tapping from wherever the basket is, so the visitor hears it follow their head.
 - **Narrator:** the time left and score (at 45, 30 and 15 s), the final score, and pose guidance for the photo ("a little to the right!"). Speech speed goes from 1× to 2×.
 
 ### The four-cut photo
