@@ -49,6 +49,8 @@ namespace FruitGame
         int step, highlighted;
 
         static readonly Color Highlight = new Color32(0xC2, 0x18, 0x5B, 0xFF);
+        /// <summary>The combo line on the difficulty cards (the combo popup's pink; 5.6:1 on the cream card).</summary>
+        static readonly Color ComboColour = Highlight;
 
         void Awake() => Build();
 
@@ -140,9 +142,9 @@ namespace FruitGame
             }
             else
             {
-                AddCard("walk.easy", "walk.easy.desc", false, null, () => ChooseMode(DefaultMode.Easy));
-                AddCard("walk.normal", "walk.normal.desc", false, null, () => ChooseMode(DefaultMode.Normal));
-                AddCard("walk.hard", "walk.hard.desc", false, null, () => ChooseMode(DefaultMode.Hard));
+                AddCard("walk.easy", "walk.easy.desc", false, null, () => ChooseMode(DefaultMode.Easy), config.gentleComboCap);
+                AddCard("walk.normal", "walk.normal.desc", false, null, () => ChooseMode(DefaultMode.Normal), config.comboCap);
+                AddCard("walk.hard", "walk.hard.desc", false, null, () => ChooseMode(DefaultMode.Hard), config.hardComboCap);
                 highlighted = Difficulty.Easy ? 0 : Difficulty.Hard ? 2 : 1;
                 Say("walk_difficulty", Narrator.Buttons);
             }
@@ -150,7 +152,8 @@ namespace FruitGame
             UiTransition.Pop(cardRow.gameObject);
         }
 
-        void AddCard(string titleKey, string descKey, bool recommended, SteerBy? diagram, Action choose)
+        /// <param name="comboCap">Difficulty cards: the mode's highest combo multiplier, shown as a line under the description (the combo ladder).</param>
+        void AddCard(string titleKey, string descKey, bool recommended, SteerBy? diagram, Action choose, int comboCap = 0)
         {
             // Holder (laid out in the row) → a pink frame behind (shown for the keyboard's pick) → the cream card.
             var holder = new GameObject(titleKey, typeof(RectTransform), typeof(LayoutElement)).GetComponent<RectTransform>();
@@ -212,6 +215,12 @@ namespace FruitGame
 
             Text(card, titleKey, 64f, 90f).fontSize = 64f;
             Text(card, descKey, 32f, 140f);
+            if (comboCap > 1)
+            {
+                var combo = Text(card, "walk.combo", 32f, 50f);
+                combo.color = ComboColour;
+                combo.GetComponent<LocalizedText>().Args = new object[] { comboCap };
+            }
 
             int index = cards.Count;
             card.GetComponent<Button>().onClick.AddListener(() => { highlighted = index; if (Narrator.Instance != null) Narrator.Instance.Click(); choose(); });

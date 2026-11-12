@@ -478,7 +478,7 @@ namespace FruitGame
             if (Narrating)
             {
                 // The Sound round has no bombs, so only golden fruit need explaining (the line says 3 points: goldenPoints).
-                if (config.goldenPerRound > 0) Gate(RunCountdown, "intro", "rules_golden", "game_start_ask");
+                if (config.GoldenPerRound > 0) Gate(RunCountdown, "intro", "rules_golden", "game_start_ask");
                 else Gate(RunCountdown, "intro", "game_start_ask");
                 return;
             }
@@ -618,7 +618,7 @@ namespace FruitGame
                 basket.PlayCatch();
                 audioFeedback.PlayCatch(golden);
                 hud.PopScore(points);
-                if (ScoreRules.IsCombo(Stats.Streak, config)) hud.ShowPopup(Strings.Get("hud.combo", Stats.Streak, config.comboMultiplier), GameHUD.PopupKind.Combo);
+                if (ScoreRules.IsCombo(Stats.Streak, config)) hud.ShowPopup(Strings.Get("hud.combo", Stats.Streak, ScoreRules.Multiplier(Stats.Streak, config)), GameHUD.PopupKind.Combo);
                 else if (golden) hud.ShowPopup("+" + points, GameHUD.PopupKind.Golden);
                 if (golden) Say("golden");
                 return;

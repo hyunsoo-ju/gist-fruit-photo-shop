@@ -16,6 +16,15 @@ namespace FruitGame
             set { key = value; if (isActiveAndEnabled) Refresh(); }
         }
 
+        object[] args;
+
+        /// <summary>Values for the entry's {0}, {1}… (for labels built at runtime).</summary>
+        public object[] Args
+        {
+            get => args;
+            set { args = value; if (isActiveAndEnabled) Refresh(); }
+        }
+
         void OnEnable()
         {
             Strings.Changed += Refresh;
@@ -27,7 +36,7 @@ namespace FruitGame
         void Refresh()
         {
             // A label built at runtime is enabled the moment it's added, before it's been given its key.
-            if (!string.IsNullOrEmpty(key)) GetComponent<TMP_Text>().text = Strings.Get(key);
+            if (!string.IsNullOrEmpty(key)) GetComponent<TMP_Text>().text = args != null ? Strings.Get(key, args) : Strings.Get(key);
         }
     }
 }

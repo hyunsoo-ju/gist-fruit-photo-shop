@@ -146,17 +146,18 @@ The scene is a stack of parallel planes along Z, seen through a **perspective ca
 
 ## 5. Rules & scoring
 
-- **Caught** = points for that fruit type (all 1; golden 3; ×2 in a combo). The fruit pops into the basket, then a copy drops onto the background pile.
+- **Caught** = points for that fruit type (all 1; golden 3), times the combo multiplier (the combo ladder, below). The fruit pops into the basket, then a copy drops onto the background pile.
 - **Missed** = no penalty in timed mode; it only costs time. The miss is counted. The fruit falls off-screen behind the bottom bushes.
 - **Round timer:** 60 s, top-right. It pauses whenever the game pauses. The last 10 s pulse.
 - **Lives (coded, off):** `LivesCounter` and a lives HUD exist and are tested, but `GameConfig.endCondition = Timer` keeps them inactive. Switching to `Lives` (or `TimerOrLives`) makes 3 misses end the round, with no other code change.
 - **The round gets harder through pace and variety, never through more head movement** (M16.1): calibration still maps each player's own range to the full basket travel, and the basket keeps its size.
   - **Everything ramps evenly** (linear over the round, no steps): fall speed 2.7 → 4.05 m/s (1.5×) and the drift cap 0.7 → 1.8 m/s, so wall bounces become common. The assist stays at full strength all round.
   - **Drops away from the basket:** each fruit drops at least 0.5 m from where the basket is at the start of the round, growing to 1.3 m by the end (`spawnAwayFromBasket`; not in Easy), so the player has to move to it.
-  - **Pace:** fruit drop on a beat whose rate climbs in a straight line, from the opening pace (one fruit's fall plus a 0.6 s gap: 3.7 per 10 s) to **9 per 10 s** at the end (`endDropsPer10s`), the same increase every 10 s. Since fruit fall only 1.5× faster by the end while the rate climbs to 9 per 10 s, more of them share the screen late on (up to `maxFruitInAir`, 3). *An earlier version switched to two at once with 20 s left and ramped along a squared curve; that felt like the game suddenly doubled in speed.*
-  - **Golden fruit** (**3 per round**, `goldenPerRound`): gold all over with a sparkle trail, 25 % faster, worth **3**; it joins the pile in gold.
-  - **Combo:** from the **5th catch in a row**, every catch scores **×2**, with a "N연속! 점수 ×2" pop under the score. A missed fruit or a caught bomb resets the streak.
-  - **Bomb** (**4 per round**, `bombsPerRound`, from 15 s in): a dark voxel bomb whose fuse burns at the tip, throwing sparks; the assist never pulls it, and letting it fall past costs nothing. Catching it blows it up (a burst of fire and smoke blocks, a low thud) and costs **5 points** (never below 0), with a red "−5" pop. Bombs never join the pile; game over lists them ("폭탄 n개").
+  - **Pace:** fruit drop on a beat whose rate climbs in a straight line, from the opening pace (one fruit's fall plus a 0.6 s gap: 3.7 per 10 s) to **9 per 10 s** at the end (`endDropsPer10s`), the same increase every 10 s. Since fruit fall only 1.5× faster by the end while the rate climbs to 9 per 10 s, more of them share the screen late on (up to `maxFruitInAir`, 3). Hard opens faster, at **6 per 10 s** (`hardStartDropsPer10s`), and climbs to the same kind of end rate, so its round drops more fruit (about 49 against Normal's 34) and its best possible score is higher. *An earlier version switched to two at once with 20 s left and ramped along a squared curve; that felt like the game suddenly doubled in speed.*
+  - **Golden fruit** (**4 per round** in Normal, 3 in Easy and Sound, 6 in Hard: `goldenPerRound`, `gentleGoldenPerRound`, `hardGoldenPerRound`): gold all over with a sparkle trail, 25 % faster but never past the speed cap, worth **3**, times the combo multiplier like any catch (a golden fruit at ×5 is 15); it joins the pile in gold.
+  - **Combo ladder:** from the **5th catch in a row** a catch scores **×2**, then one more every 5 catches (×3 at 10, ×4 at 15, ×5 at 20; `comboFrom`, `comboStep`) up to the mode's cap: **×3** in Easy and Sound, **×4** in Normal, **×5** in Hard (`gentleComboCap`, `comboCap`, `hardComboCap`), so harder modes are higher stakes with higher rewards. A "N연속! 점수 ×M" pop under the score shows it, and each difficulty card in the setup flow says its cap ("연속 콤보 최대 ×N"). A missed fruit or a caught bomb resets the streak; a dodged bomb doesn't.
+  - **Speed cap:** no fruit falls faster than **4.8 m/s** (`fallSpeedCap`), golden ones included (they reached 6.1 m/s at the end of Hard before).
+  - **Bomb** (**5 per round** in Normal, 9 in Hard: `bombsPerRound`, `hardBombsPerRound`; from 15 s in): a dark voxel bomb whose fuse burns at the tip, throwing sparks; the assist never pulls it, and letting it fall past costs nothing. Catching it blows it up (a burst of fire and smoke blocks, a low thud) and costs **5 points** (never below 0), with a red "−5" pop. Bombs never join the pile; game over lists them ("폭탄 n개").
   - **Fixed numbers:** every round has the same number of golden fruit and bombs, so rounds are comparable. Each is scheduled at a random time inside its own equal share of the round (the middle 60 % of it), golden fruit over the whole round and bombs from 15 s, none in the last 5 s (`specialsEndBefore`); the first spawn after a scheduled time takes it.
   - **Easy** and **Sound mode** are gentler rounds for players who need them (§6).
   - **Target:** about 40–50 % of fruit caught for a first-timer and 70–80 % for a practised player, read from the round stats; final values are tuned in M6. *Measured with nobody moving the basket: 29 % of fruit caught and a score of about 5 (it was 68 % before the assist followed the basket's movement). Still to check with real players: the catch rate when moving, and the eased basket's feel.*
@@ -180,12 +181,13 @@ Four modes share the same game; only the pace, the assist and what falls change.
 |---|---|---|---|---|
 | Who it's for | Most players | Players who need it gentler | Players who want a challenge | Blind and low-vision players (§11) |
 | Turned on by | (default) | The setup flow, **E** in the staff panel, or as the staff's default mode | The setup flow, or as the staff's default mode | The title's **음성 안내** button, **A**, or the numpad's 5; "음성 안내 켜짐" tag and a spoken confirmation |
-| Fall speed | 2.7 → 4.05 m/s over the round | 2.7 → 3.8 m/s | 2.7 → 5.2 m/s | steady 2.3 m/s |
-| Pace | drop rate 3.7 → 9 per 10 s, overlapping late on | one at a time, 0.6 s after the last lands | drop rate 3.7 → 13 per 10 s, up to 4 in the air | one at a time, 1 s after the last lands |
+| Fall speed | 2.7 → 4.05 m/s over the round | 2.7 → 3.8 m/s | 2.7 → 4.8 m/s | steady 2.3 m/s |
+| Pace | drop rate 3.7 → 9 per 10 s, overlapping late on | one at a time, 0.6 s after the last lands | drop rate 6 → 13 per 10 s, up to 4 in the air | one at a time, 1 s after the last lands |
 | Where fruit drop | at least 0.5 → 1.3 m from the basket | anywhere | as Normal | anywhere |
 | Assist (§10) | 2.6 m, strength 7, follows a moving basket | 1.8 m, strength 4, always on | as Normal | 2.2 m, strength 5.5, always on |
-| Golden fruit, combo | 3 golden, combo | 3 golden, combo | 3 golden, combo | 3 golden (with their own beep), combo |
-| Bombs | 4, from 15 s | no | 7, from 15 s | no |
+| Golden fruit, combo | 4 golden, combo up to ×4 | 3 golden, combo up to ×3 | 6 golden, combo up to ×5 | 3 golden (with their own beep), combo up to ×3 |
+| Bombs | 5, from 15 s | no | 9, from 15 s | no |
+| Best possible score (simulated) | about 134 | about 80 | about 205 | about 55 |
 | Feedback | visual + sounds | visual + sounds | visual + sounds | binaural beep, chimes and the narrator |
 | Ends | — | when the round ends | back on the title screen | back on the title screen |
 
@@ -244,6 +246,7 @@ Each fruit is a Rigidbody with a sphere collider, locked to z = 0.
 
 ### Face tracking robustness
 - With several faces, track the largest box, but stick with the previous target while it still overlaps it (IoU ≥ 0.3).
+- **No flicker between face and no face:** a new face needs a score of 0.6 to be picked up, but the face already being followed is kept down to 0.35 while it overlaps its last box (`keepThreshold`; hysteresis), and through missed detections its last box is held for 0.3 s (`holdSeconds`). A soft or slightly out-of-focus face used to hover around 0.6 and blink in and out, most visibly during calibration.
 - Face lost: the basket holds its position. After 1 s the game pauses with "Can't see you!", and resumes 1 s after the face returns (a manual pause still waits for Resume).
 - Keyboard ← → / A D and mouse x drive the basket when no webcam is present or when the staff panel's **M** is on.
 
@@ -567,12 +570,13 @@ Editor tools under **FruitGame > Voxels** and **FruitGame > Scene** (`Scripts/Ed
 | `assistFullAtSpeed` / `assistLinger` / `assistIdleLevel` | 1.2 m/s / 0.6 s / 0.15 | the assist follows a moving basket (normal round only) |
 | `easyAssistRadius` / `easyAssistStrength` / `easyAssistExtraSpeedCap` | 1.8 m / 4 m/s² / 1.0 m/s | Easy: the original assist, always on |
 | `auditoryAssistRadius` / `auditoryAssistStrength` / `auditoryAssistExtraSpeedCap` | 2.2 m / 5.5 m/s² / 1.3 m/s | auditory mode, always on |
-| `goldenPerRound` / `goldenSpeedFactor` / `goldenPoints` | 3 / 1.25 / 3 | |
-| `bombsPerRound` / `bombAfterSeconds` / `bombPenalty` | 4 / 15 s / 5 | |
+| `goldenPerRound` / `gentleGoldenPerRound` / `hardGoldenPerRound` / `goldenSpeedFactor` / `goldenPoints` | 4 / 3 / 6 / 1.25 / 3 | Normal / Easy and Sound / Hard |
+| `bombsPerRound` / `bombAfterSeconds` / `bombPenalty` | 5 / 15 s / 5 | |
+| `fallSpeedCap` | 4.8 m/s | no fruit falls faster, golden included |
 | `specialsEndBefore` | 5 s | no golden fruit or bomb scheduled in the round's last seconds |
-| `comboFrom` / `comboMultiplier` | 5 / ×2 | |
+| `comboFrom` / `comboStep` / `gentleComboCap` / `comboCap` / `hardComboCap` | 5 / 5 / ×3 / ×4 / ×5 | the combo ladder |
 | `easyFallSpeedMax` / `easyDriftCapMax` | 3.8 / 1.2 m/s | Easy's ramp |
-| `hardFallSpeedMax` / `hardDriftCapMax` / `hardNextFruitDelayEnd` / `hardEndDropsPer10s` / `hardMaxFruitInAir` / `hardBombsPerRound` | 5.2 m/s / 2.1 m/s / 0.2 s / 13 / 4 / 7 | Hard (M6 2.6) |
+| `hardFallSpeedMax` / `hardDriftCapMax` / `hardNextFruitDelayEnd` / `hardStartDropsPer10s` / `hardEndDropsPer10s` / `hardMaxFruitInAir` / `hardBombsPerRound` | 4.8 m/s / 2.1 m/s / 0.2 s / 6 / 13 / 4 / 9 | Hard (M6 2.6) |
 | `spinDegPerSec` | 120–240 | |
 | `spawnXRange` / `spawnY` | ±2.1 m / 3.6 | |
 | `fruitSize` | 0.70 m | × each type's `sizeScale` |
@@ -879,3 +883,5 @@ Item 6 (P0) comes first because it changes the script, the input model and the s
 | 78 | Ray tracing (2026-11-11) | The user wanted ray tracing in the realistic look, for fun: a little prettier at little cost. Unity offers no hardware ray tracing on this Mac (`SystemInfo.supportsRayTracing` is false on the M5 under Metal), so rays are traced in software through a voxel grid of the scene, which suits a game made of blocks. The user chose both uses: reflections (the most visible) and visibility for the bounce light (more correct). No randomness that changes from frame to frame (mirror rays, bounce rays fixed per cell), so nothing shimmers: screen-space bounce had been dropped earlier for its noise. |
 | 79 | Event logo (2026-11-12) | The organiser provided the festival's final logo, **2026 장애예술창작페스타 / DISABILITY ARTS FESTA**, so its black version replaces the 열린감각 mark redrawn from the poster on the card's left slot, centred where that was. Asked for slightly bigger: 0.8 of the slot (from 0.75), since at 0.9 it met the lemon sticker on the frame's corner, which the decoration rule forbids. |
 | 80 | Voice assist without a keypad (2026-11-12) | The booth may not be able to hand every voice assist visitor the keypad, and the narration assumed one ("press 5"). Rather than a second script, staff tell the game once per visit (**K**), and lines that ask for a key have a `_staff` version that asks the visitor to tell the staff; staff answer from the laptop with the keys they already had (5, Enter, Space). Chosen when the line is spoken, so repeats and replayed instructions switch too. The left-edge touch column of speech controls, a placeholder, was removed at the same time. |
+| 81 | Higher stakes, higher rewards (2026-11-12) | The user wanted each difficulty to reward more at the top while weak players score about the same, with nothing falling faster than late Hard and a cap a little under 5.2 m/s. A simulator (`Tools/simulate_difficulty.py`, replaying the spawner's timeline for players who catch 35 %, 65 %, 85 % and 100 % of fruit and 30 %, 15 %, 5 % and 0 % of bombs; results in `Docs/difficulty-proposal.xlsx`) chose the values: a combo ladder capped at ×3 / ×4 / ×5, 5 bombs in Normal and 9 in Hard (6 and 10 cost weak players 2–3 points), 4 golden fruit in Normal and 6 in Hard, and a 4.8 m/s cap on every fruit. Best possible scores went from 59 / 43 / 77 / 95 to about 80 / 55 / 134 / 205 (Easy / Sound / Normal / Hard); weak and average scores moved by under a point or two. Then the user wanted Hard to start at a faster drop rate but end at the same pace, for a higher ceiling: Hard opens at 6 per 10 s instead of 3.7 and still ends at 13, which drops about 49 fruit instead of 42 and lifts its best score to about 246 (average players 33 → 39). Golden fruit were already multiplied by the combo, as the user wanted. |
+| 82 | Steadier face (2026-11-12) | The user saw BlazeFace blink between face and no face, worst during calibration and when the camera was slightly out of focus. The face now needs 0.6 to be picked up but only 0.35 to be kept while it stays in place, with its box held for 0.3 s through missed detections; running detection on a crop around the last face would fix small faces at the root but was too big a change the day before the event. |

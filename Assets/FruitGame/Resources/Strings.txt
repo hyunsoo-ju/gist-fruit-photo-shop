@@ -111,6 +111,7 @@ voice.pressFive	5번을 눌러 주세요	Press 5
 voice.tellStaff	준비되면 직원에게 말해 주세요	Tell the staff when you're ready
 walk.hard	어려움	Hard
 walk.hard.desc	아주 빠르고\n폭탄이 많아요	Very fast,\nmore bombs
+walk.combo	연속 콤보 최대 ×{0}	Combos up to ×{0}
 over.golden	황금 과일 {0}개	Golden {0}
 photo.printTime	인쇄는 약 {0}초 걸려요	A print takes about {0} s
 idle.warn	아직 계세요? 화면을 누르면 계속해요.\n{0}초 뒤에 처음으로 돌아가요	Still there? Touch the screen to stay.\nBack to the start in {0} s

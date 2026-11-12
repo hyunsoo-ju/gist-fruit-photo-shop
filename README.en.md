@@ -170,15 +170,17 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 
 ### Rules
 
-- Catch the falling fruit in the basket for 60 s. Each fruit is 1 point, a **golden fruit** 3, and from **5 in a row** points double. Catching a **bomb** loses 5 points (Normal and Hard).
+- Catch the falling fruit in the basket for 60 s. Each fruit is 1 point, a **golden fruit** 3 (combo multiplier applies too), and from **5 in a row** points double, then go up one more step every 5 catches (×3, ×4, ×5) up to the mode's cap. Catching a **bomb** loses 5 points (Normal and Hard).
 - The fruit caught pile up behind the visitor and appear in the photo.
 - Difficulty rises only through speed and rhythm; the basket and the movement needed stay the same.
 
 | | Easy | Normal | Hard | Voice assist |
 |---|---|---|---|---|
 | Fruit speed | Speeds up slowly | Speeds up evenly through the round | Speeds up the most | Steady |
-| Gaps between fruit | One at a time | Several at once near the end | Closer than Normal | One at a time |
-| Bombs | None | 4 | 7 | None |
+| Gaps between fruit | One at a time | Several at once near the end | Closer than Normal from the start | One at a time |
+| Bombs | None | 5 | 9 | None |
+| Golden fruit | 3 | 4 | 6 | 3 |
+| Combo up to | ×3 | ×4 | ×5 | ×3 |
 
 ### Voice assist's sounds
 

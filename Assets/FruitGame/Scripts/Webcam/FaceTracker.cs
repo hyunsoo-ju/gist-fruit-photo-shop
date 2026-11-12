@@ -22,16 +22,22 @@ namespace FruitGame
         [SerializeField] WebcamSource source;
         [SerializeField] ModelAsset faceModel;
         [SerializeField] TextAsset anchorsCsv;
+        [Tooltip("A new face needs this score to be picked up.")]
         [SerializeField, Range(0f, 1f)] float scoreThreshold = 0.6f;
+        [Tooltip("A face already being followed is kept down to this score while it overlaps its last box by stickyIou " +
+                 "(hysteresis: a soft or slightly out-of-focus face hovering near scoreThreshold no longer flickers).")]
+        [SerializeField, Range(0f, 1f)] float keepThreshold = 0.35f;
         [SerializeField, Range(0f, 1f)] float iouThreshold = 0.3f;
         [Tooltip("Stick with the previous face while it still overlaps it this much (Docs/DESIGN.md §8: several faces).")]
         [SerializeField, Range(0f, 1f)] float stickyIou = 0.3f;
+        [Tooltip("Seconds the last face box is held through missed detections before HasFace goes false.")]
+        [SerializeField, Range(0f, 1f)] float holdSeconds = 0.3f;
         [SerializeField] BackendType backend = BackendType.GPUCompute;
 
         const int InputSize = 128;
         const int NumAnchors = 896;
 
-        /// <summary>True while a face was found in the latest processed frame.</summary>
+        /// <summary>True while a face is found, or was found less than holdSeconds ago (its box is then held).</summary>
         public bool HasFace { get; private set; }
         /// <summary>Face box in webcam-output UV (0..1, origin bottom-left, mirrored like the screen).</summary>
         public Rect FaceRect { get; private set; }
@@ -186,13 +192,16 @@ namespace FruitGame
         }
 
         /// <summary>
-        /// Picks the faces from the raw output: anchors scoring at least scoreThreshold, best first, dropping any that
-        /// overlap a better one by more than iouThreshold (non-maximum suppression); then the face to follow.
+        /// Picks the faces from the raw output: anchors scoring at least keepThreshold, best first, dropping any that
+        /// overlap a better one by more than iouThreshold (non-maximum suppression); then the face to follow. A face
+        /// scoring under scoreThreshold only counts when it continues the face already followed. With no face this
+        /// frame, the last one is held for holdSeconds, so a missed detection or two doesn't read as "no face".
         /// </summary>
         void ReadFaces()
         {
             candidates.Clear();
-            float minLogit = Mathf.Log(scoreThreshold / (1f - scoreThreshold)); // sigmoid(x) ≥ threshold
+            float keep = Mathf.Min(keepThreshold, scoreThreshold);
+            float minLogit = Mathf.Log(keep / (1f - keep)); // sigmoid(x) ≥ threshold
             for (int a = 0; a < NumAnchors; a++)
                 if (rawScores[a] >= minLogit) candidates.Add(a);
             candidates.Sort((p, q) => rawScores[q].CompareTo(rawScores[p]));
@@ -230,6 +239,8 @@ namespace FruitGame
                 float score = Sigmoid(rawScores[a]);
                 float area = uw * vh;
                 float overlap = HasFace ? Iou(rect, FaceRect) : 0f;
+                // Below the pick-up score, only the face we're already following counts (hysteresis).
+                if (score < scoreThreshold && overlap < stickyIou) continue;
 
                 // Prefer the face we were already tracking; otherwise the biggest one.
                 bool better = !found
@@ -241,6 +252,11 @@ namespace FruitGame
                 }
             }
 
+            if (!found && HasFace && Time.unscaledTime - LastSeenTime < holdSeconds)
+            {
+                Status = "Face (held)";
+                return;
+            }
             HasFace = found;
             if (found)
             {

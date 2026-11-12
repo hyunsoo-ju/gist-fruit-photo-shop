@@ -9,7 +9,7 @@ namespace FruitGame
     /// or missed, plus a gap that shrinks over the round. Except in Easy, fruit also drop on a beat
     /// (GameConfig.DropIntervalAt) that starts at that same pace and quickens evenly, so later in the round the next fruit
     /// drops before the last one lands (never more than two in the air). Every round has the same number of golden fruit
-    /// and bombs (goldenPerRound, bombsPerRound), each at a random time in its own even share of the round, so they're
+    /// and bombs for its mode (GoldenPerRound, BombsPerRound), each at a random time in its own even share of the round, so they're
     /// spread out but not predictable; bombs only after bombAfterSeconds. The assist fades over the round. Easy (Difficulty.Easy) keeps one at a time, steady gaps, full assist and
     /// no bombs.
     /// </summary>
@@ -60,7 +60,7 @@ namespace FruitGame
             nextSpawnTime = Time.time;
             lastSpawnTime = -1f;
             float end = config.roundDuration - config.specialsEndBefore;
-            Schedule(goldenAt, config.goldenPerRound, 0f, end);
+            Schedule(goldenAt, config.GoldenPerRound, 0f, end);
             Schedule(bombAt, bombPrefab == null ? 0 : config.BombsPerRound, config.bombAfterSeconds, end);
         }
 
@@ -142,6 +142,7 @@ namespace FruitGame
             var type = kind == FallingFruit.Kind.Bomb ? null : PickType();
             float progress = Mathf.Clamp01(Progress());
             float fall = config.FallSpeedAt(progress) * (kind == FallingFruit.Kind.Golden ? config.goldenSpeedFactor : 1f);
+            if (config.fallSpeedCap > 0f) fall = Mathf.Min(fall, config.fallSpeedCap); // never faster, golden fruit included
             float cap = config.DriftCapAt(progress);
 
             var go = new GameObject(kind == FallingFruit.Kind.Bomb ? "Bomb" : type != null ? $"Fruit_{type.displayName}" : "Fruit");

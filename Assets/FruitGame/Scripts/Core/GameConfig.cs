@@ -127,28 +127,41 @@ namespace FruitGame
         [Tooltip("Fruit drop at least this far (m) from the basket: the first value at the start, the second by the end " +
                  "(not in Easy), so a basket left in one place catches little.")]
         public Vector2 spawnAwayFromBasket = new Vector2(0.5f, 1.3f);
-        [Tooltip("Golden fruit per round (faster, worth goldenPoints), at random times spread over the round.")]
-        [Min(0)] public int goldenPerRound = 3;
+        [Tooltip("Golden fruit per round in Normal (faster, worth goldenPoints), at random times spread over the round. " +
+                 "Easy and Sound: gentleGoldenPerRound; Hard: hardGoldenPerRound.")]
+        [Min(0)] public int goldenPerRound = 4;
+        [Min(0)] public int gentleGoldenPerRound = 3;
         public float goldenSpeedFactor = 1.25f;
         public int goldenPoints = 3;
         [Tooltip("Bombs per round, at random times spread between bombAfterSeconds and the end (none in Easy or Sound mode).")]
-        [Min(0)] public int bombsPerRound = 4;
+        [Min(0)] public int bombsPerRound = 5;
         public float bombAfterSeconds = 15f;
         [Tooltip("No golden fruit or bomb is scheduled in the round's last this many seconds.")]
         public float specialsEndBefore = 5f;
         [Tooltip("Points lost for catching a bomb (the score never drops below 0).")]
         public int bombPenalty = 5;
-        [Tooltip("From this many catches in a row, every catch scores comboMultiplier times.")]
+        [Tooltip("From this many catches in a row, a catch scores ×2; every comboStep more adds one, up to the mode's cap " +
+                 "(the combo ladder: ×2 at 5, ×3 at 10, ×4 at 15, ×5 at 20).")]
         public int comboFrom = 5;
-        public int comboMultiplier = 2;
+        public int comboStep = 5;
+        [Tooltip("Highest combo multiplier: Easy and Sound, Normal, Hard. Higher stakes, higher rewards.")]
+        public int gentleComboCap = 3;
+        public int comboCap = 4;
+        public int hardComboCap = 5;
+        [Tooltip("No fruit falls faster than this (m/s), golden fruit included (their speed factor stops here).")]
+        public float fallSpeedCap = 4.8f;
 
         [Header("Hard (Docs/DESIGN.md §6, M6 2.6: faster and busier, never a smaller basket or a wider reach)")]
-        public float hardFallSpeedMax = 5.2f;
+        public float hardFallSpeedMax = 4.8f;
         public float hardDriftCapMax = 2.1f;
         public float hardNextFruitDelayEnd = 0.2f;
+        [Tooltip("Fruit dropped per 10 s at the start of a Hard round (Normal opens at one fall plus the gap, about 3.7). " +
+                 "The rate still climbs in a straight line to hardEndDropsPer10s, so Hard ends at the same pace but drops more fruit.")]
+        public float hardStartDropsPer10s = 6f;
         public float hardEndDropsPer10s = 13f;
         [Min(1)] public int hardMaxFruitInAir = 4;
-        [Min(0)] public int hardBombsPerRound = 7;
+        [Min(0)] public int hardBombsPerRound = 9;
+        [Min(0)] public int hardGoldenPerRound = 6;
 
         [Header("Auditory assist mode (Docs/DESIGN.md §11, M18)")]
         [Tooltip("Steady fall speed (m/s), no ramp.")]
@@ -324,13 +337,15 @@ namespace FruitGame
 
         /// <summary>
         /// Time between drops (−1 in Easy, which waits for each fruit to land). The drop rate climbs in a straight line
-        /// from the opening pace (one fruit's fall plus the gap, the same as one at a time) to endDropsPer10s, so the
-        /// round speeds up by the same amount every few seconds; late on, the next fruit drops before the last lands.
+        /// from the opening pace (one fruit's fall plus the gap, the same as one at a time; in Hard, hardStartDropsPer10s)
+        /// to endDropsPer10s, so the round speeds up by the same amount every few seconds; late on, the next fruit drops
+        /// before the last lands.
         /// </summary>
         public float DropIntervalAt(float progress01)
         {
             if (Difficulty.Gentle) return -1f;
             float startRate = 1f / ((spawnY - rimY) / fallSpeedStart + nextFruitDelay);
+            if (Difficulty.Hard) startRate = Mathf.Max(startRate, hardStartDropsPer10s / 10f);
             float endRate = Mathf.Max(startRate, (Difficulty.Hard ? hardEndDropsPer10s : endDropsPer10s) / 10f);
             return 1f / Mathf.Lerp(startRate, endRate, Mathf.Clamp01(progress01));
         }
@@ -350,6 +365,10 @@ namespace FruitGame
         public int MaxFruitInAir => Difficulty.Hard ? hardMaxFruitInAir : maxFruitInAir;
         /// <summary>Bombs per round, for the current mode (the gentle modes have none).</summary>
         public int BombsPerRound => Difficulty.Gentle ? 0 : Difficulty.Hard ? hardBombsPerRound : bombsPerRound;
+        /// <summary>Golden fruit per round, for the current mode.</summary>
+        public int GoldenPerRound => Difficulty.Gentle ? gentleGoldenPerRound : Difficulty.Hard ? hardGoldenPerRound : goldenPerRound;
+        /// <summary>The highest combo multiplier, for the current mode.</summary>
+        public int ComboCap => Difficulty.Gentle ? gentleComboCap : Difficulty.Hard ? hardComboCap : comboCap;
 
         public bool UsesTimer => endCondition != EndCondition.Lives;
         public bool UsesLives => endCondition != EndCondition.Timer;

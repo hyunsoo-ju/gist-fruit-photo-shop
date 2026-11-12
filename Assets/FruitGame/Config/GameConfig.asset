@@ -67,21 +67,28 @@ MonoBehaviour:
   endDropsPer10s: 9
   maxFruitInAir: 3
   spawnAwayFromBasket: {x: 0.5, y: 1.3}
-  goldenPerRound: 3
+  goldenPerRound: 4
+  gentleGoldenPerRound: 3
   goldenSpeedFactor: 1.25
   goldenPoints: 3
-  bombsPerRound: 4
+  bombsPerRound: 5
   bombAfterSeconds: 15
   specialsEndBefore: 5
   bombPenalty: 5
   comboFrom: 5
-  comboMultiplier: 2
-  hardFallSpeedMax: 5.2
+  comboStep: 5
+  gentleComboCap: 3
+  comboCap: 4
+  hardComboCap: 5
+  fallSpeedCap: 4.8
+  hardFallSpeedMax: 4.8
   hardDriftCapMax: 2.1
   hardNextFruitDelayEnd: 0.2
+  hardStartDropsPer10s: 6
   hardEndDropsPer10s: 13
   hardMaxFruitInAir: 4
-  hardBombsPerRound: 7
+  hardBombsPerRound: 9
+  hardGoldenPerRound: 6
   auditoryFallSpeed: 2.3
   auditoryDriftCap: 0.4
   auditoryFruitDelay: 1
