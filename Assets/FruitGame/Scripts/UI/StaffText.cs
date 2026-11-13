@@ -96,6 +96,7 @@ namespace FruitGame
             ["One"] = "하나",
             ["Two"] = "둘",
             ["Blank the guest screen"] = "손님 화면 가리기",
+            ["Standby (booth closed)"] = "대기 화면(부스 닫힘)",
             ["Lighting"] = "조명",
             ["Classic"] = "기본",
             ["Realistic"] = "사실적",

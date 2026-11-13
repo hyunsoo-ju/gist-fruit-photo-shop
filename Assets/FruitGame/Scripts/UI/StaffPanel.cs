@@ -355,6 +355,9 @@ namespace FruitGame
                 Setting("Main display shows (after restart)", () => T(config.staffOnMainDisplay ? "Staff screen" : "Guest screen"),
                     d => config.staffOnMainDisplay = !config.staffOnMainDisplay),
                 Action("Blank the guest screen", "B", () => OnOff(blindTest != null && blindTest.On), () => blindTest?.Toggle()),
+                // The footer's Standby button as a key, for one screen (F1, then S), where the footer is on the guest screen.
+                Action("Standby (booth closed)", "S", () => FruitGame.Standby.Busy ? T(FruitGame.Standby.On ? "Closing..." : "Opening...") : OnOff(FruitGame.Standby.On),
+                    () => FruitGame.Standby.Set(!FruitGame.Standby.On)),
             }, null));
             pages.Add(("Printing", new List<Row>
             {
