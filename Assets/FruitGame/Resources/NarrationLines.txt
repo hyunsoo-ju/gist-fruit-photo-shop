@@ -15,7 +15,7 @@ walk_difficulty	난이도를 골라요.
 walk_easy_chosen	쉬움을 골랐어요.
 walk_normal_chosen	보통을 골랐어요.
 calib_intro	두 번째 단계예요. 머리 움직임을 맞출게요. 안내에 따라 머리를 움직여 주세요.
-calib_centre	정면을 보고 잠깐 멈춰 주세요.
+calib_centre	허리를 펴고 바르게 앉아서, 정면을 보고 잠깐 멈춰 주세요.
 calib_left	머리를 왼쪽으로 편한 만큼 움직이고 멈춰 주세요.
 calib_right	머리를 오른쪽으로 편한 만큼 움직이고 멈춰 주세요.
 calib_left_turn	고개를 왼쪽으로 편한 만큼 돌리고 멈춰 주세요.
@@ -94,7 +94,7 @@ btn_walk_back	뒤로
 btn_common_back	뒤로
 btn_common_mainMenu	처음으로
 btn_pause_resume	계속하기
-btn_calib_looksGood	좋아요
+btn_calib_looksGood	준비됐어요
 btn_calib_redo	다시 하기
 btn_over_playAgain	다시 하기
 btn_over_photo	사진 찍기

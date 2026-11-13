@@ -8,7 +8,7 @@ namespace FruitGame
 {
     /// <summary>
     /// The calibration stage (Docs/DESIGN.md §9): look straight → head left → head right, each captured by holding still,
-    /// then a "try it" step where the basket follows the new range, with Looks good / Redo.
+    /// then a "try it" step where the basket follows the new range, with I'm ready / Redo.
     /// Left and right are stored separately, so a player who can turn further one way still reaches both edges.
     /// Also drives its own UI: instruction text, a hint line, a ring that fills around the face while holding,
     /// and the try-it buttons.
@@ -62,7 +62,7 @@ namespace FruitGame
         /// <summary>Spoken prompts: only with voice assist on.</summary>
         bool ByEar => narrator != null && Difficulty.Auditory;
 
-        /// <summary>"Looks good": save and finish.</summary>
+        /// <summary>"I'm ready" (준비됐어요): save and finish.</summary>
         public void Accept()
         {
             if (step != Step.Try) return;

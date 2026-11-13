@@ -464,6 +464,9 @@ namespace FruitGame
             hud.ShowPauseButton(next == GameState.Playing || next == GameState.Countdown || next == GameState.RoundEnding);
             hud.ShowRoundHud(next == GameState.Countdown || next == GameState.Playing || next == GameState.RoundEnding || next == GameState.Paused);
             if (next != GameState.GameOver) hud.HideGameOver();
+            // Caught fruit still drop onto the pile during a round, but unseen, so the one falling fruit is all there is to
+            // follow; the pile appears at game over (the attract screen's sample round, on the title, shows it as it grows).
+            if (pile != null) pile.SetHidden(next == GameState.Countdown || next == GameState.Playing || next == GameState.RoundEnding || next == GameState.Paused);
         }
 
         void EnterBoot()
@@ -526,8 +529,11 @@ namespace FruitGame
         {
             SetState(GameState.GameOver);
             bool newBest = SaveData.SubmitScore(Stats.Score);
+            // The 랭킹, with the round's setting (before Easy is switched back below). A round with no points isn't
+            // ranked, but still gets a name to show.
+            var ranked = Leaderboard.Submit(Stats.Score, Leaderboard.CurrentMode);
             hud.HideMessage();
-            hud.ShowGameOver(Stats, SaveData.BestScore, newBest, config.roundDuration);
+            hud.ShowGameOver(Stats, SaveData.BestScore, newBest, config.roundDuration, ranked.entry, ranked.rank);
             audioFeedback.PlayRoundOver();
             // Easy is for one player: the next round goes back to the staff default unless staff switch it on again.
             if (Difficulty.Easy && config.defaultMode != DefaultMode.Easy) Difficulty.Easy = false;

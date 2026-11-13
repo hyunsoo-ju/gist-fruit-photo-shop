@@ -4,7 +4,8 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Draws the voxel buttons (Docs/DESIGN.md §15, M6 1.3). Each button's blocks are rendered into its own small image
+    /// Draws the voxel buttons (Docs/DESIGN.md §15, M6 1.3). In Play they stand in the 3D scene (PhysicalUI); this draws
+    /// the ones that can't, a button on the phone card and the Editor's preview. Each button's blocks are rendered into its own small image
     /// that sits in the button's place in the UI, so panels, fades and transitions treat it like any other image (3D
     /// meshes on the HUD camera would draw over or under panels). One offscreen perspective camera, far from the game,
     /// renders a button only when it changes (hover, press, its label, its size or place). The screen reads like the
@@ -25,10 +26,8 @@ namespace FruitGame
         [SerializeField] float closeness = 5f;
         [Tooltip("Room around each button's image for its growing outer edge, as a fraction of its size.")]
         [SerializeField] float margin = 0.16f;
-        [SerializeField] bool enableVoxelButtons = true;
-
         public static VoxelButtons Instance { get; private set; }
-        public static bool On => Instance != null && Instance.enableVoxelButtons;
+        public static bool On => Instance != null;
         public float Padding => margin;
         public float Closeness => closeness;
         public RectTransform Frame => frame;
@@ -61,6 +60,7 @@ namespace FruitGame
             cam.farClipPlane = 2000f;
             cam.allowMSAA = false;
             cam.enabled = false;
+            PhysicalUI.Ensure();
         }
 
         void OnDestroy()

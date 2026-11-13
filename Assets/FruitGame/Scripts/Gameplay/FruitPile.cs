@@ -59,6 +59,27 @@ namespace FruitGame
 
         public int Count => fruits.Count;
 
+        bool hidden;
+        bool photoMode;
+
+        /// <summary>
+        /// Hides the pile fruit (true, during a real round: they still fall and stack, unseen, so nothing behind the player
+        /// competes with the falling fruit) or shows them (false). Photos always show them. The crate heap stays visible.
+        /// </summary>
+        public void SetHidden(bool on)
+        {
+            if (hidden == on) return;
+            hidden = on;
+            foreach (var f in fruits)
+                if (f != null) ApplyVisibility(f.gameObject);
+        }
+
+        void ApplyVisibility(GameObject go)
+        {
+            bool show = !hidden || photoMode;
+            foreach (var r in go.GetComponentsInChildren<Renderer>()) r.enabled = show;
+        }
+
         void Awake()
         {
             // Dithered background look (Docs/DESIGN.md §4): strength from GameConfig, on a copy so the asset isn't edited.
@@ -226,7 +247,8 @@ namespace FruitGame
                 foreach (var child in go.GetComponentsInChildren<Transform>()) child.gameObject.layer = layer;
             MakeBackground(go, type, golden);
 
-            float radius = FitCollider(go);
+            float radius = FitCollider(go); // reads the renderers' bounds, so before hiding them
+            ApplyVisibility(go);
             if (!FreeSpawnPoint(radius, out var spawnAt))
             {
                 Destroy(go); // full to the top
@@ -286,6 +308,12 @@ namespace FruitGame
 
         public void SetPhotoMode(bool on)
         {
+            if (photoMode != on)
+            {
+                photoMode = on;
+                foreach (var f in fruits)
+                    if (f != null) ApplyVisibility(f.gameObject);
+            }
             foreach (var (renderer, full, haze) in heapRenderers)
                 if (renderer != null) renderer.sharedMaterial = on ? full : haze;
             if ((on ? photoMaterial : hazeMaterial) == null) return;
@@ -380,7 +408,7 @@ namespace FruitGame
         void HandleLanded(PileFruit fruit)
         {
             fruit.Landed -= HandleLanded;
-            if (audioFeedback == null || Time.time - lastLandSound < landSoundCooldown) return;
+            if (audioFeedback == null || hidden || Time.time - lastLandSound < landSoundCooldown) return; // unseen fruit land silently
             lastLandSound = Time.time;
             audioFeedback.PlayPileLand();
         }

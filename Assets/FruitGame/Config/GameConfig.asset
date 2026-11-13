@@ -134,6 +134,18 @@ MonoBehaviour:
   shareOverInternet: 1
   cloudflaredPath: 
   lightingStyle: 0
+  classicSun: 1.2
+  classicShade: 0.7
+  classicHaze: {r: 0.39, g: 0.43, b: 0.44, a: 1}
+  rayTracing: 1
+  realisticRays: 1.8
+  realisticRayContrast: 2.75
+  realisticBloom: 0.1
+  realisticBrightness: -0.4
+  realisticSun: 1.3
+  realisticSky: 0.6
+  realisticUnderlight: 1
+  realisticLeafLight: 0.5
   fruitBlockSize: 0.044
   worldBlockSize: 0.063
   farBlockSize: 0.09
@@ -151,6 +163,7 @@ MonoBehaviour:
   language: 0
   staffLanguage: 0
   screens: 0
+  staffOnMainDisplay: 1
   staffMirrorRate: 30
   preferredCameraName: Symplectomorphism
   mirrorCamera: 1

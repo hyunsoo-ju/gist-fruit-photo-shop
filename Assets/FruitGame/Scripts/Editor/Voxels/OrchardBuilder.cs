@@ -266,6 +266,9 @@ namespace FruitGame.EditorTools
             var ls = go.transform.lossyScale;
             go.transform.localScale = new Vector3(size / Mathf.Abs(ls.x), size / Mathf.Abs(ls.y), size / Mathf.Abs(ls.z));
             go.GetComponent<MeshFilter>().sharedMesh = mesh;
+            // The far layer (PixelRenderer's back camera): behind the player, and blurred with the rest of the
+            // background. On Default, the front camera drew the fruit dots and clouds sharp, over the player too.
+            go.layer = LayerMask.NameToLayer(PixelRenderer.BackLayer);
             var r = go.GetComponent<MeshRenderer>();
             r.sharedMaterial = mat;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

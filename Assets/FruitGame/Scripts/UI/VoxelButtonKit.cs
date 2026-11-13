@@ -28,9 +28,11 @@ namespace FruitGame
 
         // The border is a warm tan, darker than the old cream so it stands out from the light background.
         static readonly Color32 Tan = new Color32(0xB9, 0x8A, 0x5E, 0xFF);
-        static readonly Color32 ContrastBorder = new Color32(0xFF, 0xD4, 0x00, 0xFF);
-        public static Color32 Cream => HighContrast.On ? ContrastBorder : Tan;
-        public static readonly Color32 LabelCream = new Color32(0xFF, 0xF8, 0xEC, 0xFF);
+        // High contrast: pure white border and labels on a pure black cap, drawn unlit (PhysicalUI).
+        static readonly Color32 White = new Color32(0xFF, 0xFF, 0xFF, 0xFF);
+        public static Color32 Cream => HighContrast.On ? White : Tan;
+        static readonly Color32 Cream0 = new Color32(0xFF, 0xF8, 0xEC, 0xFF);
+        public static Color32 LabelCream => HighContrast.On ? White : Cream0;
         public static readonly Color32 Edge = new Color32(0x1E, 0x22, 0x33, 0xFF);
 
         /// <summary>Inside a w × h rounded rectangle (corner radius r)?</summary>

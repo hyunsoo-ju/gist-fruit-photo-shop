@@ -400,7 +400,7 @@ namespace FruitGame
             cb.SetComputeTextureParam(rtCompute, k, "_BounceTex", bounceVolumes != null ? bounceVolumes[bounceTo] : voxBricks);
             cb.SetComputeVectorParam(rtCompute, "_BounceMin", new Vector4(BounceLow.x, BounceLow.y, BounceLow.z, 1f / BounceCell));
             cb.SetComputeVectorParam(rtCompute, "_BounceDims", bounceVolumes != null ? new Vector4(bounceDims.x, bounceDims.y, bounceDims.z, bounceStrength) : Vector4.zero);
-            cb.SetComputeVectorParam(rtCompute, "_UnderLight", (Vector4)(underLight.linear * underLightIntensity));
+            cb.SetComputeVectorParam(rtCompute, "_UnderLight", UnderLightValue);
             cb.SetComputeVectorParam(rtCompute, "_ReflShape", new Vector4(reflectionReach, reflectionFade, reflectionFarthest, ReflectionDebug));
         }
 

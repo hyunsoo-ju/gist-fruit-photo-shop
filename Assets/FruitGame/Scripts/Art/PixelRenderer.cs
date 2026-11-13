@@ -48,7 +48,7 @@ namespace FruitGame
             backQuad.gameObject.SetActive(!on);
             frontQuad.gameObject.SetActive(!on);
             int composite = Mask(CompositeLayer), ui = Mask("UI") | Mask("HUD3D");
-            main.cullingMask = on ? originalMask & ~(composite | ui) : Mask(PersonLayer) | composite;
+            main.cullingMask = on ? originalMask & ~(composite | ui) : Mask(PersonLayer) | composite | PhysicalUiMask;
         }
 
         void Awake()
@@ -66,8 +66,10 @@ namespace FruitGame
 
             int ui = Mask("UI") | Mask("HUD3D");
             backCam = MakeCamera("Pixel Back Camera", back, main.backgroundColor);
-            frontCam = MakeCamera("Pixel Front Camera", originalMask & ~(back | person | composite | ui), Color.clear);
-            main.cullingMask = person | composite;
+            // The physical UI (buttons and signs, PhysicalUI) is drawn by this camera at full resolution, in front of
+            // the near quad, so its labels stay crisp and nothing in the game draws over it.
+            frontCam = MakeCamera("Pixel Front Camera", originalMask & ~(back | person | composite | ui | PhysicalUiMask), Color.clear);
+            main.cullingMask = person | composite | PhysicalUiMask;
 
             backMat = MakeMaterial(BlendMode.One, BlendMode.Zero, (int)RenderQueue.Geometry - 100);
             frontMat = MakeMaterial(BlendMode.SrcAlpha, BlendMode.OneMinusSrcAlpha, (int)RenderQueue.Transparent);
@@ -75,7 +77,48 @@ namespace FruitGame
             frontQuad = MakeQuad("Pixel Front Layer", frontMat);
             MakeTargets();
             ScreenLayout.Changed += MakeTargets;
+            if (Application.isPlaying) MakeBackgroundBlur();
         }
+
+        GameObject blurVolume;
+        VolumeProfile blurProfile;
+
+        /// <summary>
+        /// The same background blur as the realistic look (SceneLighting.BackgroundBlur: a far-only Gaussian depth of
+        /// field from 13 m, full at 22 m), on the back camera, so the classic look's background softens by its real
+        /// distance as the realistic one does. Its volume sits on the Back layer, which only the back camera reads
+        /// volumes from (and the main camera doesn't), so nothing else picks it up, and the camera's post-processing
+        /// does nothing but the blur. Play only: the Editor preview leaves the scene as it was.
+        /// </summary>
+        void MakeBackgroundBlur()
+        {
+            var lighting = FindAnyObjectByType<SceneLighting>();
+            if (lighting == null || backCam == null) return;
+            int back = Mask(BackLayer);
+            if (back == 0) return;
+            var blur = lighting.BackgroundBlur;
+            blurProfile = ScriptableObject.CreateInstance<VolumeProfile>();
+            blurProfile.hideFlags = HideFlags.DontSave;
+            var dof = blurProfile.Add<DepthOfField>(true);
+            dof.mode.value = DepthOfFieldMode.Gaussian;
+            dof.gaussianStart.value = blur.x;
+            dof.gaussianEnd.value = blur.y;
+            dof.gaussianMaxRadius.value = blur.z;
+            dof.highQualitySampling.value = true;
+            blurVolume = new GameObject("Classic Background Blur") { layer = LayerMask.NameToLayer(BackLayer) };
+            blurVolume.transform.SetParent(transform, false);
+            var v = blurVolume.AddComponent<Volume>();
+            v.isGlobal = true;
+            v.sharedProfile = blurProfile;
+            var data = backCam.GetComponent<UniversalAdditionalCameraData>();
+            data.renderPostProcessing = true;
+            data.volumeLayerMask = back;
+            data.requiresDepthOption = CameraOverrideOption.On;
+            var mainData = main.GetComponent<UniversalAdditionalCameraData>();
+            if (mainData != null) mainData.volumeLayerMask &= ~back;
+        }
+
+        static int PhysicalUiMask => Mask("Ignore Raycast");
 
         void OnDestroy()
         {
@@ -83,6 +126,8 @@ namespace FruitGame
             ReleaseTargets();
             if (backMat != null) Destroy(backMat);
             if (frontMat != null) Destroy(frontMat);
+            if (blurVolume != null) Destroy(blurVolume);
+            if (blurProfile != null) Destroy(blurProfile);
         }
 
         void LateUpdate()

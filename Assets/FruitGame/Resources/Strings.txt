@@ -45,7 +45,7 @@ walk.sound	소리로 하기	Play by sound
 walk.sound.desc	헤드폰으로\n소리를 듣고 받아요	Listen with headphones\nto catch the fruit
 walk.back	뒤로	Back
 walk.none		
-calib.centre	카메라를 똑바로 봐 주세요	Look straight at the camera
+calib.centre	카메라를 똑바로 봐 주세요\n<size=64>허리를 펴고 바르게 앉아요</size>	Look straight at the camera\n<size=64>Sit up straight</size>
 calib.left	◀ 머리를 왼쪽으로\n<size=64>편한 만큼만 움직여요</size>	◀ Move your head left\n<size=64>as far as is comfortable</size>
 calib.right	머리를 오른쪽으로 ▶\n<size=64>편한 만큼만 움직여요</size>	Move your head right ▶\n<size=64>as far as is comfortable</size>
 calib.leftTurn	◀ 고개를 왼쪽으로 돌려요\n<size=64>편한 만큼만 돌려요</size>	◀ Turn your head left\n<size=64>as far as is comfortable</size>
@@ -61,7 +61,7 @@ calib.closer	조금 더 가까이 와 주세요	Move a little closer
 calib.farther	조금만 뒤로 가 주세요	Move back a little
 calib.holdStill	그대로 멈춰 주세요…	Hold still…
 calib.holdThere	그 자리에서 멈춰 주세요…	Hold it there…
-calib.looksGood	좋아요	Looks good
+calib.looksGood	준비됐어요	I'm ready
 calib.redo	다시 하기	Redo
 photo.pose	포즈를 취해요!	Strike a pose!
 photo.take	사진 찍기	Take photo
@@ -122,3 +122,26 @@ attract.3	네컷 사진을 가져가세요	Take home your four-cut photo
 hud.rules	황금 과일은 {0}점!\n폭탄은 피해요 (-{1}점)	Golden fruit: {0} points!\nDodge the bombs (-{1})
 hud.rulesGolden	황금 과일은 {0}점이에요!	Golden fruit are worth {0} points!
 hud.rulesBombs	폭탄은 피해요 (-{0}점)	Dodge the bombs (-{0})
+over.myName	내 이름: {0}	You: {0}
+rank.heading	랭킹	Ranking
+rank.name	{0} {1}	{0} {1}
+rank.adj.0	용감한	Brave
+rank.adj.1	반짝이는	Shiny
+rank.adj.2	졸린	Sleepy
+rank.adj.3	신난	Happy
+rank.adj.4	씩씩한	Plucky
+rank.adj.5	느긋한	Easygoing
+rank.adj.6	재빠른	Speedy
+rank.adj.7	명랑한	Cheerful
+rank.adj.8	수줍은	Shy
+rank.adj.9	행복한	Joyful
+rank.adj.10	꼼꼼한	Careful
+rank.adj.11	날쌘	Nimble
+rank.adj.12	상냥한	Kind
+rank.adj.13	힘찬	Mighty
+rank.adj.14	엉뚱한	Quirky
+rank.adj.15	똑똑한	Clever
+rank.adj.16	다정한	Gentle
+rank.adj.17	활기찬	Lively
+rank.adj.18	차분한	Calm
+rank.adj.19	귀여운	Cute

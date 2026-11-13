@@ -89,6 +89,8 @@ namespace FruitGame
         bool resetArmed;
         bool bestArmed;
         float bestArmedUntil;
+        bool rankingArmed;
+        float rankingArmedUntil;
         float resetArmedUntil;
         float cornerHeld;
         bool cornerFired;
@@ -145,6 +147,14 @@ namespace FruitGame
             F("language", () => (int)config.language, v => config.language = (Language)(int)v);
             F("lightingStyle", () => (int)config.lightingStyle, v => config.lightingStyle = (LightingStyle)(int)v);
             F("rayTracing", () => config.rayTracing ? 1 : 0, v => config.rayTracing = v > 0.5f);
+            F("realisticRays", () => config.realisticRays, v => config.realisticRays = v);
+            F("realisticBloom", () => config.realisticBloom, v => config.realisticBloom = v);
+            F("realisticBrightness", () => config.realisticBrightness, v => config.realisticBrightness = v);
+            F("realisticSun", () => config.realisticSun, v => config.realisticSun = v);
+            F("realisticSky", () => config.realisticSky, v => config.realisticSky = v);
+            F("realisticUnderlight", () => config.realisticUnderlight, v => config.realisticUnderlight = v);
+            F("realisticRayContrast", () => config.realisticRayContrast, v => config.realisticRayContrast = v);
+            F("realisticLeafLight", () => config.realisticLeafLight, v => config.realisticLeafLight = v);
             F("staffLanguage", () => (int)config.staffLanguage, v => config.staffLanguage = (Language)(int)v);
             F("screens", () => (int)config.screens, v => config.screens = (ScreenMode)(int)v);
             F("staffOnMainDisplay", () => config.staffOnMainDisplay ? 1 : 0, v => config.staffOnMainDisplay = v > 0.5f);
@@ -155,6 +165,8 @@ namespace FruitGame
             F("blushCoolness", () => config.blushCoolness, v => config.blushCoolness = v);
             F("lipStrength", () => config.lipStrength, v => config.lipStrength = v);
             F("lipCoolness", () => config.lipCoolness, v => config.lipCoolness = v);
+            F("bigEye", () => config.bigEye, v => config.bigEye = v);
+            F("faceSlim", () => config.faceSlim, v => config.faceSlim = v);
             S("printerName", () => config.printerName ?? "", v => config.printerName = v);
             F("shareOverInternet", () => config.shareOverInternet ? 1 : 0, v => config.shareOverInternet = v > 0.5f);
         }
@@ -213,6 +225,9 @@ namespace FruitGame
         }
 
         /// <summary>One step up or down a fixed grid, kept in range.</summary>
+        /// <summary>A strength multiplier as the panel shows it: "×1.0", or Off at 0.</summary>
+        static string Times(float v) => v <= 0f ? T("Off") : "×" + v.ToString("0.0");
+
         static float Stepped(float v, int dir, float step, float min, float max) =>
             Mathf.Clamp(Mathf.Round(v / step + dir) * step, min, max);
 
@@ -288,6 +303,13 @@ namespace FruitGame
                         if (bestArmed) { SaveData.BestScore = 0; bestArmed = false; }
                         else { bestArmed = true; bestArmedUntil = Time.unscaledTime + 4f; }
                     }),
+                // The 랭킹 on the game over screen: kept across days until reset here, with the same press-twice guard.
+                Action("Ranking", null, () => rankingArmed ? T("press again to reset") : F("{0} entries, reset", Leaderboard.Entries.Count),
+                    () =>
+                    {
+                        if (rankingArmed) { Leaderboard.Clear(); rankingArmed = false; }
+                        else { rankingArmed = true; rankingArmedUntil = Time.unscaledTime + 4f; }
+                    }),
                 Action("Basket follows the mouse", "M", () => OnOff(router != null && router.MouseControl), () => router?.ToggleMouseControl()),
             }, null));
             pages.Add(("Camera", new List<Row>
@@ -315,6 +337,19 @@ namespace FruitGame
                 Setting("Lighting", () => T(config.lightingStyle.ToString()),
                     d => config.lightingStyle = d < 0 ? LightingStyle.Classic : LightingStyle.Realistic),
                 Setting("Ray tracing (Realistic)", () => OnOff(config.rayTracing), d => config.rayTracing = d > 0),
+                Setting("God rays (Realistic)", () => config.realisticRays <= 0f ? T("Off") : "×" + config.realisticRays.ToString("0.0"),
+                    d => config.realisticRays = Stepped(config.realisticRays, d, 0.1f, 0f, 2f)),
+                Setting("God ray contrast (Realistic)", () => config.realisticRayContrast <= 0f ? T("Off") : config.realisticRayContrast.ToString("0.00"),
+                    d => config.realisticRayContrast = Stepped(config.realisticRayContrast, d, 0.25f, 0f, 4f)),
+                Setting("Bloom (Realistic)", () => config.realisticBloom <= 0f ? T("Off") : config.realisticBloom.ToString("0.00"),
+                    d => config.realisticBloom = Stepped(config.realisticBloom, d, 0.05f, 0f, 2f)),
+                Setting("Brightness (Realistic)", () => (config.realisticBrightness >= 0f ? "+" : "") + config.realisticBrightness.ToString("0.00") + " EV",
+                    d => config.realisticBrightness = Stepped(config.realisticBrightness, d, 0.05f, -1f, 1f)),
+                Setting("Sun (Realistic)", () => Times(config.realisticSun), d => config.realisticSun = Stepped(config.realisticSun, d, 0.1f, 0f, 3f)),
+                Setting("Sky light (Realistic)", () => Times(config.realisticSky), d => config.realisticSky = Stepped(config.realisticSky, d, 0.1f, 0f, 3f)),
+                Setting("Underlight (Realistic)", () => Times(config.realisticUnderlight), d => config.realisticUnderlight = Stepped(config.realisticUnderlight, d, 0.1f, 0f, 3f)),
+                Setting("Light through leaves (Realistic)", () => config.realisticLeafLight <= 0f ? T("Off") : Mathf.RoundToInt(config.realisticLeafLight * 100f) + " %",
+                    d => config.realisticLeafLight = Stepped(config.realisticLeafLight, d, 0.05f, 0f, 1f)),
                 Setting("Screens (after restart)", () => T(config.screens.ToString()),
                     d => config.screens = (ScreenMode)Mathf.Clamp((int)config.screens + d, 0, 2)),
                 Setting("Main display shows (after restart)", () => T(config.staffOnMainDisplay ? "Staff screen" : "Guest screen"),
@@ -346,6 +381,11 @@ namespace FruitGame
                 Setting("Lip tint", () => config.lipStrength <= 0f ? T("Off") : config.lipStrength.ToString("0.00"),
                     d => config.lipStrength = Stepped(config.lipStrength, d, 0.01f, 0f, 0.8f)),
                 Setting("Lip tone", () => Tone(config.lipCoolness), d => config.lipCoolness = Stepped(config.lipCoolness, d, 0.1f, 0f, 1f)),
+                // Face reshape (needs the face mesh): eye enlargement and V-line jaw slimming.
+                Setting("Eye size", () => config.bigEye <= 0f ? T("Off") : config.bigEye.ToString("0.00"),
+                    d => config.bigEye = Stepped(config.bigEye, d, 0.05f, 0f, 1f)),
+                Setting("V-line", () => config.faceSlim <= 0f ? T("Off") : config.faceSlim.ToString("0.000"),
+                    d => config.faceSlim = Stepped(config.faceSlim, d, 0.005f, 0f, 1f)),
             }, null));
         }
 
@@ -607,6 +647,7 @@ namespace FruitGame
             if (KeysActive && kb != null && !CameraMenu.IsOpen) HandleKeys(kb);
             if (resetArmed && Time.unscaledTime > resetArmedUntil) resetArmed = false;
             if (bestArmed && Time.unscaledTime > bestArmedUntil) bestArmed = false;
+            if (rankingArmed && Time.unscaledTime > rankingArmedUntil) rankingArmed = false;
             if (Open) Refresh();
         }
 

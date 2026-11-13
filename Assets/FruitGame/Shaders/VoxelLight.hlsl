@@ -119,6 +119,39 @@ half SkyVisibility(float3 positionWS, float3 n)
     return lerp((half)_SkyOcclusionParams.w, 1.0h, v);
 }
 
+// Realistic look: the sun's shadow, filtered so the canopy's light-through-leaves holes (CanopyShadow.shader: an
+// ordered 4 × 4 pattern in the shadow map) read as an exact, even part-shade. URP's soft-shadow filter left a faint
+// ripple of the pattern, which beat against the screen's pixels as moiré. Here each 4 × 4 block of texels (the
+// pattern's own grid, from the atlas origin) is averaged exactly, four bilinear comparison taps at its texel corners,
+// and the four blocks around the point are blended bilinearly: smooth edges about as soft as the pipeline's, and
+// nothing of the pattern left. 16 taps.
+half VoxelShadowBlock(float2 block, float z)
+{
+    float2 corner = block * 4.0 + 1.0;          // texel corners inside the block: +1 and +3
+    float2 inv = _MainLightShadowmapSize.xy;
+    return (SAMPLE_TEXTURE2D_SHADOW(_MainLightShadowmapTexture, sampler_LinearClampCompare, float3((corner + float2(0, 0)) * inv, z))
+          + SAMPLE_TEXTURE2D_SHADOW(_MainLightShadowmapTexture, sampler_LinearClampCompare, float3((corner + float2(2, 0)) * inv, z))
+          + SAMPLE_TEXTURE2D_SHADOW(_MainLightShadowmapTexture, sampler_LinearClampCompare, float3((corner + float2(0, 2)) * inv, z))
+          + SAMPLE_TEXTURE2D_SHADOW(_MainLightShadowmapTexture, sampler_LinearClampCompare, float3((corner + float2(2, 2)) * inv, z))) * 0.25h;
+}
+
+half VoxelSunShadow(float3 positionWS)
+{
+    #if !defined(MAIN_LIGHT_CALCULATE_SHADOWS)
+        return 1.0h;
+    #else
+        float4 sc = TransformWorldToShadowCoord(positionWS);
+        float2 c = sc.xy * _MainLightShadowmapSize.zw * 0.25 - 0.5; // block coordinates, block centres on integers
+        float2 c0 = floor(c);
+        float2 f = c - c0;
+        half s = lerp(lerp(VoxelShadowBlock(c0, sc.z), VoxelShadowBlock(c0 + float2(1, 0), sc.z), f.x),
+                      lerp(VoxelShadowBlock(c0 + float2(0, 1), sc.z), VoxelShadowBlock(c0 + float2(1, 1), sc.z), f.x), f.y);
+        s = LerpWhiteTo(s, GetMainLightShadowParams().x);
+        s = lerp(s, 1.0h, GetMainLightShadowFade(positionWS));
+        return BEYOND_SHADOW_FAR(sc) ? 1.0h : s;
+    #endif
+}
+
 half VoxelCookie(float3 positionWS, half cookieStrength)
 {
 #if defined(_LIGHT_COOKIES)
@@ -134,7 +167,7 @@ half3 VoxelGlow(half3 albedo, float3 n, float3 positionWS, half transmission, ha
     // The face toward the camera is shadowed by its own block, so look for shadow a way toward the sun (about a
     // bush's depth); foliage is solid blocks, so other leaves only dim the glow, never kill it.
     float3 probe = positionWS + light.direction * _VoxelGlowDepth;
-    half through = lerp(0.3h, 1.0h, GetMainLight(TransformWorldToShadowCoord(probe)).shadowAttenuation) * VoxelCookie(probe, cookieStrength);
+    half through = lerp(0.3h, 1.0h, VoxelSunShadow(probe)) * VoxelCookie(probe, cookieStrength);
     float3 v = normalize(GetWorldSpaceViewDir(positionWS));
     half back = saturate(dot(-light.direction, v));
     half ndl = saturate(dot(n, light.direction));
@@ -165,7 +198,9 @@ half3 VoxelLightBalanced(half3 albedo, float3 n, float3 positionWS, half transmi
     input.positionWS = positionWS;
     input.normalWS = n;
     input.viewDirectionWS = GetWorldSpaceNormalizeViewDir(positionWS);
-    input.shadowCoord = TransformWorldToShadowCoord(positionWS);
+    // Lit without the pipeline's shadow (a coordinate beyond the shadow map reads as lit); the sun's light is taken
+    // back below by VoxelSunShadow's own filter.
+    input.shadowCoord = float4(0, 0, -1, 1);
     input.bakedGI = BalanceFill(SampleSH(n), fillBalance);
     input.shadowMask = half4(1, 1, 1, 1);
     input.normalizedScreenSpaceUV = screenUV; // screen-space ambient occlusion
@@ -183,6 +218,18 @@ half3 VoxelLightBalanced(half3 albedo, float3 n, float3 positionWS, half transmi
     // Debug (SceneLighting "Show sky visibility"): white = open sky, black = covered.
     if (_SkyOcclusionParams.x > 1.5) return surface.occlusion.xxx;
     half3 color = UniversalFragmentPBR(input, surface).rgb;
+    half sunShadow = VoxelSunShadow(positionWS);
+    if (sunShadow < 0.999h)
+    {
+        // The direct sun, exactly as UniversalFragmentPBR added it (its cookie and the ambient occlusion on direct
+        // light included), less by the shadow.
+        SurfaceData brdfSurface = surface;
+        BRDFData brdf = (BRDFData)0;
+        InitializeBRDFData(brdfSurface, brdf);
+        AmbientOcclusionFactor ao = CreateAmbientOcclusionFactor(input, surface);
+        Light sun = GetMainLight(input, half4(1, 1, 1, 1), ao);
+        color -= LightingPhysicallyBased(brdf, sun, n, input.viewDirectionWS) * (1.0h - sunShadow);
+    }
     color += RayTracedReflection(input, surface, skyScale);
     if (transmission > 0.0h) color += VoxelGlow(albedo, n, positionWS, transmission, cookieStrength);
     // Sky shadows also dim the fill lights (bounce, the cool underlight), or they'd light the covered places back up;

@@ -221,7 +221,7 @@ GameObject:
   - component: {fileID: 3534387}
   - component: {fileID: 3534389}
   - component: {fileID: 3534388}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -418,7 +418,7 @@ GameObject:
   - component: {fileID: 39293487}
   - component: {fileID: 39293489}
   - component: {fileID: 39293488}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -648,6 +648,157 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.LocalizedText
   key: photo.close
+--- !u!1 &42716095
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 42716096}
+  - component: {fileID: 42716099}
+  - component: {fileID: 42716098}
+  - component: {fileID: 42716097}
+  m_Layer: 5
+  m_Name: Heading
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &42716096
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42716095}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 513240974}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -40}
+  m_SizeDelta: {x: 980, y: 130}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &42716097
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42716095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59660d484f6c741c894688bdf215e146, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.LocalizedText
+  key: rank.heading
+--- !u!114 &42716098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42716095}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "\uB7AD\uD0B9"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 0657ef24d009d4ba6a7a35748ba36843, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 75d9dd4211dc249e6a9d30496417c0e2, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 100
+  m_fontSizeBase: 100
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656bu
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &42716099
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 42716095}
+  m_CullTransparentMesh: 1
 --- !u!1 &43712953
 GameObject:
   m_ObjectHideFlags: 0
@@ -659,7 +810,7 @@ GameObject:
   - component: {fileID: 43712954}
   - component: {fileID: 43712956}
   - component: {fileID: 43712955}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -828,7 +979,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 52061766}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Cloud
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -874,7 +1025,7 @@ GameObject:
   - component: {fileID: 53377907}
   - component: {fileID: 53377909}
   - component: {fileID: 53377908}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1094,7 +1245,7 @@ GameObject:
   - component: {fileID: 62153423}
   - component: {fileID: 62153425}
   - component: {fileID: 62153424}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1685,7 +1836,7 @@ GameObject:
   - component: {fileID: 84069277}
   - component: {fileID: 84069279}
   - component: {fileID: 84069278}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1807,7 +1958,7 @@ GameObject:
   - component: {fileID: 87765054}
   - component: {fileID: 87765056}
   - component: {fileID: 87765055}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2595,7 +2746,7 @@ GameObject:
   - component: {fileID: 140706095}
   - component: {fileID: 140706097}
   - component: {fileID: 140706096}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3036,7 +3187,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 380, y: 150}
+  m_SizeDelta: {x: 308, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &149551852
 MonoBehaviour:
@@ -3085,8 +3236,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3474,8 +3625,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 140}
-  m_SizeDelta: {x: 960, y: 260}
+  m_AnchoredPosition: {x: 0, y: 410}
+  m_SizeDelta: {x: 960, y: 220}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &159752760
 CanvasRenderer:
@@ -4684,7 +4835,7 @@ GameObject:
   - component: {fileID: 201133428}
   - component: {fileID: 201133430}
   - component: {fileID: 201133429}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4973,7 +5124,7 @@ GameObject:
   - component: {fileID: 215354346}
   - component: {fileID: 215354348}
   - component: {fileID: 215354347}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5551,7 +5702,7 @@ GameObject:
   - component: {fileID: 231121437}
   - component: {fileID: 231121439}
   - component: {fileID: 231121438}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5758,7 +5909,7 @@ GameObject:
   - component: {fileID: 248083956}
   - component: {fileID: 248083958}
   - component: {fileID: 248083957}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5848,7 +5999,7 @@ GameObject:
   - component: {fileID: 257698781}
   - component: {fileID: 257698783}
   - component: {fileID: 257698782}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -6727,7 +6878,7 @@ GameObject:
   - component: {fileID: 305648814}
   - component: {fileID: 305648816}
   - component: {fileID: 305648815}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7156,7 +7307,7 @@ GameObject:
   - component: {fileID: 354684647}
   - component: {fileID: 354684649}
   - component: {fileID: 354684648}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7486,7 +7637,7 @@ GameObject:
   - component: {fileID: 367594435}
   - component: {fileID: 367594437}
   - component: {fileID: 367594436}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7576,7 +7727,7 @@ GameObject:
   - component: {fileID: 369593619}
   - component: {fileID: 369593621}
   - component: {fileID: 369593620}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -7666,7 +7817,7 @@ GameObject:
   - component: {fileID: 371764110}
   - component: {fileID: 371764112}
   - component: {fileID: 371764111}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8008,7 +8159,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400581342}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Cloud
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8060,7 +8211,7 @@ GameObject:
   - component: {fileID: 403620728}
   - component: {fileID: 403620730}
   - component: {fileID: 403620729}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8278,7 +8429,7 @@ GameObject:
   - component: {fileID: 413309130}
   - component: {fileID: 413309132}
   - component: {fileID: 413309131}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8368,7 +8519,7 @@ GameObject:
   - component: {fileID: 417472355}
   - component: {fileID: 417472357}
   - component: {fileID: 417472356}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8845,7 +8996,7 @@ GameObject:
   - component: {fileID: 429146445}
   - component: {fileID: 429146447}
   - component: {fileID: 429146446}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -8988,7 +9139,7 @@ GameObject:
   - component: {fileID: 431425121}
   - component: {fileID: 431425123}
   - component: {fileID: 431425122}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9442,7 +9593,7 @@ GameObject:
   - component: {fileID: 453444941}
   - component: {fileID: 453444943}
   - component: {fileID: 453444942}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -9771,6 +9922,143 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 460395865}
   m_CullTransparentMesh: 1
+--- !u!1 &460560687
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 460560690}
+  - component: {fileID: 460560689}
+  - component: {fileID: 460560688}
+  m_Layer: 5
+  m_Name: My Name
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &460560688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 460560687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: 
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 0657ef24d009d4ba6a7a35748ba36843, type: 2}
+  m_sharedMaterial: {fileID: 6682905371375370407, guid: 0657ef24d009d4ba6a7a35748ba36843, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 0.2, g: 0.25490198, b: 0.30980393, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 44
+  m_fontSizeBase: 44
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656bu
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &460560689
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 460560687}
+  m_CullTransparentMesh: 1
+--- !u!224 &460560690
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 460560687}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1314425507}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -470}
+  m_SizeDelta: {x: 980, y: 60}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &460609145
 GameObject:
   m_ObjectHideFlags: 0
@@ -9782,7 +10070,7 @@ GameObject:
   - component: {fileID: 460609146}
   - component: {fileID: 460609148}
   - component: {fileID: 460609147}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10107,7 +10395,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 150}
+  m_SizeDelta: {x: 324, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &473065594
 MonoBehaviour:
@@ -10156,8 +10444,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -10400,7 +10688,7 @@ GameObject:
   - component: {fileID: 496023668}
   - component: {fileID: 496023670}
   - component: {fileID: 496023669}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10597,7 +10885,7 @@ GameObject:
   - component: {fileID: 502800147}
   - component: {fileID: 502800149}
   - component: {fileID: 502800148}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11251,6 +11539,113 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.ViewFill
   view: {fileID: 2114006662}
   cameraFrame: 1
+--- !u!1 &513240973
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 513240974}
+  - component: {fileID: 513240977}
+  - component: {fileID: 513240976}
+  - component: {fileID: 513240975}
+  m_Layer: 0
+  m_Name: Ranking
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &513240974
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513240973}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 42716096}
+  m_Father: {fileID: 599405729}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 590, y: 60}
+  m_SizeDelta: {x: 1060, y: 1060}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &513240975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513240973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: -480}
+    sizeDelta: {x: 1300, y: 1060}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 590, y: 60}
+    sizeDelta: {x: 1060, y: 1060}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+--- !u!114 &513240976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513240973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.95}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 22a3e878e055d43968951575902274ef, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.25
+--- !u!222 &513240977
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 513240973}
+  m_CullTransparentMesh: 1
 --- !u!1 &521362144
 GameObject:
   m_ObjectHideFlags: 0
@@ -11262,7 +11657,7 @@ GameObject:
   - component: {fileID: 521362145}
   - component: {fileID: 521362147}
   - component: {fileID: 521362146}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11352,7 +11747,7 @@ GameObject:
   - component: {fileID: 524402485}
   - component: {fileID: 524402487}
   - component: {fileID: 524402486}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11745,7 +12140,7 @@ GameObject:
   - component: {fileID: 568555508}
   - component: {fileID: 568555510}
   - component: {fileID: 568555509}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12033,7 +12428,7 @@ GameObject:
   - component: {fileID: 577348568}
   - component: {fileID: 577348570}
   - component: {fileID: 577348569}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12123,7 +12518,7 @@ GameObject:
   - component: {fileID: 579210070}
   - component: {fileID: 579210072}
   - component: {fileID: 579210071}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12319,7 +12714,7 @@ GameObject:
   - component: {fileID: 583280834}
   - component: {fileID: 583280836}
   - component: {fileID: 583280835}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12462,7 +12857,7 @@ GameObject:
   - component: {fileID: 592047084}
   - component: {fileID: 592047086}
   - component: {fileID: 592047085}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -12791,7 +13186,6 @@ GameObject:
   m_Component:
   - component: {fileID: 599405729}
   - component: {fileID: 599405731}
-  - component: {fileID: 599405730}
   - component: {fileID: 599405732}
   m_Layer: 5
   m_Name: Game Over
@@ -12812,51 +13206,18 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1654194219}
-  - {fileID: 1344964447}
-  - {fileID: 1690172740}
-  - {fileID: 1400001044}
-  - {fileID: 2023390832}
+  - {fileID: 1314425507}
+  - {fileID: 513240974}
   - {fileID: 1573731792}
   - {fileID: 2097541227}
   - {fileID: 1256037653}
   m_Father: {fileID: 1303592882}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -20}
-  m_SizeDelta: {x: 1600, y: 1000}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &599405730
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 599405728}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.95}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 22a3e878e055d43968951575902274ef, type: 3}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 0.25
 --- !u!222 &599405731
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -12879,20 +13240,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
   portrait:
     set: 1
-    anchorMin: {x: 0.5, y: 0.5}
-    anchorMax: {x: 0.5, y: 0.5}
+    anchorMin: {x: 0, y: 0}
+    anchorMax: {x: 1, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: -20}
-    sizeDelta: {x: 1100, y: 1060}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 0, y: 0}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
-    anchorMin: {x: 0.5, y: 0.5}
-    anchorMax: {x: 0.5, y: 0.5}
+    anchorMin: {x: 0, y: 0}
+    anchorMax: {x: 1, y: 1}
     pivot: {x: 0.5, y: 0.5}
-    anchoredPosition: {x: 0, y: -20}
-    sizeDelta: {x: 1600, y: 1000}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 0, y: 0}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &601685594
@@ -13075,6 +13436,8 @@ MonoBehaviour:
   beepsPerSecond: {x: 1.5, y: 15}
   pitch: {x: 440, y: 1245}
   duckWhileSpeaking: 0.25
+  tryPitch: 392
+  tryPulsesPerSecond: 4
 --- !u!82 &606234532
 AudioSource:
   m_ObjectHideFlags: 0
@@ -13296,7 +13659,7 @@ GameObject:
   - component: {fileID: 617150642}
   - component: {fileID: 617150644}
   - component: {fileID: 617150643}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -13710,8 +14073,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 300}
-  m_SizeDelta: {x: 820, y: 150}
+  m_AnchoredPosition: {x: 132, y: 300}
+  m_SizeDelta: {x: 656, y: 120}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!1 &650186269
 GameObject:
@@ -14768,7 +15131,7 @@ GameObject:
   - component: {fileID: 689033583}
   - component: {fileID: 689033585}
   - component: {fileID: 689033584}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -15061,7 +15424,7 @@ GameObject:
   - component: {fileID: 717188890}
   - component: {fileID: 717188892}
   - component: {fileID: 717188891}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16019,7 +16382,7 @@ GameObject:
   - component: {fileID: 745626731}
   - component: {fileID: 745626733}
   - component: {fileID: 745626732}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16216,7 +16579,7 @@ GameObject:
   - component: {fileID: 748111800}
   - component: {fileID: 748111802}
   - component: {fileID: 748111801}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -17548,6 +17911,8 @@ MonoBehaviour:
   gameOverBest: {fileID: 1690172742}
   gameOverTallyLeft: {fileID: 1400001046}
   gameOverMissed: {fileID: 2023390830}
+  gameOverName: {fileID: 460560688}
+  rankingPanel: {fileID: 513240974}
   popScale: 1.25
   popTime: 0.2
   pulseFromSeconds: 10
@@ -17697,7 +18062,7 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   narrator: {fileID: 81134075}
   frame: {fileID: 1303592882}
-  panelStyle: {fileID: 599405730}
+  panelStyle: {fileID: 1314425509}
   titleStyle: {fileID: 1589569550}
   bodyStyle: {fileID: 1400001046}
   backStyle: {fileID: 1180720711}
@@ -17719,7 +18084,6 @@ MonoBehaviour:
   maxTurn: 16
   closeness: 5
   margin: 0.16
-  enableVoxelButtons: 1
 --- !u!1 &806585537
 GameObject:
   m_ObjectHideFlags: 0
@@ -17822,7 +18186,7 @@ GameObject:
   - component: {fileID: 808654195}
   - component: {fileID: 808654197}
   - component: {fileID: 808654196}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18003,7 +18367,7 @@ GameObject:
   - component: {fileID: 812551091}
   - component: {fileID: 812551093}
   - component: {fileID: 812551092}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -18860,7 +19224,7 @@ GameObject:
   - component: {fileID: 878457456}
   - component: {fileID: 878457458}
   - component: {fileID: 878457457}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19030,7 +19394,7 @@ GameObject:
   - component: {fileID: 900045814}
   - component: {fileID: 900045816}
   - component: {fileID: 900045815}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19841,7 +20205,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 945070014}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Cloud
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -20557,7 +20921,7 @@ GameObject:
   - component: {fileID: 976818488}
   - component: {fileID: 976818490}
   - component: {fileID: 976818489}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -21393,7 +21757,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 300, y: 110}
+  m_SizeDelta: {x: 240, y: 120}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1029042833
 MonoBehaviour:
@@ -22616,7 +22980,7 @@ GameObject:
   - component: {fileID: 1078312452}
   - component: {fileID: 1078312454}
   - component: {fileID: 1078312453}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22848,7 +23212,7 @@ GameObject:
   - component: {fileID: 1093066229}
   - component: {fileID: 1093066231}
   - component: {fileID: 1093066230}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -22938,7 +23302,7 @@ GameObject:
   - component: {fileID: 1095264930}
   - component: {fileID: 1095264932}
   - component: {fileID: 1095264931}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23241,7 +23605,7 @@ GameObject:
   - component: {fileID: 1117657461}
   - component: {fileID: 1117657463}
   - component: {fileID: 1117657462}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -23331,7 +23695,7 @@ GameObject:
   - component: {fileID: 1120432282}
   - component: {fileID: 1120432284}
   - component: {fileID: 1120432283}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24037,6 +24401,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d9050397d91c4a1094fa495e71ad78b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.SceneLighting
+  rayTracing: 1
+  bounceRays: 64
+  reflectionReach: 6
+  reflectionFade: 4
+  reflectionFarthest: 18
+  reflectionScale: 0.5
+  voxelSize: 0.05
+  reflectionBlurStep: 3
+  reflectionNewShare: 0.15
   config: {fileID: 11400000, guid: 8a7d98db96c1e430f8f09ce49a9b0dc1, type: 2}
   sun: {fileID: 1153856502}
   volumetricShader: {fileID: 4800000, guid: 095ad250c7b7b4cf8bfecbc2d28f9f58, type: 3}
@@ -24488,7 +24861,7 @@ GameObject:
   - component: {fileID: 1169800275}
   - component: {fileID: 1169800277}
   - component: {fileID: 1169800276}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -24677,8 +25050,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 150}
-  m_SizeDelta: {x: 300, y: 110}
+  m_AnchoredPosition: {x: -340, y: 300}
+  m_SizeDelta: {x: 240, y: 120}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &1180720711
 MonoBehaviour:
@@ -25050,7 +25423,7 @@ GameObject:
   - component: {fileID: 1206423467}
   - component: {fileID: 1206423469}
   - component: {fileID: 1206423468}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25140,7 +25513,7 @@ GameObject:
   - component: {fileID: 1209072192}
   - component: {fileID: 1209072194}
   - component: {fileID: 1209072193}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25264,7 +25637,7 @@ GameObject:
   - component: {fileID: 1213306415}
   - component: {fileID: 1213306417}
   - component: {fileID: 1213306416}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25460,7 +25833,7 @@ GameObject:
   - component: {fileID: 1222809993}
   - component: {fileID: 1222809995}
   - component: {fileID: 1222809994}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -25989,7 +26362,7 @@ GameObject:
   - component: {fileID: 1239091840}
   - component: {fileID: 1239091842}
   - component: {fileID: 1239091841}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -26415,11 +26788,11 @@ RectTransform:
   - {fileID: 2048847018}
   m_Father: {fileID: 599405729}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -830}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: -590}
   m_SizeDelta: {x: 370, y: 140}
-  m_Pivot: {x: 0.5, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1256037654
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26543,19 +26916,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
   portrait:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -890}
-    sizeDelta: {x: 340, y: 140}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: -1150}
+    sizeDelta: {x: 380, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -830}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: -590}
     sizeDelta: {x: 370, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -27689,6 +28062,118 @@ MonoBehaviour:
     sizeDelta: {x: 960, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
+--- !u!1 &1314425506
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1314425507}
+  - component: {fileID: 1314425510}
+  - component: {fileID: 1314425509}
+  - component: {fileID: 1314425508}
+  m_Layer: 0
+  m_Name: Results
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1314425507
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314425506}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1654194219}
+  - {fileID: 1344964447}
+  - {fileID: 1690172740}
+  - {fileID: 460560690}
+  - {fileID: 1400001044}
+  - {fileID: 2023390832}
+  m_Father: {fileID: 599405729}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -590, y: 60}
+  m_SizeDelta: {x: 1060, y: 1060}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1314425508
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314425506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
+  portrait:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 0, y: 640}
+    sizeDelta: {x: 1300, y: 1080}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+  landscape:
+    set: 1
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: -590, y: 60}
+    sizeDelta: {x: 1060, y: 1060}
+    localPosition: {x: 0, y: 0, z: 0}
+    localScale: {x: 1, y: 1, z: 1}
+--- !u!114 &1314425509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314425506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.95}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 22a3e878e055d43968951575902274ef, type: 3}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 0.25
+--- !u!222 &1314425510
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1314425506}
+  m_CullTransparentMesh: 1
 --- !u!1 &1314444536
 GameObject:
   m_ObjectHideFlags: 0
@@ -27776,7 +28261,7 @@ GameObject:
   - component: {fileID: 1316546816}
   - component: {fileID: 1316546818}
   - component: {fileID: 1316546817}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -28552,7 +29037,6 @@ GameObject:
   - component: {fileID: 1344964447}
   - component: {fileID: 1344964448}
   - component: {fileID: 1344964449}
-  - component: {fileID: 1344964450}
   m_Layer: 5
   m_Name: Score
   m_TagString: Untagged
@@ -28572,12 +29056,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 599405729}
+  m_Father: {fileID: 1314425507}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -180}
-  m_SizeDelta: {x: 1500, y: 280}
+  m_AnchoredPosition: {x: 0, y: -165}
+  m_SizeDelta: {x: 980, y: 230}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1344964448
 CanvasRenderer:
@@ -28634,8 +29118,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 256
-  m_fontSizeBase: 256
+  m_fontSize: 200
+  m_fontSizeBase: 200
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -28679,36 +29163,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1344964450
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1344964446}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -180}
-    sizeDelta: {x: 1000, y: 280}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -180}
-    sizeDelta: {x: 1500, y: 280}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1001 &1346571349
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -29043,7 +29497,7 @@ GameObject:
   - component: {fileID: 1373512118}
   - component: {fileID: 1373512120}
   - component: {fileID: 1373512119}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29361,7 +29815,7 @@ GameObject:
   - component: {fileID: 1381992816}
   - component: {fileID: 1381992818}
   - component: {fileID: 1381992817}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29451,7 +29905,7 @@ GameObject:
   - component: {fileID: 1383317305}
   - component: {fileID: 1383317307}
   - component: {fileID: 1383317306}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -29660,7 +30114,6 @@ GameObject:
   - component: {fileID: 1400001044}
   - component: {fileID: 1400001045}
   - component: {fileID: 1400001046}
-  - component: {fileID: 1400001047}
   m_Layer: 5
   m_Name: Tally Left
   m_TagString: Untagged
@@ -29680,12 +30133,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 599405729}
+  m_Father: {fileID: 1314425507}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -550}
-  m_SizeDelta: {x: 1500, y: 190}
+  m_AnchoredPosition: {x: 0, y: -545}
+  m_SizeDelta: {x: 980, y: 340}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1400001045
 CanvasRenderer:
@@ -29742,8 +30195,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
-  m_fontSizeBase: 48
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -29787,36 +30240,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1400001047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1400001043}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -550}
-    sizeDelta: {x: 1000, y: 250}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -550}
-    sizeDelta: {x: 1500, y: 190}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1408620337
 GameObject:
   m_ObjectHideFlags: 0
@@ -30006,7 +30429,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 380, y: 150}
+  m_SizeDelta: {x: 308, y: 120}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &1409593445
 MonoBehaviour:
@@ -31874,7 +32297,7 @@ GameObject:
   - component: {fileID: 1528928064}
   - component: {fileID: 1528928066}
   - component: {fileID: 1528928065}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31964,7 +32387,7 @@ GameObject:
   - component: {fileID: 1532945230}
   - component: {fileID: 1532945232}
   - component: {fileID: 1532945231}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32751,7 +33174,7 @@ GameObject:
   - component: {fileID: 1572249115}
   - component: {fileID: 1572249117}
   - component: {fileID: 1572249116}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -32866,11 +33289,11 @@ RectTransform:
   - {fileID: 657468600}
   m_Father: {fileID: 599405729}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -395, y: -830}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: -395, y: -590}
   m_SizeDelta: {x: 370, y: 140}
-  m_Pivot: {x: 0.5, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1573731793
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32994,19 +33417,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
   portrait:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -360, y: -890}
-    sizeDelta: {x: 340, y: 140}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: -430, y: -1150}
+    sizeDelta: {x: 380, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: -395, y: -830}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: -395, y: -590}
     sizeDelta: {x: 370, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -33127,7 +33550,7 @@ GameObject:
   - component: {fileID: 1583273437}
   - component: {fileID: 1583273439}
   - component: {fileID: 1583273438}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33217,7 +33640,7 @@ GameObject:
   - component: {fileID: 1584004390}
   - component: {fileID: 1584004392}
   - component: {fileID: 1584004391}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33414,7 +33837,7 @@ GameObject:
   - component: {fileID: 1588805755}
   - component: {fileID: 1588805757}
   - component: {fileID: 1588805756}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -33566,7 +33989,7 @@ MonoBehaviour:
   m_fontSizeMax: 96
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
+  m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -33627,8 +34050,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -230}
-  m_SizeDelta: {x: 980, y: 300}
+  m_AnchoredPosition: {x: 0, y: -28}
+  m_SizeDelta: {x: 1400, y: 260}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1590718582
 GameObject:
@@ -33903,7 +34326,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 150}
+  m_SizeDelta: {x: 324, y: 120}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &1608318711
 MonoBehaviour:
@@ -34025,7 +34448,7 @@ GameObject:
   - component: {fileID: 1609884881}
   - component: {fileID: 1609884883}
   - component: {fileID: 1609884882}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34115,7 +34538,7 @@ GameObject:
   - component: {fileID: 1613003208}
   - component: {fileID: 1613003210}
   - component: {fileID: 1613003209}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34358,7 +34781,7 @@ GameObject:
   - component: {fileID: 1618696012}
   - component: {fileID: 1618696014}
   - component: {fileID: 1618696013}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34585,7 +35008,7 @@ GameObject:
   - component: {fileID: 1623945057}
   - component: {fileID: 1623945059}
   - component: {fileID: 1623945058}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -34921,7 +35344,6 @@ GameObject:
   - component: {fileID: 1654194221}
   - component: {fileID: 1654194220}
   - component: {fileID: 1654194222}
-  - component: {fileID: 1654194223}
   m_Layer: 5
   m_Name: Heading
   m_TagString: Untagged
@@ -34941,12 +35363,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 599405729}
+  m_Father: {fileID: 1314425507}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -30}
-  m_SizeDelta: {x: 1500, y: 150}
+  m_AnchoredPosition: {x: 0, y: -40}
+  m_SizeDelta: {x: 980, y: 130}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1654194220
 MonoBehaviour:
@@ -34995,8 +35417,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 112
-  m_fontSizeBase: 112
+  m_fontSize: 100
+  m_fontSizeBase: 100
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -35061,36 +35483,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.LocalizedText
   key: over.heading
---- !u!114 &1654194223
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1654194218}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -30}
-    sizeDelta: {x: 1000, y: 150}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -30}
-    sizeDelta: {x: 1500, y: 150}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1654735087
 GameObject:
   m_ObjectHideFlags: 0
@@ -35552,7 +35944,7 @@ GameObject:
   - component: {fileID: 1679255943}
   - component: {fileID: 1679255945}
   - component: {fileID: 1679255944}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -35745,7 +36137,6 @@ GameObject:
   - component: {fileID: 1690172740}
   - component: {fileID: 1690172741}
   - component: {fileID: 1690172742}
-  - component: {fileID: 1690172743}
   m_Layer: 5
   m_Name: Best
   m_TagString: Untagged
@@ -35765,12 +36156,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 599405729}
+  m_Father: {fileID: 1314425507}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -460}
-  m_SizeDelta: {x: 1500, y: 80}
+  m_AnchoredPosition: {x: 0, y: -395}
+  m_SizeDelta: {x: 980, y: 70}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &1690172741
 CanvasRenderer:
@@ -35827,8 +36218,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 52
+  m_fontSizeBase: 52
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -35872,36 +36263,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &1690172743
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1690172739}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -460}
-    sizeDelta: {x: 1000, y: 80}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -460}
-    sizeDelta: {x: 1500, y: 80}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &1714264427
 GameObject:
   m_ObjectHideFlags: 0
@@ -35967,15 +36328,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 512
+  m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -36036,8 +36397,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0, y: 470}
-  m_SizeDelta: {x: 980, y: 110}
+  m_AnchoredPosition: {x: 0, y: 1010}
+  m_SizeDelta: {x: 1400, y: 130}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!1 &1716717531
 GameObject:
@@ -36288,8 +36649,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -110}
-  m_SizeDelta: {x: 1000, y: 240}
+  m_AnchoredPosition: {x: 0, y: 170}
+  m_SizeDelta: {x: 1400, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1733569420
 CanvasRenderer:
@@ -36346,8 +36707,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 64
-  m_fontSizeBase: 64
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -37026,7 +37387,7 @@ GameObject:
   - component: {fileID: 1769499258}
   - component: {fileID: 1769499260}
   - component: {fileID: 1769499259}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -37608,7 +37969,7 @@ GameObject:
   - component: {fileID: 1773498716}
   - component: {fileID: 1773498718}
   - component: {fileID: 1773498717}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38260,7 +38621,7 @@ GameObject:
   - component: {fileID: 1804406920}
   - component: {fileID: 1804406922}
   - component: {fileID: 1804406921}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -38403,7 +38764,7 @@ GameObject:
   - component: {fileID: 1815234551}
   - component: {fileID: 1815234553}
   - component: {fileID: 1815234552}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39287,7 +39648,7 @@ GameObject:
   - component: {fileID: 1853279101}
   - component: {fileID: 1853279103}
   - component: {fileID: 1853279102}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -39681,7 +40042,7 @@ GameObject:
   - component: {fileID: 1862746532}
   - component: {fileID: 1862746534}
   - component: {fileID: 1862746533}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40314,7 +40675,7 @@ GameObject:
   - component: {fileID: 1895106900}
   - component: {fileID: 1895106902}
   - component: {fileID: 1895106901}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40404,7 +40765,7 @@ GameObject:
   - component: {fileID: 1900939953}
   - component: {fileID: 1900939955}
   - component: {fileID: 1900939954}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40757,7 +41118,7 @@ GameObject:
   - component: {fileID: 1944714331}
   - component: {fileID: 1944714333}
   - component: {fileID: 1944714332}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41209,8 +41570,10 @@ MonoBehaviour:
   faceModel: {fileID: 5022602860645237092, guid: d9cb3e7c1ceb14bc090f34ec156b626b, type: 3}
   anchorsCsv: {fileID: 4900000, guid: 85d08ecbaa8cd44419b174d76bd63b06, type: 3}
   scoreThreshold: 0.6
+  keepThreshold: 0.35
   iouThreshold: 0.3
   stickyIou: 0.3
+  holdSeconds: 0.3
   backend: 256
 --- !u!114 &1957496578
 MonoBehaviour:
@@ -41893,7 +42256,7 @@ GameObject:
   - component: {fileID: 1980509875}
   - component: {fileID: 1980509877}
   - component: {fileID: 1980509876}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42079,7 +42442,7 @@ GameObject:
   - component: {fileID: 1993935020}
   - component: {fileID: 1993935022}
   - component: {fileID: 1993935021}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42538,7 +42901,7 @@ GameObject:
   - component: {fileID: 2006289481}
   - component: {fileID: 2006289483}
   - component: {fileID: 2006289482}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42803,7 +43166,7 @@ GameObject:
   - component: {fileID: 2016442694}
   - component: {fileID: 2016442696}
   - component: {fileID: 2016442695}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42893,7 +43256,7 @@ GameObject:
   - component: {fileID: 2019942244}
   - component: {fileID: 2019942246}
   - component: {fileID: 2019942245}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42983,7 +43346,6 @@ GameObject:
   - component: {fileID: 2023390832}
   - component: {fileID: 2023390831}
   - component: {fileID: 2023390830}
-  - component: {fileID: 2023390833}
   m_Layer: 5
   m_Name: Missed
   m_TagString: Untagged
@@ -43038,8 +43400,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 48
-  m_fontSizeBase: 48
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -43103,43 +43465,13 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 599405729}
+  m_Father: {fileID: 1314425507}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0, y: -745}
-  m_SizeDelta: {x: 1500, y: 70}
+  m_AnchoredPosition: {x: 0, y: -905}
+  m_SizeDelta: {x: 980, y: 60}
   m_Pivot: {x: 0.5, y: 1}
---- !u!114 &2023390833
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2023390829}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f98aeaeefce62438e8ad085f058326e7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
-  portrait:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -805}
-    sizeDelta: {x: 1000, y: 70}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
-  landscape:
-    set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 0, y: -745}
-    sizeDelta: {x: 1500, y: 70}
-    localPosition: {x: 0, y: 0, z: 0}
-    localScale: {x: 1, y: 1, z: 1}
 --- !u!1 &2024783875
 GameObject:
   m_ObjectHideFlags: 0
@@ -43151,7 +43483,7 @@ GameObject:
   - component: {fileID: 2024783876}
   - component: {fileID: 2024783878}
   - component: {fileID: 2024783877}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43701,7 +44033,7 @@ GameObject:
   - component: {fileID: 2054687195}
   - component: {fileID: 2054687197}
   - component: {fileID: 2054687196}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43791,7 +44123,7 @@ GameObject:
   - component: {fileID: 2067593686}
   - component: {fileID: 2067593688}
   - component: {fileID: 2067593687}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43972,7 +44304,7 @@ GameObject:
   - component: {fileID: 2068366678}
   - component: {fileID: 2068366680}
   - component: {fileID: 2068366679}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: Puff
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44153,7 +44485,7 @@ GameObject:
   - component: {fileID: 2069870520}
   - component: {fileID: 2069870522}
   - component: {fileID: 2069870521}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44525,11 +44857,11 @@ RectTransform:
   - {fileID: 228526317}
   m_Father: {fileID: 599405729}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 395, y: -830}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 395, y: -590}
   m_SizeDelta: {x: 370, y: 140}
-  m_Pivot: {x: 0.5, y: 1}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2097541228
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -44653,19 +44985,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FruitGame.AspectLayout
   portrait:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 360, y: -890}
-    sizeDelta: {x: 340, y: 140}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 430, y: -1150}
+    sizeDelta: {x: 380, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
   landscape:
     set: 1
-    anchorMin: {x: 0.5, y: 1}
-    anchorMax: {x: 0.5, y: 1}
-    pivot: {x: 0.5, y: 1}
-    anchoredPosition: {x: 395, y: -830}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    anchoredPosition: {x: 395, y: -590}
     sizeDelta: {x: 370, y: 140}
     localPosition: {x: 0, y: 0, z: 0}
     localScale: {x: 1, y: 1, z: 1}
@@ -45152,7 +45484,7 @@ GameObject:
   - component: {fileID: 2115905231}
   - component: {fileID: 2115905233}
   - component: {fileID: 2115905232}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45569,7 +45901,7 @@ GameObject:
   - component: {fileID: 2139595037}
   - component: {fileID: 2139595039}
   - component: {fileID: 2139595038}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FruitDot
   m_TagString: Untagged
   m_Icon: {fileID: 0}

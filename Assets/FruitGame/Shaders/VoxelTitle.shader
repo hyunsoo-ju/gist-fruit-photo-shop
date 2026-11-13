@@ -12,6 +12,8 @@ Shader "FruitGame/Voxel Title"
         [Toggle] _SceneLit("Lit by the scene (butterflies, flames); off = the title and buttons' own fixed light", Float) = 0
         _Transmission("Light Through (scene-lit only)", Range(0, 2)) = 0
         _FillBalance("Fill light colour (scene-lit: rgb, a = how much; physical buttons take the classic UI light's warmth)", Vector) = (1, 1, 1, 0)
+        [Toggle] _Unlit("High contrast: the block colours exactly as authored, no light, shade or glow", Float) = 0
+        [Toggle] _UnlitTonemap("High contrast in the realistic look: undo its tone mapping, so white shows white", Float) = 0
     }
 
     SubShader
@@ -44,6 +46,7 @@ Shader "FruitGame/Voxel Title"
             half4 _UIGlowTint;      // the buttons' own glow colour (warm)
             half4 _UIStageLight;    // x: 1 when buttons take the stage light (realistic, no high contrast), y: their own glow,
                                     // z: how much of the sun, w: how much of the sky
+            half _UIExposure;       // the realistic grade's exposure as a factor (2^EV, staff panel brightness); 0 = unset
 
             CBUFFER_START(UnityPerMaterial)
                 float _SweepX;
@@ -54,7 +57,19 @@ Shader "FruitGame/Voxel Title"
                 half4 _SelfGlow;
                 half _Transmission;
                 half4 _FillBalance;
+                half _Unlit;
+                half _UnlitTonemap;
             CBUFFER_END
+
+            // The realistic look's ACES curve (Narkowicz's fit) and its exposure (_UIExposure), undone: the colour to output so
+            // that `target` (linear, at most 0.96) is what reaches the screen.
+            half3 UndoTonemap(half3 target)
+            {
+                half3 y = min(target, 0.96h);
+                half3 a = 2.51h - y * 2.43h, b = 0.03h - y * 0.59h, c = -y * 0.14h;
+                half3 x = (-b + sqrt(max(b * b - 4.0h * a * c, 0.0h))) / (2.0h * a);
+                return x / (_UIExposure > 0.0h ? _UIExposure : 1.23h);
+            }
 
             struct Attributes
             {
@@ -85,6 +100,9 @@ Shader "FruitGame/Voxel Title"
 
             half4 frag(Varyings input) : SV_Target
             {
+                // High contrast (PhysicalUI): pure black and white blocks, unlit, so nothing in the scene dims them.
+                if (_Unlit > 0.5h)
+                    return half4(_UnlitTonemap > 0.5h ? UndoTonemap(input.color.rgb) : input.color.rgb, 1);
                 float3 n = normalize(input.normalWS);
                 half3 color;
                 if (_StageLit > 0.5h && _UIStageLight.x > 0.5h)

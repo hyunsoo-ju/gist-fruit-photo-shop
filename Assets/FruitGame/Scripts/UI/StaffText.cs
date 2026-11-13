@@ -67,6 +67,8 @@ namespace FruitGame
             ["Today's best score"] = "오늘 최고 점수",
             ["press again to reset"] = "한 번 더 누르면 초기화",
             ["{0}, reset"] = "{0}, 초기화",
+            ["Ranking"] = "랭킹",
+            ["{0} entries, reset"] = "{0}명, 초기화",
             ["Basket follows the mouse"] = "마우스로 바구니 움직이기",
 
             // Camera
@@ -98,6 +100,14 @@ namespace FruitGame
             ["Classic"] = "기본",
             ["Realistic"] = "사실적",
             ["Ray tracing (Realistic)"] = "레이 트레이싱(사실적)",
+            ["God rays (Realistic)"] = "빛줄기(사실적)",
+            ["God ray contrast (Realistic)"] = "빛줄기 대비(사실적)",
+            ["Bloom (Realistic)"] = "블룸(사실적)",
+            ["Brightness (Realistic)"] = "밝기(사실적)",
+            ["Sun (Realistic)"] = "햇빛(사실적)",
+            ["Sky light (Realistic)"] = "하늘빛(사실적)",
+            ["Underlight (Realistic)"] = "아래 반사광(사실적)",
+            ["Light through leaves (Realistic)"] = "잎 투과광(사실적)",
 
             // Printing
             ["Copies per print"] = "한 번에 인쇄 매수",
@@ -140,6 +150,8 @@ namespace FruitGame
             ["Blush tone"] = "블러셔 톤",
             ["Lip tint"] = "립 틴트",
             ["Lip tone"] = "립 톤",
+            ["Eye size"] = "눈 크기",
+            ["V-line"] = "V라인",
             ["{0} (base)"] = "{0} (기본)",
             ["{0} warmer"] = "{0} 따뜻하게",
             ["{0} cooler"] = "{0} 차갑게",

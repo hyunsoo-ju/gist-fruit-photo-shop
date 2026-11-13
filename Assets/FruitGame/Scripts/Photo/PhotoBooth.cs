@@ -337,6 +337,7 @@ namespace FruitGame
 
         void Update()
         {
+            ApplyBeauty(); // every frame, so the staff panel's eye size and V-line show at once
             if (flashT >= 0f)
             {
                 flashT += Time.unscaledDeltaTime;

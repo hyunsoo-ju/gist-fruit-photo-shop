@@ -6,12 +6,13 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// A keycap button (Docs/DESIGN.md §15). With voxel buttons on (VoxelButtons, M6 1.3) it's drawn as blocks: a flat
-    /// cream border that stays put and a cap in the button's colour inside it, with a ridge two blocks in from its edge
-    /// and its label raised in cream blocks on a dark edge. Hover lifts the cap one block; pressing sinks it flush with
-    /// the border. The button keeps its own image (invisible) for clicks, and its label text (hidden) as the source of
-    /// the label, so localisation keeps working. Without voxel buttons it's the flat pixel keycap: the image is the
-    /// dark lip and the face (holding the label) sits on it; hover lifts the face a pixel, pressing sinks it.
+    /// A keycap button (Docs/DESIGN.md §15), drawn as blocks (VoxelButtons, M6 1.3): a flat tan border that stays put
+    /// and a cap in the button's colour inside it, with a ridge two blocks in from its edge and its label raised in cream
+    /// blocks on a dark edge. Hover lifts the cap one block; pressing sinks it flush with the border. The button keeps
+    /// its own image (invisible) for clicks, and its label text (hidden) as the source of the label, so localisation
+    /// keeps working. In Play the blocks stand in the 3D scene (PhysicalUI) in every look; only a button on the phone
+    /// card, and the Editor's preview, render them into an image in the button's place instead. The flat pixel keycap
+    /// (the image as the dark lip, the face on it) only shows in the Editor outside the preview.
     /// </summary>
     [RequireComponent(typeof(Button))]
     public class KeycapButton : MonoBehaviour, IEditPreview, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
@@ -195,8 +196,9 @@ namespace FruitGame
                 // The pause button's label is "II": drawn as a proper pause icon (two solid bars), not two letters.
                 var bits = text == "II" ? VoxelButtonKit.PauseIcon(capInner, capTall)
                     : VoxelButtonKit.Label(label != null ? label.font : null, text, capInner, capTall >= 34 ? 2 : 1);
-                // Standing in the scene, the blocks get grit so they read as a textured material (PhysicalUI).
-                float grit = physical ? PhysicalGrit : 0f;
+                // Standing in the scene, the blocks get grit so they read as a textured material (PhysicalUI); not in high
+                // contrast, which stays pure black and white.
+                float grit = physical && !HighContrast.On ? PhysicalGrit : 0f;
                 borderMesh = VoxelButtonKit.Border(blocks.x, blocks.y, grit);
                 var capColour = HighContrast.On ? new Color32(0, 0, 0, 0xFF) : Live ? colour : VoxelButtonKit.Shade(colour, 0.6f);
                 capMesh = VoxelButtonKit.Cap(blocks.x, blocks.y, capColour, bits, grit);
@@ -254,20 +256,22 @@ namespace FruitGame
         bool physical;
 
         /// <summary>
-        /// In the realistic look (high contrast off) the button's blocks stand in the 3D scene where the button sits on
-        /// screen, lit like the rest of it; the image view is hidden and the invisible button still takes the taps.
-        /// Returns true while that's so.
+        /// In Play the button's blocks stand in the 3D scene where the button sits on screen (PhysicalUI), in the look's
+        /// light, or unlit black and white with high contrast; the image view is hidden and the invisible button still
+        /// takes the taps. Returns true while that's so.
         /// </summary>
         bool UpdatePhysical()
         {
             var ui = PhysicalUI.Instance;
-            bool want = PhysicalUI.On && ui.SceneMaterial != null && !PhysicalUI.KeptFlat(transform);
+            var material = PhysicalUI.On ? ui.ButtonMaterial : null;
+            bool want = material != null && !PhysicalUI.KeptFlat(transform);
             if (!want)
             {
                 if (physical) LeaveScene();
                 return false;
             }
             if (!physical) EnterScene(ui);
+            UseMaterial(material);
             BuildMeshes();
             float block = Block;
             int state = State;
@@ -286,7 +290,7 @@ namespace FruitGame
                 var turn = vb.ViewTurn(vb.FromMiddle(rt));
                 float angle = Quaternion.Angle(Quaternion.identity, turn) * Mathf.Deg2Rad;
                 float halfSize = Mathf.Max(rt.rect.width, rt.rect.height) * 0.5f * ui.MetresPerCanvasUnit(rt, PhysicalUI.Distance);
-                float clearance = halfSize * Mathf.Sin(angle) + 0.02f;
+                float clearance = halfSize * Mathf.Sin(angle) + PhysicalUI.Clearance;
                 if (ui.Place(pivot, rt, PhysicalUI.Distance - clearance)) pivot.rotation *= turn;
             }
             return true;
@@ -296,16 +300,29 @@ namespace FruitGame
         {
             physical = true;
             if (view != null) view.enabled = false;
-            foreach (var r in pivot.GetComponentsInChildren<MeshRenderer>(true))
-            {
-                r.gameObject.layer = ui.Layer;
-                r.sharedMaterial = ui.SceneMaterial;
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                r.receiveShadows = true;
-            }
+            foreach (var r in pivot.GetComponentsInChildren<MeshRenderer>(true)) r.gameObject.layer = ui.Layer;
             pivot.gameObject.layer = ui.Layer;
+            usedMaterial = null;
             float block = Block;
             borderT.localScale = capT.localScale = Vector3.one * block;
+        }
+
+        Material usedMaterial;
+        bool usedShadows;
+
+        /// <summary>The look or high contrast can change at any time: the blocks follow (material and shadows).</summary>
+        void UseMaterial(Material material)
+        {
+            bool shadows = PhysicalUI.Shadows;
+            if (material == usedMaterial && shadows == usedShadows) return;
+            usedMaterial = material;
+            usedShadows = shadows;
+            foreach (var r in pivot.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                r.sharedMaterial = material;
+                r.shadowCastingMode = shadows ? UnityEngine.Rendering.ShadowCastingMode.On : UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = shadows;
+            }
         }
 
         void LeaveScene()

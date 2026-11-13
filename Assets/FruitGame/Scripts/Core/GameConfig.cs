@@ -254,8 +254,27 @@ namespace FruitGame
         [Header("Voxel look (Docs/DESIGN.md §4, §16)")]
         [Tooltip("Classic: the pixel-art look. Realistic: full-resolution, physically based glossy blocks, a low sun from behind, sky lighting and reflections, volumetric beams, fog and cinematic post-processing (SceneLighting). Staff panel: Display.")]
         public LightingStyle lightingStyle = LightingStyle.Classic;
+        [Tooltip("Classic look: the sun's strength and the ambient fill's (the unlit sides), times the scene's own, so lit faces are brighter and shaded ones darker (SceneLighting).")]
+        public float classicSun = 1.2f;
+        public float classicShade = 0.7f;
+        [Tooltip("Classic look: the colour the distant layers fade toward (their materials' own is #A9C6DD; darker, so the background sits back).")]
+        public Color classicHaze = new Color(0.39f, 0.43f, 0.44f);
         [Tooltip("Realistic look: ray traced reflections and bounce light (software, through a voxel grid of the scene; about 1.7 ms a frame and 215 MB of graphics memory). Off: the reflection probe and the summed bounce. Staff panel: Display.")]
         public bool rayTracing = true;
+        [Tooltip("Realistic look: strength of the volumetric sun beams (god rays), times their built-in density; 0 = off. Staff panel: Display.")]
+        public float realisticRays = 1.8f;
+        [Tooltip("Realistic look: how much the god rays stand out from the haze they add everywhere: 0 = plain (every ray's light as it gathers it), higher = the shafts keep their light while the even glow between them fades. Staff panel: Display.")]
+        public float realisticRayContrast = 2.75f;
+        [Tooltip("Realistic look: bloom intensity; 0 = off. Staff panel: Display.")]
+        public float realisticBloom = 0.1f;
+        [Tooltip("Realistic look: overall brightness, the grade's exposure in EV. Staff panel: Display.")]
+        public float realisticBrightness = -0.4f;
+        [Tooltip("Realistic look: light source strengths, times their built-in values (sun 3.6, sky light 2.0, underlight 3); 0 = off. Staff panel: Display.")]
+        public float realisticSun = 1.3f;
+        public float realisticSky = 0.6f;
+        public float realisticUnderlight = 1f;
+        [Tooltip("Realistic look: share of the sun the hidden leaf canopy lets through its leaves (0 = opaque leaves, the sun only through the gaps; 1 = no shade). Staff panel: Display.")]
+        public float realisticLeafLight = 0.5f;
         [Tooltip("Block size in metres for fruit (falling and pile). Re-bake fruit after changing (FruitGame > Voxels).")]
         public float fruitBlockSize = 0.044f;
         [Tooltip("Block size in metres for the play layers: basket, foreground trees and plants.")]

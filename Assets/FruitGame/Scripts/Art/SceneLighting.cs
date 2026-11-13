@@ -97,6 +97,9 @@ namespace FruitGame
         [SerializeField] float backgroundBlurStart = 13f;
         [SerializeField] float backgroundBlurEnd = 22f;
         [SerializeField] float backgroundBlur = 1.2f;
+        /// <summary>The background blur (Gaussian depth of field: start, full at, radius), which the classic look's
+        /// background layer takes too (PixelRenderer).</summary>
+        public Vector3 BackgroundBlur => new Vector3(backgroundBlurStart, backgroundBlurEnd, backgroundBlur);
 
         // The classic look, as saved in the scene.
         bool captured;
@@ -159,7 +162,11 @@ namespace FruitGame
 
         LightingStyle Wanted => config != null ? config.lightingStyle : LightingStyle.Classic;
 
-        void Awake() => Capture();
+        void Awake()
+        {
+            PhysicalUI.VeilShader = veilShader; // the physical UI's dimmers, in every look
+            Capture();
+        }
 
         void OnEnable() => HighContrast.Changed += ShowButtonLight;
         void OnDisable() => HighContrast.Changed -= ShowButtonLight;
@@ -175,11 +182,37 @@ namespace FruitGame
         [SerializeField] float buttonSun = 0.18f;
         [SerializeField] float buttonSky = 0.35f;
 
+        Bloom bloom;
+        ColorAdjustments grade;
+
         void ShowButtonLight()
         {
             Shader.SetGlobalVector(UIStageLight, stageLitButtons && !HighContrast.On ? new Vector4(1f, buttonGlow, buttonSun, buttonSky) : Vector4.zero);
             Shader.SetGlobalColor(UIGlowTint, buttonGlowTint.linear);
             PhysicalUI.ButtonGlow = buttonGlowTint.linear * buttonGlow;
+            // High contrast: no bloom, so the white labels and frames don't bleed into the black around them.
+            if (bloom != null) bloom.active = !HighContrast.On;
+        }
+
+        /// <summary>
+        /// Classic look, in Play: more contrast than the scene's own light (GameConfig.classicSun / classicShade: a
+        /// stronger sun, a weaker ambient fill on the shaded sides) and a darker haze on the distant layers. The title,
+        /// buttons and digits follow the scene's light in this look, so they take the same contrast. Not in the
+        /// Editor's preview, which must leave the scene exactly as it was.
+        /// </summary>
+        void ApplyClassicTuning()
+        {
+            if (!Application.isPlaying || config == null || sun == null) return;
+            sun.intensity = classicIntensity * Mathf.Max(0f, config.classicSun);
+            float shade = Mathf.Max(0f, config.classicShade);
+            RenderSettings.ambientSkyColor = classicSky * shade;
+            RenderSettings.ambientEquatorColor = classicEquator * shade;
+            RenderSettings.ambientGroundColor = classicGround * shade;
+            var probe = classicProbe;
+            probe *= shade;
+            RenderSettings.ambientProbe = probe;
+            var haze = config.classicHaze.linear;
+            Shader.SetGlobalVector(HazeColour, new Vector4(haze.r, haze.g, haze.b, 1f));
         }
 
         void Capture()
@@ -231,6 +264,7 @@ namespace FruitGame
             if (Standby.Idle) return;
             if (applied != Wanted) Apply(Wanted);
             if (applied != LightingStyle.Realistic) return;
+            ApplyTuning();
             // Each layer of leaves sways on its own, with gusts, so the gaps between them open and close and the
             // spots of light flicker and wander like sun through leaves in a breeze.
             if (Application.isPlaying && canopyLayers != null)
@@ -260,6 +294,52 @@ namespace FruitGame
             }
         }
 
+        /// <summary>
+        /// The staff panel's realistic-look strengths (Display page), applied every frame so a change shows at once: the
+        /// sun beams' density, bloom and the grade's exposure (which the unlit high-contrast buttons undo, via _UIExposure).
+        /// </summary>
+        void ApplyTuning()
+        {
+            if (config == null) return;
+            if (beams != null)
+            {
+                bool rays = config.realisticRays > 0f;
+                if (beams.activeSelf != rays) beams.SetActive(rays);
+                if (beamsMaterial != null) beamsMaterial.SetFloat("_Density", beamDensity * config.realisticRays);
+            }
+            if (bloom != null) bloom.intensity.value = config.realisticBloom;
+            if (sun != null) sun.intensity = SunIntensity;
+            Shader.SetGlobalVector(UnderLight, UnderLightValue);
+            if (canopyMaterial != null && canopyMaterial.HasProperty(Transmit)) canopyMaterial.SetFloat(Transmit, LeafLight);
+            if (beamsMaterial != null)
+            {
+                beamsMaterial.SetFloat(RayContrast, Mathf.Max(0f, config.realisticRayContrast));
+                beamsMaterial.SetFloat(BeamLeafLight, LeafLight);
+            }
+            // The sky's light is baked into the ambient probe, so it's rebuilt only when the setting changes.
+            if (!Mathf.Approximately(appliedSky, SkyLight))
+            {
+                RenderSettings.ambientIntensity = appliedSky = SkyLight;
+                DynamicGI.UpdateEnvironment();
+            }
+            if (grade != null) grade.postExposure.value = config.realisticBrightness;
+            Shader.SetGlobalFloat(UIExposure, Mathf.Pow(2f, config.realisticBrightness));
+        }
+
+        static readonly int UIExposure = Shader.PropertyToID("_UIExposure");
+        static readonly int Transmit = Shader.PropertyToID("_Transmit");
+        static readonly int RayContrast = Shader.PropertyToID("_Contrast");
+        static readonly int BeamLeafLight = Shader.PropertyToID("_LeafLight");
+
+        // The light sources' strengths: the tuned values times the staff panel's multipliers.
+        float SunIntensity => sunIntensity * (config != null ? config.realisticSun : 1f);
+        // Unity applies the ambient intensity in gamma space (the probe went to 22 %, not 50 %, at half), so the staff
+        // multiplier goes in through the inverse gamma: ×0.5 then halves the sky's light.
+        float SkyLight => skyLight * Mathf.Pow(config != null ? Mathf.Max(0f, config.realisticSky) : 1f, 1f / 2.2f);
+        Vector4 UnderLightValue => underLight.linear * underLightIntensity * (config != null ? config.realisticUnderlight : 1f);
+        float LeafLight => config != null ? Mathf.Clamp01(config.realisticLeafLight) : 0f;
+        float appliedSky;
+
         void Apply(LightingStyle style)
         {
             Capture();
@@ -284,7 +364,7 @@ namespace FruitGame
             // Sun.
             sun.transform.rotation = Quaternion.Euler(sunAngles);
             sun.color = sunColour;
-            sun.intensity = sunIntensity;
+            sun.intensity = SunIntensity;
             sun.shadows = LightShadows.Soft;
             sun.shadowStrength = 1f;
             // Cheaper soft-shadow filtering (0.45 ms a frame less than High, the same softness to the eye) and
@@ -292,6 +372,7 @@ namespace FruitGame
             // look keeps the pipeline's own settings.
             if (sunData != null) sunData.softShadowQuality = SoftShadowQuality.Medium;
             SetSsaoDownsample(true);
+            SetShadowResolution(true);
             MakeCanopy();
 
             // Sky: lights the scene and is reflected in it.
@@ -309,7 +390,8 @@ namespace FruitGame
             RenderSettings.skybox = skybox;
             RenderSettings.sun = sun;
             RenderSettings.ambientMode = AmbientMode.Skybox;
-            RenderSettings.ambientIntensity = skyLight;
+            RenderSettings.ambientIntensity = SkyLight;
+            appliedSky = SkyLight;
             DynamicGI.UpdateEnvironment();
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
             MakeProbe();
@@ -323,7 +405,7 @@ namespace FruitGame
             if (Application.isPlaying) Gloss();
             Shader.SetGlobalFloat(Backlight, 1f);
             Shader.SetGlobalFloat(Smoothness, smoothness);
-            Shader.SetGlobalVector(UnderLight, underLight.linear * underLightIntensity);
+            Shader.SetGlobalVector(UnderLight, UnderLightValue);
             Shader.SetGlobalFloat(FadeScale, 0.0001f); // fog does the distance now
             // The pile's haze (and any kept fade) takes a dark warm colour, not the classic sky blue, so the pile and its
             // crates sink back behind the play plane.
@@ -359,6 +441,29 @@ namespace FruitGame
         /// Switches the renderer's SSAO between full and half resolution (the URP feature's own Downsample setting, which
         /// has no public setter), remembering the original so the classic look gets it back exactly.
         /// </summary>
+        int? classicShadowResolution;
+
+        /// <summary>
+        /// Realistic look: a 4096 sun shadow map (the pipeline's is 2048), so the holes the canopy's leaves let light
+        /// through (CanopyShadow.shader, one shadow-map texel each) are half the size and blur into an even part-shade.
+        /// Put back with the classic look and on teardown, as the pipeline asset is shared (and saved, in the Editor).
+        /// </summary>
+        void SetShadowResolution(bool realistic)
+        {
+            var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
+            if (asset == null) return;
+            if (realistic)
+            {
+                classicShadowResolution ??= asset.mainLightShadowmapResolution;
+                asset.mainLightShadowmapResolution = 4096;
+            }
+            else if (classicShadowResolution.HasValue)
+            {
+                asset.mainLightShadowmapResolution = classicShadowResolution.Value;
+                classicShadowResolution = null;
+            }
+        }
+
         void SetSsaoDownsample(bool realistic)
         {
             var asset = GraphicsSettings.currentRenderPipeline as UniversalRenderPipelineAsset;
@@ -409,6 +514,7 @@ namespace FruitGame
             sun.cookie = null;
             if (sunData != null) { sunData.lightCookieSize = classicCookieSize; sunData.lightCookieOffset = classicCookieOffset; sunData.softShadowQuality = classicSoftQuality; }
             SetSsaoDownsample(false);
+            SetShadowResolution(false);
             RenderSettings.skybox = classicSkybox;
             RenderSettings.sun = classicSun;
             RenderSettings.ambientMode = classicMode;
@@ -436,6 +542,7 @@ namespace FruitGame
             if (beams != null) beams.SetActive(false);
             // The canopy only casts shadows: left on, it shaded the whole classic scene flat and dark after a switch back.
             if (canopy != null) canopy.SetActive(false);
+            ApplyClassicTuning();
             Shader.SetGlobalVector(BounceDims, Vector4.zero);
             Shader.SetGlobalVector(SkyParams, Vector4.zero);
             StopRayTracing();
@@ -485,8 +592,9 @@ namespace FruitGame
                 profile = ScriptableObject.CreateInstance<VolumeProfile>();
                 profile.hideFlags = HideFlags.DontSave;
                 var tm = profile.Add<Tonemapping>(true); tm.mode.value = TonemappingMode.ACES;
-                var bloom = profile.Add<Bloom>(true);
-                bloom.intensity.value = 0.9f; bloom.threshold.value = 0.95f; bloom.scatter.value = 0.75f;
+                bloom = profile.Add<Bloom>(true);
+                bloom.active = !HighContrast.On;
+                bloom.intensity.value = config != null ? config.realisticBloom : 0.75f; bloom.threshold.value = 0.95f; bloom.scatter.value = 0.75f;
                 bloom.tint.value = Color.white;
                 var dof = profile.Add<DepthOfField>(true);
                 // Far-only blur: everything behind the play plane softens a little, the player, the falling fruit
@@ -496,8 +604,8 @@ namespace FruitGame
                 dof.gaussianEnd.value = backgroundBlurEnd;
                 dof.gaussianMaxRadius.value = backgroundBlur;
                 dof.highQualitySampling.value = true;
-                var grade = profile.Add<ColorAdjustments>(true);
-                grade.postExposure.value = 0.15f; grade.contrast.value = 18f; grade.saturation.value = 12f;
+                grade = profile.Add<ColorAdjustments>(true);
+                grade.postExposure.value = config != null ? config.realisticBrightness : 0.3f; grade.contrast.value = 18f; grade.saturation.value = 12f;
                 var wb = profile.Add<WhiteBalance>(true); wb.temperature.value = 0f;
                 var smh = profile.Add<ShadowsMidtonesHighlights>(true);
                 smh.shadows.value = new Vector4(0.97f, 0.99f, 1.04f, -0.1f); // deeper darks
@@ -906,11 +1014,11 @@ namespace FruitGame
                 r.shadowCastingMode = ShadowCastingMode.Off;
                 r.receiveShadows = false;
             }
-            beamsMaterial.SetFloat("_Density", beamDensity);
+            beamsMaterial.SetFloat("_Density", beamDensity * (config != null ? config.realisticRays : 1f));
             beamsMaterial.SetFloat("_Steps", 20f); // jittered, so 20 samples a ray look as smooth as 32
             beamsMaterial.SetColor("_Tint", sunColour);
             beamsMaterial.SetFloat("_Anisotropy", 0.35f); // the sun is behind the camera: less forward scattering, so the shafts still show
-            beams.SetActive(true);
+            beams.SetActive(config == null || config.realisticRays > 0f);
             FitBeams();
         }
 
@@ -980,8 +1088,11 @@ namespace FruitGame
             if (canopy == null)
             {
                 canopy = new GameObject("Sun Canopy (shadows only)");
-                canopyMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "Sun Canopy", hideFlags = HideFlags.DontSave };
+                // Its own shadow caster, so the leaves can let part of the sun through (staff panel), which URP Lit can't.
+                var canopyShader = Resources.Load<Shader>("Lighting/CanopyShadow");
+                canopyMaterial = new Material(canopyShader != null ? canopyShader : Shader.Find("Universal Render Pipeline/Lit")) { name = "Sun Canopy", hideFlags = HideFlags.DontSave };
                 canopyMaterial.SetFloat("_Cull", 0f); // both sides cast
+                if (canopyMaterial.HasProperty(Transmit)) canopyMaterial.SetFloat(Transmit, LeafLight);
                 canopyMeshes = BuildCanopyMeshes();
                 canopyLayers = new Transform[canopyMeshes.Length];
                 for (int i = 0; i < canopyMeshes.Length; i++)
@@ -1076,6 +1187,10 @@ namespace FruitGame
         void TearDown()
         {
             if (applied == LightingStyle.Realistic) Restore();
+            // The pipeline asset is shared and, in the Editor, saved: put its settings back even when Restore stopped
+            // early (leaving Play destroys the sun before this runs).
+            SetShadowResolution(false);
+            SetSsaoDownsample(false);
             applied = null;
             Shader.SetGlobalFloat(Backlight, 0f);
             Shader.SetGlobalFloat(FadeScale, 0f);

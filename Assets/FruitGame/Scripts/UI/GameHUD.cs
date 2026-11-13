@@ -30,6 +30,10 @@ namespace FruitGame
         [SerializeField] TMP_Text gameOverBest;
         [SerializeField] TMP_Text gameOverTallyLeft;
         [SerializeField] TMP_Text gameOverMissed;
+        [Tooltip("The visitor's random name on the results panel (\"내 이름: …\").")]
+        [SerializeField] TMP_Text gameOverName;
+        [Tooltip("The 랭킹 panel, right of the results (below them in portrait); its rows are built at runtime.")]
+        [SerializeField] RectTransform rankingPanel;
 
         [Header("Animation")]
         [SerializeField] float popScale = 1.25f;
@@ -108,9 +112,11 @@ namespace FruitGame
             messageHideAt = -1f;
         }
 
-        public void ShowGameOver(RoundStats stats, int best, bool newBest, float roundDuration)
+        public void ShowGameOver(RoundStats stats, int best, bool newBest, float roundDuration, Leaderboard.Entry mine, int rank)
         {
-            lastGameOver = (stats, best, newBest, roundDuration);
+            lastGameOver = (stats, best, newBest, roundDuration, mine, rank);
+            if (gameOverName != null) gameOverName.text = Strings.Get("over.myName", mine.Name);
+            ShowRanking(rank);
             gameOverScore.text = stats.Score.ToString();
             gameOverBest.text = newBest ? Strings.Get("over.newBest") : Strings.Get("over.best", best);
 
@@ -130,61 +136,62 @@ namespace FruitGame
         // ---- The catch tally on the game over screen ----------------------------------------------------------------
 
         const int TallyColumns = 4, TallyRows = 4;
-        const float TallyColumnWidth = 360f, TallyFontSize = 40f;
-        TMP_Text[] tallyColumns;
+        const float TallyColumnWidth = 230f, TallyFontSize = 30f; // "Dragon Fruit ×25" on one line, inside the board's frame
+        TMP_Text[,] tallyCells;
 
         /// <summary>
         /// The fruit caught, in columns: up to four fruit a column, up to four columns (all 16 kinds fit), filled top to
-        /// bottom and then left to right, the columns centred together. Tally Left stays as the area (its AspectLayout
-        /// places it in either layout) and the columns are texts inside it, so the realistic look's signboard carves them
-        /// as columns too. A single paragraph wrapped across the whole width ran off the screen with many kinds.
+        /// bottom and then left to right, the columns centred together. Each fruit is its own text, the rows spread over
+        /// the whole tally area (a quarter of its height apart; fewer rows keep that spacing, centred), as the signboard
+        /// draws a many-line text with its own tight line spacing. Tally Left stays as the area (and says when nothing
+        /// was caught). A single paragraph wrapped across the whole width ran off the screen with many kinds.
         /// </summary>
         void ShowTally(RoundStats stats)
         {
-            if (tallyColumns == null)
+            var area = gameOverTallyLeft.rectTransform;
+            float pitch = area.rect.height / TallyRows;
+            if (tallyCells == null)
             {
-                tallyColumns = new TMP_Text[TallyColumns];
-                for (int i = 0; i < TallyColumns; i++)
+                tallyCells = new TMP_Text[TallyColumns, TallyRows];
+                for (int c = 0; c < TallyColumns; c++)
+                for (int r = 0; r < TallyRows; r++)
                 {
-                    var c = Instantiate(gameOverTallyLeft, gameOverTallyLeft.transform);
-                    var layout = c.GetComponent<AspectLayout>();
+                    var t = Instantiate(gameOverTallyLeft, area);
+                    var layout = t.GetComponent<AspectLayout>();
                     if (layout != null) DestroyImmediate(layout);
-                    for (int k = c.transform.childCount - 1; k >= 0; k--) DestroyImmediate(c.transform.GetChild(k).gameObject);
-                    c.name = $"Tally Column {i + 1}";
-                    c.fontSize = TallyFontSize;
-                    c.alignment = TextAlignmentOptions.Top;
-                    var rt = c.rectTransform;
-                    rt.anchorMin = new Vector2(0.5f, 0f);
-                    rt.anchorMax = new Vector2(0.5f, 1f);
-                    rt.pivot = new Vector2(0.5f, 1f);
-                    rt.sizeDelta = new Vector2(TallyColumnWidth, 0f);
-                    tallyColumns[i] = c;
+                    for (int k = t.transform.childCount - 1; k >= 0; k--) DestroyImmediate(t.transform.GetChild(k).gameObject);
+                    t.name = $"Tally {c + 1}.{r + 1}";
+                    t.fontSize = TallyFontSize;
+                    t.alignment = TextAlignmentOptions.Center;
+                    t.textWrappingMode = TextWrappingModes.NoWrap;
+                    var rt = t.rectTransform;
+                    rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+                    rt.pivot = new Vector2(0.5f, 0.5f);
+                    tallyCells[c, r] = t;
                 }
             }
             var items = new List<string>();
-            foreach (var kv in stats.CaughtByType) items.Add($"<nobr>{Strings.Fruit(kv.Key)} ×{kv.Value}</nobr>");
+            foreach (var kv in stats.CaughtByType) items.Add($"{Strings.Fruit(kv.Key)} ×{kv.Value}");
             gameOverTallyLeft.text = items.Count == 0 ? Strings.Get("over.none") : "";
 
             int cols = items.Count == 0 ? 0 : Mathf.Min(TallyColumns, Mathf.CeilToInt(items.Count / (float)TallyRows));
             int rows = cols == 0 ? 0 : Mathf.CeilToInt(items.Count / (float)cols);
+            float top = (area.rect.height - rows * pitch) * 0.5f;
             for (int c = 0; c < TallyColumns; c++)
+            for (int r = 0; r < TallyRows; r++)
             {
-                var t = tallyColumns[c];
-                bool used = c < cols;
+                var t = tallyCells[c, r];
+                int i = c * rows + r;
+                bool used = c < cols && r < rows && i < items.Count;
                 t.gameObject.SetActive(used);
                 if (!used) continue;
-                var lines = new List<string>();
-                for (int r = 0; r < rows; r++)
-                {
-                    int i = c * rows + r;
-                    if (i < items.Count) lines.Add(items[i]);
-                }
-                t.text = string.Join("\n", lines);
-                t.rectTransform.anchoredPosition = new Vector2((c - (cols - 1) * 0.5f) * TallyColumnWidth, 0f);
+                t.text = items[i];
+                t.rectTransform.sizeDelta = new Vector2(TallyColumnWidth, pitch);
+                t.rectTransform.anchoredPosition = new Vector2((c - (cols - 1) * 0.5f) * TallyColumnWidth, -(top + (r + 0.5f) * pitch));
             }
         }
 
-        (RoundStats stats, int best, bool newBest, float duration)? lastGameOver;
+        (RoundStats stats, int best, bool newBest, float duration, Leaderboard.Entry mine, int rank)? lastGameOver;
 
         /// <summary>Language flipped (staff panel L): re-fill the game-over lines if they're on screen.</summary>
         void RefreshLanguage()
@@ -192,11 +199,123 @@ namespace FruitGame
             RefreshEasyTag();
             if (!gameOverPanel.activeSelf || !lastGameOver.HasValue) return;
             var g = lastGameOver.Value;
-            ShowGameOver(g.stats, g.best, g.newBest, g.duration);
+            ShowGameOver(g.stats, g.best, g.newBest, g.duration, g.mine, g.rank);
         }
 
-        void OnEnable() => Strings.Changed += RefreshLanguage;
-        void OnDisable() => Strings.Changed -= RefreshLanguage;
+        // ---- The 랭킹 -------------------------------------------------------------------------------------------------
+
+        // Rows on the 랭킹 panel (canvas units, from its top): a raised light plate each (SignPlate), the place, the name,
+        // the round's setting and the score in dark letters.
+        // Plate colours are authored a little dark: block colours go into the lighting, and the realistic look's sun
+        // washed lighter ones out to white (the silver place vanished, the visitor's row hardly stood out).
+        const float RowWidth = 900f, RowHeight = 130f, RowTop = 200f, RowStep = 158f;
+        static readonly Color PlateColour = new Color32(0xBF, 0xA0, 0x70, 0xFF);
+        static readonly Color PlateMine = new Color32(0xF0, 0xB4, 0x30, 0xFF); // the visitor's own row
+        static readonly Color InkDark = new Color32(0x24, 0x18, 0x0C, 0xFF);
+        static readonly Color InkSoft = new Color32(0x5A, 0x44, 0x2C, 0xFF);
+        static readonly Color[] PlaceColours =
+        {
+            new Color32(0xB8, 0x86, 0x00, 0xFF), // gold
+            new Color32(0x44, 0x52, 0x62, 0xFF), // silver (dark enough to read on the light plate in the sun)
+            new Color32(0x9A, 0x4C, 0x22, 0xFF), // bronze
+        };
+
+        class RankRow
+        {
+            public UnityEngine.UI.Image plate;
+            public SignPlate sign;
+            public TMP_Text place, name, mode, score;
+        }
+
+        RankRow[] rankRows;
+        int shownRank = -1;
+
+        void BuildRanking()
+        {
+            if (rankRows != null || rankingPanel == null) return;
+            rankRows = new RankRow[Leaderboard.Size];
+            for (int i = 0; i < rankRows.Length; i++)
+            {
+                var row = new RankRow();
+                var plate = new GameObject($"Rank Row {i + 1}", typeof(RectTransform), typeof(UnityEngine.UI.Image), typeof(SignPlate)).GetComponent<RectTransform>();
+                plate.SetParent(rankingPanel, false);
+                plate.anchorMin = plate.anchorMax = new Vector2(0.5f, 1f);
+                plate.pivot = new Vector2(0.5f, 0.5f);
+                plate.sizeDelta = new Vector2(RowWidth, RowHeight);
+                plate.anchoredPosition = new Vector2(0f, -RowTop - i * RowStep);
+                row.plate = plate.GetComponent<UnityEngine.UI.Image>();
+                row.plate.raycastTarget = false;
+                row.sign = plate.GetComponent<SignPlate>();
+                row.place = RowText(plate, "Place", 15f, 100f, 76f, TextAlignmentOptions.Center);
+                row.name = RowText(plate, "Name", 135f, 430f, 46f, TextAlignmentOptions.Left);
+                row.mode = RowText(plate, "Setting", 570f, 200f, 34f, TextAlignmentOptions.Center);
+                row.score = RowText(plate, "Score", 770f, 110f, 60f, TextAlignmentOptions.Right);
+                rankRows[i] = row;
+            }
+        }
+
+        /// <summary>A text in a 랭킹 row: from `left` (canvas units from the row's left edge), `width` wide.</summary>
+        TMP_Text RowText(RectTransform row, string textName, float left, float width, float size, TextAlignmentOptions align)
+        {
+            var t = new GameObject(textName, typeof(RectTransform), typeof(TextMeshProUGUI)).GetComponent<TMP_Text>();
+            var r = t.rectTransform;
+            r.SetParent(row, false);
+            r.anchorMin = r.anchorMax = new Vector2(0f, 0.5f);
+            r.pivot = new Vector2(0f, 0.5f);
+            r.sizeDelta = new Vector2(width, RowHeight);
+            r.anchoredPosition = new Vector2(left, 0f);
+            t.font = gameOverBest.font;
+            t.fontSharedMaterial = gameOverBest.fontSharedMaterial;
+            t.fontSize = size;
+            t.alignment = align;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Overflow;
+            t.raycastTarget = false;
+            return t;
+        }
+
+        /// <summary>Fills the 랭킹: the five best rounds, the visitor's own row (`rank`, −1 if not on it) lit up.</summary>
+        void ShowRanking(int rank)
+        {
+            BuildRanking();
+            if (rankRows == null) return;
+            shownRank = rank;
+            var entries = Leaderboard.Entries;
+            for (int i = 0; i < rankRows.Length; i++)
+            {
+                var row = rankRows[i];
+                bool has = i < entries.Count;
+                var plateColour = i == rank ? PlateMine : PlateColour;
+                row.plate.color = plateColour;
+                row.sign.colour = plateColour;
+                row.place.text = (i + 1).ToString();
+                row.place.color = i < PlaceColours.Length ? PlaceColours[i] : InkSoft;
+                row.name.text = has ? entries[i].Name : "-";
+                row.name.color = InkDark;
+                row.mode.text = has ? entries[i].ModeName : "";
+                row.mode.color = InkSoft;
+                row.score.text = has ? entries[i].score.ToString() : "";
+                row.score.color = InkDark;
+            }
+        }
+
+        /// <summary>Staff reset the 랭킹 while it shows: empty it at once.</summary>
+        void RefreshRanking()
+        {
+            if (gameOverPanel != null && gameOverPanel.activeSelf) ShowRanking(Leaderboard.Entries.Count == 0 ? -1 : shownRank);
+        }
+
+        void OnEnable()
+        {
+            Strings.Changed += RefreshLanguage;
+            Leaderboard.Changed += RefreshRanking;
+        }
+
+        void OnDisable()
+        {
+            Strings.Changed -= RefreshLanguage;
+            Leaderboard.Changed -= RefreshRanking;
+        }
         void OnDestroy() => Difficulty.Changed -= RefreshEasyTag;
 
         static void SetActive(GameObject go, bool active) => UiTransition.Set(go, active);
@@ -234,7 +353,7 @@ namespace FruitGame
 
         GameObject BuildCard(string cardName, Vector2 anchor, Vector2 position, Vector2 size, out TMP_Text label)
         {
-            var style = gameOverPanel.GetComponent<UnityEngine.UI.Image>();
+            var style = gameOverPanel.GetComponentInChildren<UnityEngine.UI.Image>(true); // the results panel's
             var card = new GameObject(cardName, typeof(RectTransform), typeof(UnityEngine.UI.Image)).GetComponent<RectTransform>();
             card.SetParent(messageSub.rectTransform.parent, false);
             card.anchorMin = card.anchorMax = card.pivot = anchor;

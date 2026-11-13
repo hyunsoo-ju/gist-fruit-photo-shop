@@ -5,23 +5,31 @@ using UnityEngine.UI;
 namespace FruitGame
 {
     /// <summary>
-    /// Physical UI for the realistic look (Docs/DESIGN.md §15): the voxel buttons and the panels stand in the 3D scene,
-    /// just in front of the player, lit by the scene's sun, sky, leaf spots and beams like everything else, and casting
-    /// shadows. The panels are wooden signboards hanging on ropes from above, their text raised in voxel letters
-    /// (SignBoard). The UI keeps working as before underneath: the (invisible) 2D elements still take the taps, and each
-    /// model is placed where its 2D element sits on screen, scaled to the same size. What stays 2D: the captured photos,
-    /// the floating instructions, the final photo preview and the phone card. Full-screen dimmers become a dark veil just
-    /// behind the signs, so they dim the scene but not the signs. Off in the classic look and with high contrast on, which
-    /// keep the flat UI.
+    /// Physical UI (Docs/DESIGN.md §15): the voxel buttons and the panels stand in the 3D scene, in every look. The
+    /// panels are wooden signboards hanging on ropes from above, their text raised in voxel letters (SignBoard). The UI
+    /// keeps working as before underneath: the (invisible) 2D elements still take the taps, and each model is placed where
+    /// its 2D element sits on screen, scaled to the same size. What stays 2D: the captured photos, the floating
+    /// instructions, the final photo preview and the phone card (its Close button too). Full-screen dimmers become a dark
+    /// veil just behind the signs, so they dim the scene but not the signs.
+    /// Realistic look: just in front of the player, lit by the scene's sun, sky, leaf spots and beams and casting shadows.
+    /// Classic look: in front of the pixel layers' near quad, drawn at full resolution by the game camera in the classic
+    /// buttons' light, without shadows. High contrast (either look): unlit pure black and white, no shadows.
     /// </summary>
     public class PhysicalUI : MonoBehaviour
     {
-        /// <summary>Metres from the camera to the buttons (the player stands at about 12).</summary>
-        public const float Distance = 9f;
+        /// <summary>
+        /// Metres from the camera to the buttons. Realistic: 9 (the player stands at about 14). Classic: 1.5, nearer
+        /// than the pixel layers' front quad (2 m), so nothing in the game draws over them. A model scaled toward the
+        /// camera looks the same on screen, so only the light and shadows differ.
+        /// </summary>
+        public static float Distance => realistic ? 9f : 1.5f;
+        static float Scale => Distance / 9f;
         /// <summary>The signboards sit this far behind the buttons on them.</summary>
-        public const float BoardBehind = 0.12f;
+        public static float BoardBehind => 0.12f * Scale;
+        /// <summary>A little room in front of a sign, so a button doesn't sink into it.</summary>
+        public static float Clearance => 0.02f * Scale;
         /// <summary>The dimming veil sits this far behind the signs.</summary>
-        const float VeilBehind = 0.6f;
+        static float VeilBehind => 0.6f * Scale;
 
         static PhysicalUI instance;
         static bool realistic;
@@ -35,18 +43,28 @@ namespace FruitGame
             realistic = false;
         }
 
-        /// <summary>Physical UI is showing: the realistic look in Play, high contrast off.</summary>
-        public static bool On => realistic && !HighContrast.On && Application.isPlaying && instance != null && instance.Camera != null;
+        /// <summary>Physical UI is showing: always in Play, once there's a game camera.</summary>
+        public static bool On => Application.isPlaying && instance != null && instance.Camera != null;
+
+        /// <summary>The realistic look is on (SceneLighting says).</summary>
+        public static bool Realistic => realistic;
+
+        /// <summary>The models cast and take shadows: only in the realistic look without high contrast.</summary>
+        public static bool Shadows => realistic && !HighContrast.On;
 
         /// <summary>SceneLighting tells this when the realistic look goes on or off.</summary>
         public static void SetRealistic(bool on)
         {
             realistic = on;
-            if (on && Application.isPlaying && instance == null)
-            {
-                var go = new GameObject("Physical UI"); // a scene object: gone when Play ends
-                instance = go.AddComponent<PhysicalUI>();
-            }
+            if (on) Ensure();
+        }
+
+        /// <summary>Makes the physical UI in Play if it isn't there yet (VoxelButtons calls it, for the classic look).</summary>
+        public static void Ensure()
+        {
+            if (!Application.isPlaying || instance != null) return;
+            var go = new GameObject("Physical UI"); // a scene object: gone when Play ends
+            instance = go.AddComponent<PhysicalUI>();
         }
 
         public static PhysicalUI Instance => instance;
@@ -56,8 +74,40 @@ namespace FruitGame
 
         public Camera Camera => Camera.main;
         public int Layer { get; private set; }
+        /// <summary>The buttons' material for the look and contrast now.</summary>
+        public Material ButtonMaterial => HighContrast.On ? ContrastMaterial : realistic ? SceneMaterial : ClassicMaterial;
+        /// <summary>The signboards' material for the look and contrast now.</summary>
+        public Material BoardMaterial => HighContrast.On ? ContrastMaterial : realistic ? SignMaterial : ClassicMaterial;
+
+        /// <summary>Classic look: the blocks' own material, in the classic buttons' light.</summary>
+        Material ClassicMaterial
+        {
+            get
+            {
+                if (classicMaterial == null && VoxelButtons.Instance != null && VoxelButtons.Instance.BlockMaterial != null)
+                    classicMaterial = new Material(VoxelButtons.Instance.BlockMaterial) { name = "Physical UI Classic", hideFlags = HideFlags.DontSave };
+                return classicMaterial;
+            }
+        }
+
+        /// <summary>High contrast: the block colours as they are (pure black and white), unlit.</summary>
+        Material ContrastMaterial
+        {
+            get
+            {
+                if (contrastMaterial == null && VoxelButtons.Instance != null && VoxelButtons.Instance.BlockMaterial != null)
+                {
+                    contrastMaterial = new Material(VoxelButtons.Instance.BlockMaterial) { name = "Physical UI Contrast", hideFlags = HideFlags.DontSave };
+                    contrastMaterial.SetFloat("_Unlit", 1f);
+                }
+                if (contrastMaterial != null) contrastMaterial.SetFloat("_UnlitTonemap", realistic ? 1f : 0f);
+                return contrastMaterial;
+            }
+        }
+        Material classicMaterial, contrastMaterial;
+
         /// <summary>The blocks' material, lit by the scene (made on first use: VoxelButtons may start after this).</summary>
-        public Material SceneMaterial
+        Material SceneMaterial
         {
             get
             {
@@ -74,7 +124,7 @@ namespace FruitGame
         Material sceneMaterial, signMaterial;
 
         /// <summary>The signboards' material: lit by the scene like the buttons, without their glow.</summary>
-        public Material SignMaterial
+        Material SignMaterial
         {
             get
             {
@@ -129,10 +179,13 @@ namespace FruitGame
                 if (c.isRootCanvas && c.renderMode == RenderMode.ScreenSpaceOverlay && c.transform.Find("Frame") != null) ui = c;
             if (ui == null) return;
             var frame = ui.transform.Find("Frame");
-            foreach (var path in new[] { "Game Over", "Side Panels/Left Panel", "Side Panels/Film Strip" })
+            foreach (var path in new[] { "Game Over/Results", "Game Over/Ranking", "Side Panels/Left Panel", "Side Panels/Film Strip" })
             {
                 var t = frame.Find(path);
-                if (t != null && t.GetComponent<SignBoard>() == null) boards.Add(t.gameObject.AddComponent<SignBoard>());
+                if (t == null || t.GetComponent<SignBoard>() != null) continue;
+                var board = t.gameObject.AddComponent<SignBoard>();
+                if (path == "Game Over/Ranking") board.extraBehind = 1f;
+                boards.Add(board);
             }
             foreach (var path in new[] { "Pause Menu", "Photo Booth/Preview" })
             {
@@ -187,6 +240,8 @@ namespace FruitGame
             foreach (var (_, veil) in dimmers) if (veil != null) Destroy(veil.gameObject);
             if (sceneMaterial != null) Destroy(sceneMaterial);
             if (signMaterial != null) Destroy(signMaterial);
+            if (classicMaterial != null) Destroy(classicMaterial);
+            if (contrastMaterial != null) Destroy(contrastMaterial);
             foreach (var (_, veil) in dimmers) if (veil != null) Destroy(veil.GetComponent<MeshRenderer>().sharedMaterial);
             if (veilMaterial != null) Destroy(veilMaterial);
             if (instance == this) instance = null;
@@ -198,8 +253,8 @@ namespace FruitGame
 
         /// <summary>
         /// Hides the buttons, signs and dimmers (and so their shadows) while a photo is rendered, then shows them again.
-        /// Picked by their materials, not their layer: the sun beams share the layer (both stay out of the sky and sun
-        /// maps), and leaving the layer out took the beams out of the photos too.
+        /// Picked by their materials, not their layer: the realistic look's sun beams share the layer (both stay out of
+        /// the sky and sun maps), and leaving the layer out took the beams out of the photos too.
         /// </summary>
         public void HideForPhoto(bool hide)
         {
@@ -217,7 +272,7 @@ namespace FruitGame
         bool Owns(Material m)
         {
             if (m == null) return false;
-            if (m == sceneMaterial || m == signMaterial) return true;
+            if (m == sceneMaterial || m == signMaterial || m == classicMaterial || m == contrastMaterial) return true;
             foreach (var (_, veil) in dimmers)
                 if (veil != null && veil.GetComponent<MeshRenderer>().sharedMaterial == m) return true;
             return false;
@@ -238,8 +293,10 @@ namespace FruitGame
             rect.GetWorldCorners(corners); // overlay canvas: world = screen pixels
             var centre = (corners[0] + corners[2]) * 0.5f;
             var ray = cam.ScreenPointToRay(new Vector3(centre.x, centre.y, 0f));
+            // From the camera itself: the ray starts on the near plane, which put every model that much farther than
+            // `depth` and so smaller on screen than its element (a fifth smaller at the classic look's 1.5 m).
             float along = depth / Mathf.Max(0.01f, Vector3.Dot(ray.direction, cam.transform.forward));
-            model.SetPositionAndRotation(ray.origin + ray.direction * along, cam.transform.rotation);
+            model.SetPositionAndRotation(cam.transform.position + ray.direction * along, cam.transform.rotation);
             var canvas = rect.GetComponentInParent<Canvas>().rootCanvas;
             float metresPerPixel = 2f * depth * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / Mathf.Max(1f, cam.pixelHeight);
             float k = metresPerPixel * canvas.scaleFactor;
