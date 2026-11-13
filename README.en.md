@@ -31,7 +31,7 @@ Written so the booth can be run from this section alone when the project lead is
 | Equipment | Role | Connection |
 |---|---|---|
 | Booth laptop (MacBook) | Runs the game; the **staff screen** | Plugged in to power, ideally |
-| Guest touch display | The **guest screen** (the game; tap buttons) | Connected to the laptop (extended display) |
+| Guest touch display | The **guest screen** (the game; tap buttons) | Connected to the laptop (extended display). Touch also needs the monitor's **USB cable** in the laptop, and, with the laptop as the main display, the **touch helper** below |
 | Camera | The visitor's face and picture | A webcam, or the DSLR (Canon EOS R6) → micro HDMI–HDMI cable → Elgato 4K X → laptop |
 | Printer, Canon SELPHY CP1500 | Prints the four-cut photo | USB-C. **RP-108** paper (postcard, 4 × 6 in, 18 sheets at a time); one ink cassette prints 36 |
 | Headphones | For voice-assist visitors (the beeps that say where the fruit is) | The laptop's headphone socket or Bluetooth |
@@ -40,13 +40,23 @@ Written so the booth can be run from this section alone when the project lead is
 
 **Display arrangement (macOS):** keep the laptop as the **main display** (in System Settings ▸ Displays ▸ Arrange, the white menu bar on the laptop) and the touch display as an extended display, not mirrored. The staff screen then appears on the laptop and the guest screen on the touch display. To use the touch display as the main display instead, set staff panel ▸ Display ▸ "Main display shows" to "Guest screen" and restart the app. With only one display, the guest screen fills it and the staff panel opens over it (see "Staff keys").
 
+**Touch helper (TouchToDisplay):** the touch panel on the booth's LG monitor ("Touch Device,32-40P") connects to macOS like a mouse, so its taps land on the **main display (the laptop)**. To keep the laptop as the main display and still have taps land on the guest screen, run the helper in Terminal before opening the app, and **leave that window open**.
+
+```bash
+cd ~/Documents/Unity/gist-fruit-photo-shop && Builds/TouchToDisplay
+```
+
+- The first time: in System Settings ▸ Privacy & Security, turn **Terminal** on under **Input Monitoring** and **Accessibility**, then reopen Terminal. If the helper is missing, build it with `swiftc -O Tools/TouchToDisplay/main.swift -o Builds/TouchToDisplay` (needs the Xcode command-line tools).
+- "taken over" means it's ready. Taps go to the first external display (pick another by number with `--display 2`; `--list` shows the numbers).
+- To stop it, press **Ctrl-C** in that window. After unplugging and replugging the touch USB, run it again.
+
 ### Starting up
 
 **A. Running the app (once it's built)**
 
 To build it: in Unity, choose **FruitGame ▸ Build ▸ macOS**. It makes `Builds/macOS/GIST Fruit Photo Shop.app` in the project folder and shows it in Finder (a few minutes; it isn't put in git). Only the `.app` needs copying to the booth laptop, not the `…_BackUpThisFolder_ButDontShipItWithYourGame` folder beside it.
 
-1. With everything connected, open the `GIST Fruit Photo Shop` app. The staff screen opens on the main display (the laptop) and the guest screen full screen on the touch display.
+1. With everything connected and the **touch helper** running (see "Equipment"), open the `GIST Fruit Photo Shop` app. The staff screen opens on the main display (the laptop) and the guest screen full screen on the touch display.
 2. The first time, macOS asks about **camera** access and **incoming network connections** (for phone downloads): **allow** both.
 3. To quit, press **⌘Q** (Windows: Alt+F4).
 
@@ -133,6 +143,7 @@ The panel's settings (starting mode, assist, sensitivity, calibration, round len
 
 | Symptom | Fix |
 |---|---|
+| Taps land on the laptop screen / touch doesn't work | Check the touch helper is running (see "Equipment"). If it says "Couldn't take over", check Terminal's Input Monitoring permission and the touch USB cable, and run it again. In a hurry: make the LG the main display, set staff panel ▸ Display ▸ "Main display shows" to "Guest screen" and restart the app. |
 | No camera picture / the wrong camera | Check the panel's Camera page: if **Camera** says Off, press it to turn it back on. Otherwise turn the panel keys on and choose the camera with **C**. On macOS, allow the app (or Unity) in System Settings ▸ Privacy & Security ▸ Camera. |
 | It can't find the face and keeps pausing | Check there's enough light on the face and they're not too far or too close. Ask them to take off a hat or mask covering the face. |
 | The basket is too twitchy or too sluggish | Start again from the **title** so they calibrate afresh. If it persists, adjust the sensitivity on the panel's Gameplay page. |
