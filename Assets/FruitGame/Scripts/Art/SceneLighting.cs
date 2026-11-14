@@ -160,7 +160,24 @@ namespace FruitGame
         static readonly int PlayerRimColor = Shader.PropertyToID("_PlayerRimColor");
         static readonly int PlayerRimDir = Shader.PropertyToID("_PlayerRimDir");
 
-        LightingStyle Wanted => config != null ? config.lightingStyle : LightingStyle.Classic;
+        LightingStyle Wanted => VisitorLook ?? (config != null ? config.lightingStyle : LightingStyle.Classic);
+        static SceneLighting live;
+
+        /// <summary>The look the visitor picked on the title (its look button), for this visit only; null = the staff's.</summary>
+        public static LightingStyle? VisitorLook;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetVisitorLook() => VisitorLook = null;
+
+        /// <summary>The look the guest screen shows: the visitor's pick, else the staff's (GameConfig.lightingStyle).</summary>
+        public static LightingStyle ShownLook
+        {
+            get
+            {
+                if (VisitorLook.HasValue) return VisitorLook.Value;
+                return live != null ? live.Wanted : LightingStyle.Classic;
+            }
+        }
 
         void Awake()
         {
@@ -168,8 +185,8 @@ namespace FruitGame
             Capture();
         }
 
-        void OnEnable() => HighContrast.Changed += ShowButtonLight;
-        void OnDisable() => HighContrast.Changed -= ShowButtonLight;
+        void OnEnable() { live = this; HighContrast.Changed += ShowButtonLight; }
+        void OnDisable() { if (live == this) live = null; HighContrast.Changed -= ShowButtonLight; }
 
         // Realistic look: the buttons take the scene's sun and sky plus a glow of their own; with high contrast on (or
         // in the classic look) they keep their own fixed light, as before.

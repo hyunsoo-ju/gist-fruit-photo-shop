@@ -300,6 +300,7 @@ namespace FruitGame
             VoiceAssist.ResetVisit();
             if (router != null) router.EndVisit();
             HighContrast.On = false;
+            SceneLighting.VisitorLook = null;
             Difficulty.ResetTo(config.defaultMode);
             Steering.ResetTo(config.steerBy);
         }

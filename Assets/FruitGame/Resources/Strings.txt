@@ -107,6 +107,8 @@ fruit.pear	배	Pear
 fruit.pineapple	파인애플	Pineapple
 fruit.watermelon	수박	Watermelon
 start.contrast	고대비	High contrast
+start.lookClassic	간단 모드	Simple mode
+start.lookRealistic	사실적 모드	Realistic mode
 voice.pressFive	5번을 눌러 주세요	Press 5
 voice.tellStaff	준비되면 직원에게 말해 주세요	Tell the staff when you're ready
 walk.hard	어려움	Hard

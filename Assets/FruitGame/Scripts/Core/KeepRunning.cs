@@ -5,29 +5,23 @@ using UnityEngine;
 namespace FruitGame
 {
     /// <summary>
-    /// Keeps the booth running while staff work elsewhere (Docs/DESIGN.md §16): the guest screen must carry on when the
-    /// staff screen's desktop is switched away or another app is in front. Three parts, in the macOS build:
-    ///  - frames are paced by a fixed frame rate (BoothFrameRate), not by the display: Unity's Metal display link (off in
-    ///    Player Settings) follows the main window, and macOS stops it while that window can't be seen, which froze the
-    ///    whole player, the guest window too; vsync is off for the same reason;
-    ///  - an activity assertion (NSProcessInfo beginActivity, user-initiated and latency-critical) so macOS doesn't put
-    ///    the app to sleep (App Nap) or let the Mac idle to sleep while it isn't the frontmost app;
-    ///  - Run In Background (Player Settings) and the Info.plist App Nap keys (MacBuildPlist) back that up.
-    /// Standby lowers the frame rate while the booth is closed and puts this one back.
+    /// Keeps the booth running while staff work elsewhere (Docs/DESIGN.md §16), in the macOS build: an activity assertion
+    /// (NSProcessInfo beginActivity, user-initiated and latency-critical) so macOS doesn't put the app to sleep (App Nap)
+    /// or let the Mac idle to sleep while it isn't the frontmost app; Run In Background (Player Settings) and the
+    /// Info.plist App Nap keys (MacBuildPlist) back it up. Frames stay paced by Unity's Metal display link, which the
+    /// two-screen flicker needs (UUM-103506); it follows the main window, so the player only keeps drawing while that
+    /// window can be seen: a booth that needs the guest screen to run while staff switch desktops puts the guest screen
+    /// in the main window (the touch display as macOS's main display). No frame-rate cap: under the display link a capped
+    /// frame sleeps inside the display's refresh and macOS delivers no clicks meanwhile.
     /// </summary>
     public static class KeepRunning
     {
-        /// <summary>The guest touch display's refresh rate.</summary>
-        public const int BoothFrameRate = 60;
-
         static IntPtr activity;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Init()
         {
 #if UNITY_STANDALONE_OSX && !UNITY_EDITOR
-            QualitySettings.vSyncCount = 0;
-            Application.targetFrameRate = BoothFrameRate;
             Application.runInBackground = true;
             BeginActivity();
 #endif

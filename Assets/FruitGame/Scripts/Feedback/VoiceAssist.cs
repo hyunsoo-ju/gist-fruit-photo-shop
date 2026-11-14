@@ -102,11 +102,29 @@ namespace FruitGame
                 var label = contrast.GetComponentInChildren<LocalizedText>(true);
                 if (label != null) label.Key = "start.contrast";
                 RemoveLayout(contrast.gameObject);
-                StackUnderPlay((RectTransform)contrast.transform, 1);
+                // The look (기본 ↔ 사실적, for this visit) and high contrast share the row, as two half-width buttons.
+                var look = Instantiate(contrast.gameObject, menu).GetComponent<Button>();
+                look.name = "Look Button";
+                look.onClick = new Button.ButtonClickedEvent();
+                look.onClick.AddListener(ToggleLook);
+                lookLabel = look.GetComponentInChildren<LocalizedText>(true);
+                halfLabels = new[] { look.GetComponentInChildren<TMP_Text>(true), contrast.GetComponentInChildren<TMP_Text>(true) };
+                if (halfLabels[0] != null) fullFontSize = halfLabels[0].fontSize;
+                foreach (Transform child in look.transform) if (child.name == "Easy Tag") Destroy(child.gameObject);
+                RemoveLayout(look.gameObject);
+                StackUnderPlay((RectTransform)look.transform, 1, 0, 2);
+                StackUnderPlay((RectTransform)contrast.transform, 1, 1, 2);
                 contrast.gameObject.SetActive(true);
-                // The "voice assist on" tag sits under the lowest button.
-                var tag = auditory != null ? auditory.Find("Easy Tag") : null;
-                if (tag != null && tag.parent != contrast.transform) tag.SetParent(contrast.transform, false);
+                look.gameObject.SetActive(true);
+                // The "voice assist on" tag sits under the lowest row, centred on it (the contrast button is its right half).
+                var tag = auditory != null ? auditory.Find("Easy Tag") : contrast.transform.Find("Easy Tag");
+                if (tag != null)
+                {
+                    if (tag.parent != contrast.transform) tag.SetParent(contrast.transform, false);
+                    var tagRect = (RectTransform)tag;
+                    tagRect.anchoredPosition = new Vector2(-(HalfWidth + ColumnGap) * 0.5f, tagRect.anchoredPosition.y);
+                }
+                RefreshLookLabel();
             }
 
             // Focus ring: four bars, moved onto the focused button.
@@ -159,10 +177,17 @@ namespace FruitGame
             foreach (var a in go.GetComponents<AspectLayout>()) Destroy(a);
         }
 
-        /// <summary>The title's buttons in one column, as wide as Play and centred on it, in either layout.</summary>
-        void StackUnderPlay(RectTransform r, int row)
+        const float RowWidth = 560f, ColumnGap = 20f, HalfWidth = (RowWidth - ColumnGap) * 0.5f;
+
+        /// <summary>
+        /// The title's buttons in rows as wide as Play and centred on it, in either layout: one button across the row, or
+        /// (columns 2) column 0 or 1 of two half-width buttons.
+        /// </summary>
+        void StackUnderPlay(RectTransform r, int row, int column = 0, int columns = 1)
         {
-            const float RowGap = 150f, Width = 560f, Height = 130f;
+            const float RowGap = 150f, Height = 130f;
+            float Width = columns == 2 ? HalfWidth : RowWidth;
+            float x = columns == 2 ? (column == 0 ? -1f : 1f) * (HalfWidth + ColumnGap) * 0.5f : 0f;
             var play = frame.Find("Start Menu/Play Button").GetComponent<AspectLayout>();
             AspectLayout.Pose Below(AspectLayout.Pose p) => new AspectLayout.Pose
             {
@@ -170,7 +195,7 @@ namespace FruitGame
                 anchorMin = p.anchorMin,
                 anchorMax = p.anchorMax,
                 pivot = p.pivot,
-                anchoredPosition = p.anchoredPosition - new Vector2(0f, p.sizeDelta.y * 0.5f + 40f + Height * 0.5f + row * RowGap),
+                anchoredPosition = p.anchoredPosition + new Vector2(x, -(p.sizeDelta.y * 0.5f + 40f + Height * 0.5f + row * RowGap)),
                 sizeDelta = new Vector2(Width, Height),
                 localScale = Vector3.one,
             };
@@ -214,6 +239,7 @@ namespace FruitGame
                 sr.sizeDelta = new Vector2(0f, height);
             }
             RefreshContrast();
+            RefreshLookLabel();
             UpdateInvite();
             if (focused != null && !focused.isActiveAndEnabled) SetFocus(null);
             if (fallback != null) FallbackInput.KeyAxis = 0f;
@@ -276,6 +302,46 @@ namespace FruitGame
             image.color = Color.black;
             image.raycastTarget = false;
             return plate;
+        }
+
+        /// <summary>Switches this visit between the classic and realistic looks (the staff's look comes back after it).</summary>
+        public void ToggleLook()
+        {
+            SceneLighting.VisitorLook = SceneLighting.ShownLook == LightingStyle.Realistic ? LightingStyle.Classic : LightingStyle.Realistic;
+            narrator.Click();
+            RefreshLookLabel();
+        }
+
+        LocalizedText lookLabel;
+
+        TMP_Text[] halfLabels;
+        float fullFontSize = 64f;
+        string fittedTexts;
+
+        /// <summary>
+        /// The look button names the look it switches to. The two half-width buttons share one label size, the largest of the
+        /// sizes, in steps of 4, at which both labels fit (Korean 40, English 36).
+        /// </summary>
+        void RefreshLookLabel()
+        {
+            if (lookLabel == null) return;
+            string key = SceneLighting.ShownLook == LightingStyle.Realistic ? "start.lookClassic" : "start.lookRealistic";
+            if (lookLabel.Key != key) lookLabel.Key = key;
+            if (halfLabels == null || halfLabels[0] == null || halfLabels[1] == null) return;
+            // Both looks' names, so the size doesn't jump when the button is pressed.
+            string texts = Strings.Get("start.lookRealistic") + "|" + Strings.Get("start.lookClassic") + "|" + halfLabels[1].text;
+            if (texts == fittedTexts) return;
+            fittedTexts = texts;
+            float room = HalfWidth - 40f;
+            float size = fullFontSize;
+            for (; size > 24f; size -= 4f)
+            {
+                bool fits = true;
+                foreach (var text in texts.Split('|'))
+                    if (halfLabels[0].GetPreferredValues(text, 9999f, 0f).x * size / halfLabels[0].fontSize > room) { fits = false; break; }
+                if (fits) break;
+            }
+            foreach (var l in halfLabels) l.fontSize = size;
         }
 
         public void ToggleContrast()

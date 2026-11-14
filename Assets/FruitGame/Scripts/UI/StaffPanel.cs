@@ -335,7 +335,7 @@ namespace FruitGame
                 Setting("Staff panel language", () => config.staffLanguage == Language.Korean ? "한국어" : "English",
                     d => config.staffLanguage = d < 0 ? Language.Korean : Language.English),
                 Setting("Lighting", () => T(config.lightingStyle.ToString()),
-                    d => config.lightingStyle = d < 0 ? LightingStyle.Classic : LightingStyle.Realistic),
+                    d => { config.lightingStyle = d < 0 ? LightingStyle.Classic : LightingStyle.Realistic; SceneLighting.VisitorLook = null; }),
                 Setting("Ray tracing (Realistic)", () => OnOff(config.rayTracing), d => config.rayTracing = d > 0),
                 Setting("God rays (Realistic)", () => config.realisticRays <= 0f ? T("Off") : "×" + config.realisticRays.ToString("0.0"),
                     d => config.realisticRays = Stepped(config.realisticRays, d, 0.1f, 0f, 2f)),
